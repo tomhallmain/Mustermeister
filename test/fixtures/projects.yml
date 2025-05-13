@@ -6,6 +6,7 @@ one:
   user: one
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+  last_activity_at: <%= Time.current %>
 
 two:
   title: "Another Project"
@@ -13,3 +14,4 @@ two:
   user: two
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+  last_activity_at: <%= Time.current %>

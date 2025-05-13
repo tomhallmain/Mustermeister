@@ -3,7 +3,7 @@ class ProjectsController < ApplicationController
 
   def index
     @projects = current_user.projects.includes(:tasks)
-                          .order(updated_at: :desc)
+                          .order(last_activity_at: :desc)
                           .page(params[:page]).per(12)
   end
 

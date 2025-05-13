@@ -15,6 +15,9 @@ class Project < ApplicationRecord
 
   validates :title, presence: true
   
+  before_save :update_last_activity
+  before_create :set_initial_activity
+  
   scope :not_completed, -> { 
     joins(:tasks)
       .where(tasks: { completed: false })
@@ -34,6 +37,14 @@ class Project < ApplicationRecord
   end
 
   private
+
+  def set_initial_activity
+    self.last_activity_at = Time.current
+  end
+
+  def update_last_activity
+    self.last_activity_at = Time.current
+  end
 
   # PaperTrail metadata methods
   def user_id_for_paper_trail

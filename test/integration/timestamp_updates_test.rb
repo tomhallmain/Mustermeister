@@ -21,11 +21,20 @@ class TimestampUpdatesTest < ActionDispatch::IntegrationTest
     PaperTrail.request.controller_info = {}
   end
 
-  test "should update project timestamps" do
+  test "should update project update_at upon update" do
     original_updated_at = @project.updated_at
     sleep(1)
     @project.update!(title: "Updated Project Title")
     assert_not_equal original_updated_at, @project.updated_at
+  end
+
+  test "should update project last_activity_at when task is updated" do
+    original_activity_at = @project.last_activity_at
+    sleep(1)
+    @task.update!(title: "Updated Task Title")
+    @project.reload
+    assert_not_equal original_activity_at, @project.last_activity_at
+    assert_in_delta Time.current, @project.last_activity_at, 1.second
   end
 
   test "should update task timestamps" do

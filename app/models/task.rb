@@ -21,6 +21,7 @@ class Task < ApplicationRecord
   
   before_create :set_defaults
   before_destroy :ensure_no_active_dependencies
+  after_save :update_project_activity
   
   scope :active, -> { where(completed: false, archived: false) }
   scope :completed, -> { where(completed: true) }
@@ -115,6 +116,10 @@ class Task < ApplicationRecord
     if archived? && archived_at.blank?
       errors.add(:archived_at, "must be present when task is archived")
     end
+  end
+  
+  def update_project_activity
+    project.update_column(:last_activity_at, Time.current)
   end
   
   # PaperTrail metadata methods

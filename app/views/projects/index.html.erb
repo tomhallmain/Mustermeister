@@ -29,9 +29,8 @@
           
           <div class="mt-2 text-xs text-gray-500">
             Created: <%= project.created_at.strftime("%b %d, %Y") %>
-            <% if project.updated_at != project.created_at %>
-              <br>Updated: <%= project.updated_at.strftime("%b %d, %Y") %>
-            <% end %>
+            <% last_activity = [project.last_activity_at, project.updated_at].compact.max %>
+            <br>Last Activity: <%= last_activity.strftime("%b %d, %Y") %>
           </div>
 
           <div class="mt-2">

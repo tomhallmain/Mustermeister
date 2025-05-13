@@ -61,6 +61,23 @@ class ProjectTest < ActiveSupport::TestCase
     assert_equal 100, project.completion_percentage
   end
 
+  test "should set last_activity_at on creation" do
+    project = Project.create!(title: "New Project", user: @user)
+    assert_not_nil project.last_activity_at
+    assert_in_delta Time.current, project.last_activity_at, 1.second
+  end
+
+  test "should update last_activity_at when task is updated" do
+    project = Project.create!(title: "Test Project", user: @user)
+    task = project.tasks.create!(title: "Test Task", user: @user)
+    original_activity = project.last_activity_at
+    sleep(1)
+    task.update!(title: "Updated Task")
+    project.reload
+    assert_not_equal original_activity, project.last_activity_at
+    assert_in_delta Time.current, project.last_activity_at, 1.second
+  end
+
   test "should destroy associated tasks when destroyed" do
     project = Project.create!(title: "Test Project", user: @user)
     task = project.tasks.create!(title: "Task", user: @user)
