@@ -189,6 +189,28 @@ rails destroy controller Comments
    yarn build:css
    ```
 
+## Windows-Specific Rails Asset Pipeline Configuration Notes
+
+**Problem**: Windows file locking behavior causes `Errno::EACCES` during asset precompilation, especially with `rails_admin` CSS.
+
+---
+
+### 1. Environment Variables
+```cmd
+setx RAILS_TMPDIR "C:\rails_temp"
+set TMP="%RAILS_TMPDIR%"
+set TEMP="%RAILS_TMPDIR%"```
+
+### 2. Directory Setup (run as Administrator)
+```cmd
+mkdir C:\rails_temp
+icacls "C:\rails_temp" /grant Everyone:(OI)(CI)F /T```
+
+### 3. Precompilation Sequence
+```cmd
+rails assets:clobber && rails tmp:clear && yarn build:css && rails assets:precompile
+```
+
 ## Development Tips
 
 - Use `rails routes` to see all available routes

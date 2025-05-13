@@ -4,8 +4,9 @@ class TasksController < ApplicationController
 
   def index
     @tasks = current_user.tasks.not_archived.includes(:project, :tags)
-                        .order(created_at: :desc)
-                        .page(params[:page]).per(15)
+    @tasks = @tasks.not_completed unless params[:show_completed]
+    @tasks = @tasks.order(created_at: :desc)
+                   .page(params[:page]).per(15)
   end
 
   def show

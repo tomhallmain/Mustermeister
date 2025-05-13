@@ -21,8 +21,9 @@ class ProjectsController < ApplicationController
 
   def show
     @tasks = @project.tasks.includes(:tags, :user)
-                    .order(created_at: :desc)
-                    .page(params[:page]).per(15)
+    @tasks = @tasks.not_completed unless params[:show_completed]
+    @tasks = @tasks.order(created_at: :desc)
+                   .page(params[:page]).per(15)
   end
 
   def new

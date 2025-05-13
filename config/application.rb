@@ -8,6 +8,10 @@ Bundler.require(*Rails.groups)
 
 module Myapp
   class Application < Rails::Application
+    # Configure Sprockets cache to avoid file locking issues on Windows
+    config.tmp_dir = ENV['RAILS_TMPDIR']
+    config.paths['tmp'] = [ENV['RAILS_TMPDIR']]
+
     # Load the PostgreSQL checker before Rails initializes
     config.before_initialize do
       require_relative '../lib/postgres_connection_checker'

@@ -75,4 +75,13 @@ Rails.application.configure do
 
   # Default URL options for Devise mailer
   config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
+
+  # Configure Sprockets cache to avoid file locking issues on Windows
+  config.assets.configure do |env|
+    env.cache = Sprockets::Cache::FileStore.new(
+      "#{ENV['RAILS_TMPDIR']}/sprockets_cache",  # Explicit custom path
+      64 * 1024 * 1024  # Numeric byte size (64MB) second  # Add cache size limit directly
+    )
+    env.export_concurrent = false
+  end
 end

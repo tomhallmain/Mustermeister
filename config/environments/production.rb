@@ -87,4 +87,13 @@ Rails.application.configure do
   #
   # Skip DNS rebinding protection for the default health check endpoint.
   # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+
+  # Configure Sprockets cache to avoid file locking issues on Windows
+  config.assets.configure do |env|
+    env.cache = Sprockets::Cache::FileStore.new(
+      "#{ENV['RAILS_TMPDIR']}/sprockets_cache",  # Explicit custom path
+      64 * 1024 * 1024  # Numeric byte size (64MB) second  # Add cache size limit directly
+    )
+    env.export_concurrent = false
+  end
 end
