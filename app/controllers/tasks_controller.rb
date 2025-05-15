@@ -31,7 +31,7 @@ class TasksController < ApplicationController
     # Now load the tasks based on the current preference
     @tasks = current_user.tasks.not_archived.includes(:project, :tags)
     @tasks = @tasks.not_completed unless current_preference
-    @tasks = @tasks.order(created_at: :desc)
+    @tasks = @tasks.order(Arel.sql('COALESCE(updated_at, created_at) DESC, created_at DESC'))
                    .page(params[:page]).per(TASKS_PER_PAGE)
   end
 

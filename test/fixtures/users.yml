@@ -13,3 +13,10 @@ two:
   encrypted_password: <%= Devise::Encryptor.digest(User, 'password') %>
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+sorting_test_user:
+  name: "Sorting Test User"
+  email: "sorting_test@example.com"
+  encrypted_password: <%= Devise::Encryptor.digest(User, 'password') %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

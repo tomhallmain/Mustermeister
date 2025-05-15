@@ -17,3 +17,12 @@ two:
   updated_at: <%= Time.current %>
   last_activity_at: <%= Time.current %>
   default_priority: "medium"
+
+sorting_test_project:
+  title: "Sorting Test Project"
+  description: "Project for testing task sorting"
+  user: sorting_test_user
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+  last_activity_at: <%= Time.current %>
+  default_priority: "medium"
