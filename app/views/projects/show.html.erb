@@ -65,7 +65,7 @@
 
   <div class="bg-white shadow-lg rounded-lg">
     <% @tasks.each do |task| %>
-      <div class="border-b border-gray-200 p-4 flex items-center justify-between hover:bg-gray-50">
+      <div class="task-item border-b border-gray-200 p-4 flex items-center justify-between hover:bg-gray-50">
         <div class="flex items-center space-x-4">
           <%= button_to toggle_task_path(task, show_completed: show_completed), 
               method: :patch, 
@@ -138,6 +138,6 @@
   </div>
   
   <div class="mt-8">
-    <%= paginate @tasks, window: 2, outer_window: 1, views_prefix: 'shared' %>
+    <%= paginate @tasks, window: 2, outer_window: 1, views_prefix: 'shared', params: { show_completed: show_completed }, data: { turbo: false } %>
   </div>
 </div> 

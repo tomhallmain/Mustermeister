@@ -25,6 +25,10 @@ class ActiveSupport::TestCase
     follow_redirect!
     assert_response :success
   end
+
+  def debug(message)
+    puts message if @verbose
+  end
 end
 
 class ActionDispatch::IntegrationTest
@@ -53,5 +57,9 @@ class ActionDispatch::IntegrationTest
       follow_redirect!
       assert_response :success
     end
+  end
+
+  def debug(message)
+    puts message if @verbose
   end
 end

@@ -1,4 +1,6 @@
 class TasksController < ApplicationController
+  TASKS_PER_PAGE = 15
+
   before_action :initialize_show_completed_prefs
   before_action :set_task, only: [:show, :edit, :update, :destroy, :toggle, :archive]
   before_action :load_projects_and_tags, only: [:new, :edit, :create, :update]
@@ -19,7 +21,7 @@ class TasksController < ApplicationController
     
     # If no param and we have a stored preference, redirect to include it
     if params[:show_completed].nil?
-      redirect_to tasks_path(show_completed: stored_preference)
+      redirect_to tasks_path(show_completed: stored_preference, page: params[:page])
       return
     end
     
@@ -30,7 +32,7 @@ class TasksController < ApplicationController
     @tasks = current_user.tasks.not_archived.includes(:project, :tags)
     @tasks = @tasks.not_completed unless current_preference
     @tasks = @tasks.order(created_at: :desc)
-                   .page(params[:page]).per(15)
+                   .page(params[:page]).per(TASKS_PER_PAGE)
   end
 
   def show

@@ -1,4 +1,6 @@
 class ProjectsController < ApplicationController
+  TASKS_PER_PAGE = 15
+
   before_action :initialize_show_completed_prefs
   before_action :set_project, only: [:show, :edit, :update, :destroy, :report]
 
@@ -47,7 +49,7 @@ class ProjectsController < ApplicationController
     
     # If no param and we have a stored preference, redirect to include it
     if params[:show_completed].nil?
-      redirect_url = project_path(@project, show_completed: stored_preference)
+      redirect_url = project_path(@project, show_completed: stored_preference, page: params[:page])
       Rails.logger.debug "REDIRECTING to: #{redirect_url}"
       redirect_to redirect_url
       return
@@ -66,7 +68,7 @@ class ProjectsController < ApplicationController
     @tasks = @project.tasks.includes(:tags, :user)
     @tasks = @tasks.not_completed unless current_preference
     @tasks = @tasks.order(created_at: :desc)
-                   .page(params[:page]).per(15)
+                   .page(params[:page]).per(TASKS_PER_PAGE)
   end
 
   def new

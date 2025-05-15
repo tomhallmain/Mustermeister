@@ -4,7 +4,7 @@ class TaskCreationTest < ActionDispatch::IntegrationTest
   def setup
     @user = users(:one)
     @project = projects(:one)
-    @verbose = ENV['VERBOSE_TESTS'] == 'true'
+    @verbose = false # Enable debug output
     
     # Sign in
     post user_session_path, params: { 
@@ -27,10 +27,6 @@ class TaskCreationTest < ActionDispatch::IntegrationTest
     # Reset PaperTrail 
     PaperTrail.request.whodunnit = nil
     PaperTrail.request.controller_info = {}
-  end
-
-  def debug(message)
-    puts message if @verbose
   end
 
   test "should inherit project default priority when creating a task" do
