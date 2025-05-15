@@ -14,13 +14,13 @@ class ActiveSupport::TestCase
   fixtures :all
 
   # Add more helper methods to be used by all tests here...
-  def sign_in_as(user)
+  def sign_in_as(user, format: :html)
     post user_session_path, params: { 
       user: { 
         email: user.email, 
         password: 'password' 
       } 
-    }
+    }, as: format
     assert_response :redirect
     follow_redirect!
     assert_response :success
@@ -28,7 +28,7 @@ class ActiveSupport::TestCase
 end
 
 class ActionDispatch::IntegrationTest
-  def sign_in_as(user, skip_redirect: false)
+  def sign_in_as(user, skip_redirect: false, format: :html)
     if skip_redirect
       # Force JSON format to skip HTML/CSS rendering
       post user_session_path, 
@@ -37,11 +37,8 @@ class ActionDispatch::IntegrationTest
             email: user.email, 
             password: 'password' 
           } 
-        }.to_json, 
-        headers: { 
-          'Accept' => 'application/json', 
-          'Content-Type' => 'application/json' 
-        }
+        }, 
+        as: :json
       assert_response :success
       # Directly set the authentication token or session (if using Devise)
       @controller.sign_in(user) if defined?(@controller)
@@ -51,7 +48,7 @@ class ActionDispatch::IntegrationTest
           email: user.email, 
           password: 'password' 
         } 
-      }
+      }, as: format
       assert_response :redirect
       follow_redirect!
       assert_response :success

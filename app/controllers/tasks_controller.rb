@@ -4,8 +4,31 @@ class TasksController < ApplicationController
   before_action :load_projects_and_tags, only: [:new, :edit, :create, :update]
 
   def index
+    # Add headers to disable Turbo for this response to prevent double requests
+    response.headers["Turbo-Frame"] = "_top"
+    
+    # If show_completed param is present, update the session preference
+    if params[:show_completed].present?
+      show_completed = params[:show_completed] == 'true'
+      session[:tasks_show_completed] = show_completed
+    end
+    
+    # Get the current stored preference (default to false if nil)
+    stored_preference = session[:tasks_show_completed]
+    stored_preference = false if stored_preference.nil?
+    
+    # If no param and we have a stored preference, redirect to include it
+    if params[:show_completed].nil?
+      redirect_to tasks_path(show_completed: stored_preference)
+      return
+    end
+    
+    # Current preference is from params (already stored in session above)
+    current_preference = params[:show_completed] == 'true'
+    
+    # Now load the tasks based on the current preference
     @tasks = current_user.tasks.not_archived.includes(:project, :tags)
-    @tasks = @tasks.not_completed unless params[:show_completed]
+    @tasks = @tasks.not_completed unless current_preference
     @tasks = @tasks.order(created_at: :desc)
                    .page(params[:page]).per(15)
   end
@@ -45,7 +68,8 @@ class TasksController < ApplicationController
         redirect_to project_path(@task.project, show_completed: show_completed), 
                     notice: 'Task was successfully created.'
       else
-        redirect_to tasks_path, notice: 'Task was successfully created.'
+        redirect_to tasks_path(show_completed: session[:tasks_show_completed] || false), 
+                    notice: 'Task was successfully created.'
       end
     else
       render :new, status: :unprocessable_entity
@@ -64,7 +88,8 @@ class TasksController < ApplicationController
         redirect_to project_path(@task.project, show_completed: show_completed), 
                     notice: 'Task was successfully updated.'
       else
-        redirect_to tasks_path, notice: 'Task was successfully updated.'
+        redirect_to tasks_path(show_completed: session[:tasks_show_completed] || false), 
+                    notice: 'Task was successfully updated.'
       end
     else
       render :edit, status: :unprocessable_entity
@@ -73,25 +98,35 @@ class TasksController < ApplicationController
 
   def destroy
     project = @task.project
-    project_id = project&.id&.to_s
-    show_completed = project_id ? session[:projects_show_completed][project_id] : nil
-    # Default to false if not set in session
-    show_completed = show_completed.nil? ? false : show_completed
-    
-    @task.destroy
     
     if project
+      project_id = project.id.to_s
+      show_completed = session[:projects_show_completed][project_id]
+      # Default to false if not set in session
+      show_completed = show_completed.nil? ? false : show_completed
+      
+      @task.destroy
       redirect_to project_path(project, show_completed: show_completed), 
-                  notice: 'Task was successfully deleted.'
+                notice: 'Task was successfully deleted.'
     else
-      redirect_to tasks_path, notice: 'Task was successfully deleted.'
+      @task.destroy
+      redirect_to tasks_path(show_completed: session[:tasks_show_completed] || false), 
+                notice: 'Task was successfully deleted.'
     end
   end
 
   def toggle
     @task.update(completed: !@task.completed)
     
-    redirect_back(fallback_location: tasks_path, notice: 'Task status updated.')
+    # If show_completed param is present, use it for the redirect
+    show_completed = if params[:show_completed].present?
+                       params[:show_completed]
+                     else
+                       session[:tasks_show_completed] || false
+                     end
+    
+    redirect_back(fallback_location: tasks_path(show_completed: show_completed), 
+                  notice: 'Task status updated.')
   end
 
   def archive_index
@@ -107,8 +142,16 @@ class TasksController < ApplicationController
   end
 
   def archive
+    # If show_completed param is present, use it for the redirect
+    show_completed = if params[:show_completed].present?
+                       params[:show_completed]
+                     else
+                       session[:tasks_show_completed] || false
+                     end
+    
     if @task.archive!(current_user)
-      redirect_to tasks_path, notice: 'Task was successfully archived.'
+      redirect_to tasks_path(show_completed: show_completed), 
+                notice: 'Task was successfully archived.'
     else
       redirect_to @task, alert: @task.errors.full_messages.join(", ")
     end
@@ -126,7 +169,7 @@ class TasksController < ApplicationController
       redirect_to archives_path, 
                   notice: "Successfully archived #{count} completed tasks."
     rescue TaskManagementService::Error => e
-      redirect_to tasks_path, 
+      redirect_to tasks_path(show_completed: session[:tasks_show_completed] || false), 
                   alert: "Failed to archive tasks: #{e.message}"
     end
   end
@@ -153,7 +196,7 @@ class TasksController < ApplicationController
         current_user: current_user
       )
       
-      redirect_to tasks_path, 
+      redirect_to tasks_path(show_completed: session[:tasks_show_completed] || false), 
                   notice: "Successfully rescheduled #{count} tasks."
     rescue TaskManagementService::Error => e
       redirect_to reschedule_path, 
@@ -165,12 +208,14 @@ class TasksController < ApplicationController
 
   def initialize_show_completed_prefs
     session[:projects_show_completed] ||= {}
+    session[:tasks_show_completed] = false if session[:tasks_show_completed].nil?
   end
 
   def set_task
     @task = Task.not_archived.find(params[:id])
   rescue ActiveRecord::RecordNotFound
-    redirect_to tasks_path, alert: 'Task not found or already archived.'
+    redirect_to tasks_path(show_completed: session[:tasks_show_completed] || false), 
+                alert: 'Task not found or already archived.'
   end
 
   def load_projects_and_tags

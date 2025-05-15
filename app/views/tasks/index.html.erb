@@ -2,12 +2,13 @@
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold text-gray-900">Tasks</h1>
     <div class="flex items-center space-x-4">
-      <%= link_to params[:show_completed] ? tasks_path : tasks_path(show_completed: true),
-          class: "flex items-center space-x-2 px-4 py-2 rounded-md #{params[:show_completed] ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'} hover:bg-opacity-80" do %>
+      <%= link_to params[:show_completed] == 'true' ? tasks_path(show_completed: false) : tasks_path(show_completed: true),
+          class: "flex items-center space-x-2 px-4 py-2 rounded-md #{params[:show_completed] == 'true' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'} hover:bg-opacity-80",
+          data: { turbo: false } do %>
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
         </svg>
-        <span><%= params[:show_completed] ? 'Hide Completed' : 'Show Completed' %></span>
+        <span><%= params[:show_completed] == 'true' ? 'Hide Completed' : 'Show Completed' %></span>
       <% end %>
     </div>
   </div>
@@ -16,7 +17,7 @@
     <% @tasks.each do |task| %>
       <div class="border-b border-gray-200 p-3 flex items-center justify-between hover:bg-gray-50">
         <div class="flex items-center space-x-3">
-          <%= button_to toggle_task_path(task), method: :patch, class: "flex-shrink-0" do %>
+          <%= button_to toggle_task_path(task, show_completed: params[:show_completed]), method: :patch, class: "flex-shrink-0" do %>
             <div class="w-5 h-5 border-2 rounded <%= task.completed ? 'bg-green-500 border-green-500' : 'border-gray-400' %>">
               <% if task.completed %>
                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -67,14 +68,14 @@
             </svg>
           <% end %>
           
-          <%= button_to archive_task_path(task), method: :post, class: "text-gray-600 hover:text-gray-800", 
+          <%= button_to archive_task_path(task, show_completed: params[:show_completed]), method: :post, class: "text-gray-600 hover:text-gray-800", 
               data: { confirm: "Are you sure you want to archive this task?" } do %>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
             </svg>
           <% end %>
           
-          <%= button_to task_path(task), method: :delete, class: "text-red-600 hover:text-red-800", 
+          <%= button_to task_path(task, show_completed: params[:show_completed]), method: :delete, class: "text-red-600 hover:text-red-800", 
               data: { confirm: "Are you sure?" } do %>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>

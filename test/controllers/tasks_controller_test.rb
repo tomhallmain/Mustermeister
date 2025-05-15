@@ -32,14 +32,15 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should get index" do
-    get tasks_path
+    # The index action now redirects to add show_completed param if missing
+    get tasks_path(show_completed: false)
     assert_response :success
     assert_select "h1", "Tasks"
   end
 
   test "should redirect to tasks when trying to create task without project" do
     get new_task_path
-    assert_redirected_to tasks_path
+    assert_redirected_to tasks_path(show_completed: false)
   end
 
   test "should create task" do
@@ -109,14 +110,14 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
 
   test "should toggle task completion" do
     patch toggle_task_path(@task)
-    assert_redirected_to tasks_path
+    assert_redirected_to tasks_path(show_completed: false)
     @task.reload
     assert @task.completed
   end
 
   test "should archive task" do
     post archive_task_path(@task)
-    assert_redirected_to tasks_path
+    assert_redirected_to tasks_path(show_completed: false)
     @task.reload
     assert @task.archived
   end

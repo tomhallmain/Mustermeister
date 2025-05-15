@@ -31,7 +31,7 @@ class Users::SessionsController < Devise::SessionsController
     
     respond_to do |format|
       format.json { render json: { message: "Signed out successfully." }, status: :ok }
-      format.html { respond_to_on_destroy }
+      format.html { redirect_to after_sign_out_path_for(resource_name) }
     end
   end
 

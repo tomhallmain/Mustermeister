@@ -112,7 +112,7 @@ class TaskCreationTest < ActionDispatch::IntegrationTest
     
     # 5. Now check that the form has the project's default priority pre-selected
     # Dump the first 1000 characters of response body to see what we're dealing with
-    debug "Response preview: #{response.body[0..1000]}"
+    # debug "Response preview: #{response.body[0..1000]}"
     
     # Let's get all select elements and their options
     select_elements = css_select("select")
