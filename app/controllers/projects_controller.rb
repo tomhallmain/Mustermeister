@@ -1,4 +1,5 @@
 class ProjectsController < ApplicationController
+  before_action :initialize_show_completed_prefs
   before_action :set_project, only: [:show, :edit, :update, :destroy, :report]
 
   def index
@@ -20,8 +21,50 @@ class ProjectsController < ApplicationController
   end
 
   def show
+    # Initialize preferences for this project if not already set
+    session[:projects_show_completed] ||= {}
+    
+    # Debug values on entry
+    Rails.logger.debug "ENTRY params[:show_completed]: #{params[:show_completed].inspect}"
+    Rails.logger.debug "ENTRY session value: #{session[:projects_show_completed][@project.id.to_s].inspect}"
+    
+    # Add headers to disable Turbo for this response to prevent double requests
+    response.headers["Turbo-Frame"] = "_top"
+    response.headers["X-Robots-Tag"] = "none"
+    
+    # If show_completed param is present, update the session preference
+    if params[:show_completed].present?
+      show_completed = params[:show_completed] == 'true'
+      Rails.logger.debug "UPDATING session to: #{show_completed.inspect}"
+      session[:projects_show_completed][@project.id.to_s] = show_completed
+    end
+    
+    # Get the current stored preference (default to false if nil)
+    stored_preference = session[:projects_show_completed][@project.id.to_s]
+    stored_preference = false if stored_preference.nil?
+    
+    Rails.logger.debug "STORED preference: #{stored_preference.inspect}"
+    
+    # If no param and we have a stored preference, redirect to include it
+    if params[:show_completed].nil?
+      redirect_url = project_path(@project, show_completed: stored_preference)
+      Rails.logger.debug "REDIRECTING to: #{redirect_url}"
+      redirect_to redirect_url
+      return
+    end
+    
+    # Add more debug info for the params
+    Rails.logger.debug "Request referrer: #{request.referrer.inspect}"
+    Rails.logger.debug "Request headers: #{request.headers.env.select {|k,v| k.start_with?('HTTP_')}.inspect}"
+    
+    # Current preference is from params (already stored in session above)
+    current_preference = params[:show_completed] == 'true'
+    
+    Rails.logger.debug "CURRENT preference for tasks: #{current_preference.inspect}"
+    
+    # Now load the tasks based on the current preference
     @tasks = @project.tasks.includes(:tags, :user)
-    @tasks = @tasks.not_completed unless params[:show_completed]
+    @tasks = @tasks.not_completed unless current_preference
     @tasks = @tasks.order(created_at: :desc)
                    .page(params[:page]).per(15)
   end
@@ -81,6 +124,10 @@ class ProjectsController < ApplicationController
   end
 
   private
+
+  def initialize_show_completed_prefs
+    session[:projects_show_completed] ||= {}
+  end
 
   def set_project
     @project = current_user.projects.includes(:tasks).find(params[:id])

@@ -1,4 +1,5 @@
 class TasksController < ApplicationController
+  before_action :initialize_show_completed_prefs
   before_action :set_task, only: [:show, :edit, :update, :destroy, :toggle, :archive]
   before_action :load_projects_and_tags, only: [:new, :edit, :create, :update]
 
@@ -25,14 +26,27 @@ class TasksController < ApplicationController
       project_id: params[:project_id],
       priority: project.default_priority
     )
+    
+    # If we have a show_completed param, update the session
+    if params[:show_completed].present?
+      show_completed = params[:show_completed] == 'true'
+      session[:projects_show_completed][project.id.to_s] = show_completed
+    end
   end
 
   def create
     @task = current_user.tasks.build(task_params)
 
     if @task.save
-      redirect_to @task.project ? project_path(@task.project) : tasks_path, 
-                  notice: 'Task was successfully created.'
+      if @task.project
+        show_completed = session[:projects_show_completed][@task.project.id.to_s]
+        # Default to false if not set in session
+        show_completed = show_completed.nil? ? false : show_completed
+        redirect_to project_path(@task.project, show_completed: show_completed), 
+                    notice: 'Task was successfully created.'
+      else
+        redirect_to tasks_path, notice: 'Task was successfully created.'
+      end
     else
       render :new, status: :unprocessable_entity
     end
@@ -43,8 +57,15 @@ class TasksController < ApplicationController
 
   def update
     if @task.update(task_params)
-      redirect_to @task.project ? project_path(@task.project) : tasks_path, 
-                  notice: 'Task was successfully updated.'
+      if @task.project
+        show_completed = session[:projects_show_completed][@task.project.id.to_s]
+        # Default to false if not set in session
+        show_completed = show_completed.nil? ? false : show_completed
+        redirect_to project_path(@task.project, show_completed: show_completed), 
+                    notice: 'Task was successfully updated.'
+      else
+        redirect_to tasks_path, notice: 'Task was successfully updated.'
+      end
     else
       render :edit, status: :unprocessable_entity
     end
@@ -52,14 +73,34 @@ class TasksController < ApplicationController
 
   def destroy
     project = @task.project
+    project_id = project&.id&.to_s
+    show_completed = project_id ? session[:projects_show_completed][project_id] : nil
+    # Default to false if not set in session
+    show_completed = show_completed.nil? ? false : show_completed
+    
     @task.destroy
-    redirect_to project ? project_path(project) : tasks_path, 
-                notice: 'Task was successfully deleted.'
+    
+    if project
+      redirect_to project_path(project, show_completed: show_completed), 
+                  notice: 'Task was successfully deleted.'
+    else
+      redirect_to tasks_path, notice: 'Task was successfully deleted.'
+    end
   end
 
   def toggle
     @task.update(completed: !@task.completed)
-    redirect_back_or_to tasks_path, notice: 'Task status updated.'
+    
+    # If this is from a project page and we're redirecting back there
+    if @task.project
+      show_completed = session[:projects_show_completed][@task.project.id.to_s]
+      # Default to false if not set in session
+      show_completed = show_completed.nil? ? false : show_completed
+      redirect_to project_path(@task.project, show_completed: show_completed), 
+                  notice: 'Task status updated.'
+    else
+      redirect_back(fallback_location: tasks_path, notice: 'Task status updated.')
+    end
   end
 
   def archive_index
@@ -130,6 +171,10 @@ class TasksController < ApplicationController
   end
 
   private
+
+  def initialize_show_completed_prefs
+    session[:projects_show_completed] ||= {}
+  end
 
   def set_task
     @task = Task.not_archived.find(params[:id])

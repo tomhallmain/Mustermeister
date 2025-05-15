@@ -24,16 +24,30 @@
       <div class="flex space-x-4">
         <%= link_to 'Edit Project', edit_project_path(@project), 
             class: 'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' %>
-        <%= link_to 'New Task', new_project_task_path(@project), 
+        <% 
+          # Get the current preference from params or session
+          show_completed = params[:show_completed] == 'true' 
+          show_completed = session[:projects_show_completed][@project.id.to_s] if params[:show_completed].nil?
+          
+          # Force boolean
+          show_completed = !!show_completed
+          
+          # Debug with more details
+          Rails.logger.debug "*** Current show_completed value: #{show_completed.inspect} (type: #{show_completed.class})"
+        %>
+        <%= link_to 'New Task', new_project_task_path(@project, show_completed: show_completed), 
             class: 'bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded' %>
         <%= link_to 'View Report', report_project_path(@project), 
             class: 'bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded shadow-md' %>
-        <%= link_to params[:show_completed] ? project_path(@project) : project_path(@project, show_completed: true),
-            class: "flex items-center space-x-2 px-4 py-2 rounded-md #{params[:show_completed] ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'} hover:bg-opacity-80" do %>
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+        <%# Completely disable Turbo for this link to prevent double requests %>
+        <%= link_to project_path(@project, show_completed: !show_completed),
+            class: "flex items-center space-x-2 px-4 py-2 rounded-md #{show_completed ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'} hover:bg-opacity-80",
+            data: { turbo: false } do %>
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
           </svg>
-          <span><%= params[:show_completed] ? 'Hide Completed' : 'Show Completed' %></span>
+          <span><%= show_completed ? 'Hide Completed' : 'Show Completed' %></span>
         <% end %>
       </div>
     </div>
@@ -53,7 +67,10 @@
     <% @tasks.each do |task| %>
       <div class="border-b border-gray-200 p-4 flex items-center justify-between hover:bg-gray-50">
         <div class="flex items-center space-x-4">
-          <%= button_to toggle_task_path(task), method: :patch, class: "flex-shrink-0" do %>
+          <%= button_to toggle_task_path(task, show_completed: show_completed), 
+              method: :patch, 
+              class: "flex-shrink-0",
+              form: { data: { turbo: false } } do %>
             <div class="w-6 h-6 border-2 rounded <%= task.completed ? 'bg-green-500 border-green-500' : 'border-gray-400' %>">
               <% if task.completed %>
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -98,13 +115,19 @@
         </div>
         
         <div class="flex space-x-2">
-          <%= link_to edit_task_path(task), class: "text-blue-600 hover:text-blue-800" do %>
+          <%= link_to edit_task_path(task, show_completed: show_completed), 
+              class: "text-blue-600 hover:text-blue-800", 
+              data: { turbo: false } do %>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
             </svg>
           <% end %>
           
-          <%= button_to task_path(task), method: :delete, class: "text-red-600 hover:text-red-800", data: { confirm: "Are you sure?" } do %>
+          <%= button_to task_path(task, show_completed: show_completed), 
+              method: :delete, 
+              class: "text-red-600 hover:text-red-800", 
+              form: { data: { turbo: false } },
+              data: { confirm: "Are you sure?" } do %>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
             </svg>
