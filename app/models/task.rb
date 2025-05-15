@@ -101,7 +101,7 @@ class Task < ApplicationRecord
   
   def set_defaults
     self.completed ||= false
-    self.priority ||= 'medium'
+    self.priority ||= project&.default_priority || 'medium'
     self.archived ||= false
   end
   

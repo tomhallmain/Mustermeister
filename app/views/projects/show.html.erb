@@ -10,6 +10,16 @@
             <br>Last Updated: <%= @project.updated_at.strftime("%B %d, %Y at %I:%M %p") %>
           <% end %>
         </div>
+        <div class="mt-2">
+          <span class="text-sm px-2 py-1 rounded-full
+            <%= case @project.default_priority
+                when 'high' then 'bg-red-100 text-red-800'
+                when 'medium' then 'bg-yellow-100 text-yellow-800'
+                else 'bg-green-100 text-green-800'
+                end %>">
+            Default Priority: <%= @project.default_priority&.capitalize || 'Medium' %>
+          </span>
+        </div>
       </div>
       <div class="flex space-x-4">
         <%= link_to 'Edit Project', edit_project_path(@project), 

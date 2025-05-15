@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_05_13_120000) do
+ActiveRecord::Schema[8.0].define(version: 2025_05_20_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -36,6 +36,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_13_120000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "last_activity_at"
+    t.string "default_priority", default: "medium"
     t.index ["user_id"], name: "index_projects_on_user_id"
   end
 

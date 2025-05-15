@@ -14,6 +14,7 @@ class Project < ApplicationRecord
   belongs_to :user
 
   validates :title, presence: true
+  validates :default_priority, inclusion: { in: %w[low medium high] }, allow_nil: true
   
   before_save :update_last_activity
   before_create :set_initial_activity

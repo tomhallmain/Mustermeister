@@ -19,7 +19,12 @@ class TasksController < ApplicationController
       redirect_to projects_path, notice: 'Please select a project to create a task.'
       return
     end
-    @task = current_user.tasks.build(project_id: params[:project_id])
+    
+    project = Project.find(params[:project_id])
+    @task = current_user.tasks.build(
+      project_id: params[:project_id],
+      priority: project.default_priority
+    )
   end
 
   def create
