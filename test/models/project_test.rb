@@ -29,6 +29,35 @@ class ProjectTest < ActiveSupport::TestCase
     assert_includes @project.errors[:user], "must exist"
   end
 
+  test "should validate default_priority inclusion" do
+    @project.default_priority = 'invalid'
+    assert_not @project.valid?
+    assert_includes @project.errors[:default_priority], "is not included in the list"
+    
+    # Valid values should pass
+    @project.default_priority = 'low'
+    assert @project.valid?
+    
+    @project.default_priority = 'medium'
+    assert @project.valid?
+    
+    @project.default_priority = 'high'
+    assert @project.valid?
+    
+    # Nil should be allowed
+    @project.default_priority = nil
+    assert @project.valid?
+  end
+  
+  test "should set medium as default_priority if not specified" do
+    # This test verifies that medium is used as a fallback in the Task model
+    # when no default_priority is set on the project
+    project = Project.create!(title: "No Priority Project", user: @user)
+    task = project.tasks.create!(title: "Task with default priority", user: @user)
+    
+    assert_equal 'medium', task.priority
+  end
+
   test "should have many tasks" do
     assert_respond_to @project, :tasks
     assert_instance_of Task, @project.tasks.build

@@ -10,18 +10,6 @@ class TaskTest < ActiveSupport::TestCase
       user: @user,
       project: @project
     )
-
-    # Simulate controller context for PaperTrail
-    PaperTrail.request.whodunnit = @user.id
-    PaperTrail.request.controller_info = {
-      ip: "192.168.1.1",
-      user_agent: "TestAgent"
-    }
-  end
-
-  def teardown
-    PaperTrail.request.whodunnit = nil
-    PaperTrail.request.controller_info = {}
   end
 
   test "should be valid" do
@@ -38,6 +26,26 @@ class TaskTest < ActiveSupport::TestCase
     assert_equal false, task.completed
     assert_equal 'medium', task.priority
     assert_equal false, task.archived
+  end
+
+  test "should override project default priority when explicitly set" do
+    # Create a project with high default priority
+    project = Project.create!(
+      title: "High Priority Project", 
+      user: @user,
+      default_priority: 'high'
+    )
+    
+    # Create a task with explicit low priority
+    task = project.tasks.build(
+      title: "Low Priority Task", 
+      user: @user,
+      priority: 'low'
+    )
+    task.save!
+    
+    # Task priority should be the explicitly set value, not the project default
+    assert_equal 'low', task.priority
   end
 
   test "completion percentage should be calculated correctly" do

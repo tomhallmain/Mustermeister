@@ -11,6 +11,13 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     @project = projects(:one)
     @task = tasks(:one)
     sign_in_as(@user, skip_redirect: true)
+    
+    # Setup PaperTrail for controller tests
+    PaperTrail.request.whodunnit = @user.id
+    PaperTrail.request.controller_info = {
+      ip: "127.0.0.1",
+      user_agent: "Rails Testing"
+    }
   end
 
   def teardown
@@ -18,6 +25,10 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     TasksController.class_eval do
       layout 'application'
     end
+    
+    # Reset PaperTrail 
+    PaperTrail.request.whodunnit = nil
+    PaperTrail.request.controller_info = {}
   end
 
   test "should get index" do
@@ -42,7 +53,28 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to Task.last.project || tasks_path
+    assert_redirected_to project_path(Task.last.project, show_completed: false)
+  end
+
+  test "should use specified priority when creating task" do
+    # Set a default priority on the project
+    @project.update!(default_priority: 'high')
+    
+    # Create the task with explicit low priority
+    assert_difference('Task.count') do
+      post tasks_path, params: {
+        task: {
+          title: "Low Priority Task",
+          description: "This should use explicit low priority",
+          project_id: @project.id,
+          priority: 'low'
+        }
+      }
+    end
+    
+    # Verify the task got the explicit priority, not project default
+    task = Task.find_by(title: "Low Priority Task")
+    assert_equal 'low', task.priority
   end
 
   test "should show task" do
@@ -62,7 +94,7 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
         description: "Updated Description"
       }
     }
-    assert_redirected_to @task.project || tasks_path
+    assert_redirected_to project_path(@task.project, show_completed: false)
     @task.reload
     assert_equal "Updated Task", @task.title
   end
@@ -72,7 +104,7 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
       delete task_path(@task)
     end
 
-    assert_redirected_to @task.project || tasks_path
+    assert_redirected_to project_path(@task.project, show_completed: false)
   end
 
   test "should toggle task completion" do

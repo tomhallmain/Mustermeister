@@ -91,16 +91,7 @@ class TasksController < ApplicationController
   def toggle
     @task.update(completed: !@task.completed)
     
-    # If this is from a project page and we're redirecting back there
-    if @task.project
-      show_completed = session[:projects_show_completed][@task.project.id.to_s]
-      # Default to false if not set in session
-      show_completed = show_completed.nil? ? false : show_completed
-      redirect_to project_path(@task.project, show_completed: show_completed), 
-                  notice: 'Task status updated.'
-    else
-      redirect_back(fallback_location: tasks_path, notice: 'Task status updated.')
-    end
+    redirect_back(fallback_location: tasks_path, notice: 'Task status updated.')
   end
 
   def archive_index

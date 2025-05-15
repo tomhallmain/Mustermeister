@@ -7,6 +7,7 @@ one:
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
   last_activity_at: <%= Time.current %>
+  default_priority: "medium"
 
 two:
   title: "Another Project"
@@ -15,3 +16,4 @@ two:
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
   last_activity_at: <%= Time.current %>
+  default_priority: "medium"
