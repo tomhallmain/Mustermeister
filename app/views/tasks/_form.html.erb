@@ -19,7 +19,10 @@
 
   <div>
     <%= f.label :description, class: "block text-sm font-medium text-gray-700" %>
-    <%= f.text_area :description, rows: 3, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+    <%= f.text_area :description, 
+        rows: 3, 
+        id: "task-description",
+        class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
   </div>
 
   <div>
@@ -73,4 +76,44 @@
         class: "px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
     <%= f.submit class: "px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>
   </div>
-<% end %> 
+<% end %>
+
+<script>
+  (function() {
+    const textarea = document.getElementById('task-description');
+    
+    if (!textarea) {
+      console.error('Could not find task description textarea');
+      return;
+    }
+
+    function autoExpand() {
+      // console.log('Auto-expanding textarea...');
+      
+      // Reset height to auto to get the correct scrollHeight
+      textarea.style.height = 'auto';
+      
+      // Calculate new height (24px per row is approximate)
+      const minHeight = 3 * 24; // 3 rows minimum
+      const maxHeight = 20 * 24; // 20 rows maximum
+      const newHeight = Math.max(minHeight, Math.min(textarea.scrollHeight, maxHeight));
+      
+      // console.log('New height:', newHeight, 'px');
+      
+      // Set the new height
+      textarea.style.height = newHeight + 'px';
+    }
+
+    // Add event listeners
+    textarea.addEventListener('input', function() {
+      autoExpand();
+    });
+    
+    textarea.addEventListener('change', function() {
+      autoExpand();
+    });
+    
+    // Initial expansion
+    autoExpand();
+  })();
+</script> 
