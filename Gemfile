@@ -21,8 +21,21 @@ gem "tailwindcss-rails"
 # Use Devise for authentication [https://github.com/heartcombo/devise]
 gem "devise"
 
+# Add two-factor authentication to Devise
+gem "devise-two-factor"
+# Add encryption for sensitive data
+gem "attr_encrypted"
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
+# Add secure password hashing
 gem "bcrypt", "~> 3.1.7"
+# Add Redis for caching and session storage
+gem "redis", ">= 4.0.1"
+# Add secure file upload handling
+gem "shrine"
+# Add secure headers
+gem "secure_headers"
+# Add DDOS protection and rate limiting
+gem "rack-attack"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]

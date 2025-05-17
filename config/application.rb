@@ -36,5 +36,9 @@ module Myapp
 
     # Use both Propshaft and Sprockets
     config.assets.enabled = true
-    config.sass.load_paths << Rails.root.join('node_modules')  end
+    config.sass.load_paths << Rails.root.join('node_modules')
+
+    # Enable Rack Attack for DDOS protection
+    config.middleware.use Rack::Attack
+  end
 end

@@ -84,4 +84,11 @@ Rails.application.configure do
     )
     env.export_concurrent = false
   end
+
+  # Configure SSL in development
+  # config.force_ssl = true
+  # config.ssl_options = {
+  #   hsts: { subdomains: true },
+  #   secure_cookies: true
+  # }
 end

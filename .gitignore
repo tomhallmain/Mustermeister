@@ -39,3 +39,7 @@ i
 /node_modules
 
 /coverage/*
+
+*.pem
+*.crt
+*.key

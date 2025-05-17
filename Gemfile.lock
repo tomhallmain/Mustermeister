@@ -79,6 +79,8 @@ GEM
     addressable (2.8.7)
       public_suffix (>= 2.0.2, < 7.0)
     ast (2.4.2)
+    attr_encrypted (4.2.0)
+      encryptor (~> 3.0.0)
     base64 (0.2.0)
     bcrypt (3.1.20)
     bcrypt_pbkdf (1.1.1)
@@ -102,6 +104,7 @@ GEM
       xpath (~> 3.2)
     concurrent-ruby (1.3.5)
     connection_pool (2.5.0)
+    content_disposition (1.0.0)
     crass (1.0.6)
     csv (3.3.2)
     database_consistency (2.0.4)
@@ -116,10 +119,18 @@ GEM
       railties (>= 4.1.0)
       responders
       warden (~> 1.2.3)
+    devise-two-factor (6.1.0)
+      activesupport (>= 7.0, < 8.1)
+      devise (~> 4.0)
+      railties (>= 7.0, < 8.1)
+      rotp (~> 6.0)
     docile (1.4.1)
     dotenv (3.1.7)
+    down (5.4.2)
+      addressable (~> 2.8)
     drb (2.2.1)
     ed25519 (1.3.0)
+    encryptor (3.0.0)
     erubi (1.13.1)
     et-orbi (1.2.11)
       tzinfo
@@ -234,6 +245,8 @@ GEM
     raabro (1.4.0)
     racc (1.8.1)
     rack (3.1.12)
+    rack-attack (6.7.0)
+      rack (>= 1.0, < 4)
     rack-session (2.1.0)
       base64 (>= 0.1.0)
       rack (>= 3.0.0)
@@ -281,6 +294,10 @@ GEM
     rake (13.2.1)
     rdoc (6.12.0)
       psych (>= 4.0.0)
+    redis (5.4.0)
+      redis-client (>= 0.22.0)
+    redis-client (0.24.0)
+      connection_pool
     regexp_parser (2.10.0)
     reline (0.6.0)
       io-console (~> 0.5)
@@ -290,6 +307,7 @@ GEM
       actionpack (>= 5.2)
       railties (>= 5.2)
     rexml (3.4.1)
+    rotp (6.3.0)
     rubocop (1.74.0)
       json (~> 2.3)
       language_server-protocol (~> 3.17.0.2)
@@ -330,6 +348,7 @@ GEM
     scenic (1.8.0)
       activerecord (>= 4.0.0)
       railties (>= 4.0.0)
+    secure_headers (7.1.0)
     securerandom (0.4.1)
     selenium-webdriver (4.29.1)
       base64 (~> 0.2)
@@ -337,6 +356,9 @@ GEM
       rexml (~> 3.2, >= 3.2.5)
       rubyzip (>= 1.2.2, < 3.0)
       websocket (~> 1.0)
+    shrine (3.6.0)
+      content_disposition (~> 1.0)
+      down (~> 5.1)
     simplecov (0.22.0)
       docile (~> 1.1)
       simplecov-html (~> 0.11)
@@ -421,6 +443,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
+  attr_encrypted
   bcrypt (~> 3.1.7)
   bootsnap
   brakeman
@@ -428,6 +451,7 @@ DEPENDENCIES
   database_consistency
   debug
   devise
+  devise-two-factor
   importmap-rails
   jbuilder
   jsbundling-rails
@@ -437,12 +461,16 @@ DEPENDENCIES
   pg (~> 1.1)
   propshaft
   puma (>= 5.0)
+  rack-attack
   rails (~> 8.0.2)
   rails_admin (~> 3.3.0)
+  redis (>= 4.0.1)
   rubocop-rails-omakase
   sassc-rails
   scenic
+  secure_headers
   selenium-webdriver
+  shrine
   simplecov
   solid_cable
   solid_cache
