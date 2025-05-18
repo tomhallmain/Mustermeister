@@ -1,8 +1,8 @@
 # Name of your application. Used to uniquely configure containers.
-service: myapp
+service: mustermeister
 
 # Name of the container image.
-image: your-user/myapp
+image: your-user/mustermeister
 
 # Deploy to these servers.
 servers:
@@ -35,6 +35,9 @@ registry:
 env:
   secret:
     - RAILS_MASTER_KEY
+    - DATABASE_URL
+    - SECRET_KEY_BASE
+    - DEVISE_SECRET_KEY
   clear:
     # Run the Solid Queue Supervisor inside the web server's Puma process to do jobs.
     # When you start using multiple servers, you should split out job processing to a dedicated machine.
@@ -61,11 +64,10 @@ aliases:
   logs: app logs -f
   dbc: app exec --interactive --reuse "bin/rails dbconsole"
 
-
 # Use a persistent storage volume for sqlite database files and local Active Storage files.
 # Recommended to change this to a mounted volume path that is backed up off server.
 volumes:
-  - "myapp_storage:/rails/storage"
+  - "mustermeister_storage:/rails/storage"
 
 
 # Bridge fingerprinted assets, like JS and CSS, between versions to avoid
@@ -114,3 +116,11 @@ builder:
 #     port: 6379
 #     directories:
 #       - data:/data
+
+healthcheck:
+  path: /up
+  port: 3000
+  max_attempts: 10
+  interval: 5s
+  timeout: 3s
+  grace_period: 10s
