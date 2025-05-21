@@ -155,4 +155,46 @@ class TaskManagementService
   rescue ActiveRecord::RecordInvalid => e
     raise Error, "Failed to reschedule project tasks: #{e.message}"
   end
+
+  def self.reprioritize_project_tasks(project:, current_user:)
+    raise Error, "Project cannot be nil" if project.nil?
+    return 0 if project.default_priority.nil?
+
+    ApplicationRecord.transaction do
+      tasks = project.tasks.not_archived.includes(:comments)
+      updated_count = 0
+      
+      tasks.find_each do |task|
+        next if task.priority == project.default_priority # Skip tasks that already match
+
+        task.paper_trail_event = 'project_reprioritize'
+        task.update!(
+          priority: project.default_priority,
+          updated_at: Time.current
+        )
+        
+        # Create an audit comment
+        Comment.create!(
+          task: task,
+          user: current_user,
+          content: "Priority updated to #{project.default_priority} to match project default",
+          status: 'resolved'
+        )
+        
+        updated_count += 1
+      end
+      
+      if updated_count > 0 && defined?(NotificationService)
+        NotificationService.project_reprioritize_completed(
+          project: project,
+          tasks_updated: updated_count,
+          user: current_user
+        )
+      end
+      
+      return updated_count
+    end
+  rescue ActiveRecord::RecordInvalid => e
+    raise Error, "Failed to reprioritize project tasks: #{e.message}"
+  end
 end 

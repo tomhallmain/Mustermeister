@@ -40,6 +40,20 @@
         <%= link_to 'View Report', report_project_path(@project), 
             class: 'bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded shadow-md' %>
 
+        <%= button_to reprioritize_project_path(@project), 
+            method: :post,
+            class: 'bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded shadow-md',
+            data: { 
+              confirm: "Are you sure you want to update all task priorities to match the project's default priority (#{@project.default_priority&.capitalize || 'Medium'})? This action cannot be undone."
+            } do %>
+          <div class="flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+            <span>Reprioritize Tasks</span>
+          </div>
+        <% end %>
+
         <%# Completely disable Turbo for this link to prevent double requests %>
         <%= link_to project_path(@project, show_completed: !show_completed),
             class: "flex items-center space-x-2 px-4 py-2 rounded-md #{show_completed ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'} hover:bg-opacity-80",

@@ -18,6 +18,15 @@ two:
   last_activity_at: <%= Time.current %>
   default_priority: "medium"
 
+reprioritize_test:
+  title: "Project for Reprioritize Test"
+  description: "A project specifically for testing task reprioritization"
+  user: one
+  default_priority: medium
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+  last_activity_at: <%= Time.current %>
+
 sorting_test_project:
   title: "Sorting Test Project"
   description: "Project for testing task sorting"

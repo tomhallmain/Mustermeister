@@ -2,7 +2,7 @@ class ProjectsController < ApplicationController
   TASKS_PER_PAGE = 15
 
   before_action :initialize_show_completed_prefs
-  before_action :set_project, only: [:show, :edit, :update, :destroy, :report]
+  before_action :set_project, only: [:show, :edit, :update, :destroy, :report, :reprioritize]
 
   def index
     @projects = current_user.projects.includes(:tasks)
@@ -123,6 +123,25 @@ class ProjectsController < ApplicationController
   def destroy
     @project.destroy
     redirect_to projects_path, notice: 'Project was successfully deleted.'
+  end
+
+  def reprioritize
+    begin
+      updated_count = TaskManagementService.reprioritize_project_tasks(
+        project: @project,
+        current_user: current_user
+      )
+      
+      notice = if updated_count > 0
+        "Successfully updated #{updated_count} tasks to match project's default priority."
+      else
+        "No tasks needed priority updates."
+      end
+      
+      redirect_to project_path(@project), notice: notice
+    rescue TaskManagementService::Error => e
+      redirect_to project_path(@project), alert: "Failed to reprioritize tasks: #{e.message}"
+    end
   end
 
   private

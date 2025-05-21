@@ -32,6 +32,7 @@ Rails.application.routes.draw do
     resources :tasks, shallow: true
     member do
       get 'report'
+      post 'reprioritize'
     end
     collection do
       get 'all_reports'

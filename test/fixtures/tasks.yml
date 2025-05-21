@@ -23,3 +23,25 @@ two:
   user: one
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+reprioritize_high:
+  title: "High Priority Task for Reprioritize Test"
+  description: "A high priority task for testing reprioritization"
+  priority: high
+  completed: false
+  archived: false
+  project: reprioritize_test
+  user: one
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+reprioritize_low:
+  title: "Low Priority Task for Reprioritize Test"
+  description: "A low priority task for testing reprioritization"
+  priority: low
+  completed: false
+  archived: false
+  project: reprioritize_test
+  user: one
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
