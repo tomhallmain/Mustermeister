@@ -8,12 +8,7 @@ class ProjectPaginationTest < ActionDispatch::IntegrationTest
     @project = projects(:two)  # Use a different fixture project to avoid conflicts with other tests
     @verbose = false # Enable debug output
     
-    # Setup PaperTrail for tests
-    PaperTrail.request.whodunnit = @user.id
-    PaperTrail.request.controller_info = {
-      ip: "127.0.0.1",
-      user_agent: "Rails Testing"
-    }
+    setup_paper_trail
     
     # Create enough tasks to test pagination (one more than the per_page limit)
     (TASKS_PER_PAGE + 1).times do |i|
@@ -35,9 +30,7 @@ class ProjectPaginationTest < ActionDispatch::IntegrationTest
   end
   
   def teardown
-    # Reset PaperTrail 
-    PaperTrail.request.whodunnit = nil
-    PaperTrail.request.controller_info = {}
+    teardown_paper_trail
   end
 
   test "pagination works with show_completed preference" do

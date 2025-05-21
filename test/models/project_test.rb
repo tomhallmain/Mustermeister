@@ -6,11 +6,11 @@ class ProjectTest < ActiveSupport::TestCase
     @project = projects(:one)
 
     # Simulate controller context for PaperTrail
-    PaperTrail.request.whodunnit = @user.id
-    PaperTrail.request.controller_info = {
-      ip: "192.168.1.1",
-      user_agent: "TestAgent"
-    }
+    setup_paper_trail(ip: "192.168.1.1", user_agent: "TestAgent")
+  end
+
+  def teardown
+    teardown_paper_trail
   end
 
   test "should be valid" do

@@ -11,12 +11,7 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     @project = projects(:one)
     sign_in_as(@user, skip_redirect: true)
     
-    # Setup PaperTrail for controller tests
-    PaperTrail.request.whodunnit = @user.id
-    PaperTrail.request.controller_info = {
-      ip: "127.0.0.1",
-      user_agent: "Rails Testing"
-    }
+    setup_paper_trail
   end
 
   def teardown
@@ -25,9 +20,7 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
       layout 'application'
     end
     
-    # Reset PaperTrail 
-    PaperTrail.request.whodunnit = nil
-    PaperTrail.request.controller_info = {}
+    teardown_paper_trail
   end
 
   test "should get index" do

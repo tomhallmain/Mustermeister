@@ -6,12 +6,7 @@ class TaskSortingTest < ActionDispatch::IntegrationTest
     @user = users(:sorting_test_user)
     @project = projects(:sorting_test_project)
     
-    # Setup PaperTrail for tests
-    PaperTrail.request.whodunnit = @user.id
-    PaperTrail.request.controller_info = {
-      ip: "127.0.0.1",
-      user_agent: "Rails Testing"
-    }
+    setup_paper_trail
     
     # Clear any existing tasks for this project to ensure clean state
     @project.tasks.destroy_all
@@ -63,9 +58,7 @@ class TaskSortingTest < ActionDispatch::IntegrationTest
   end
   
   def teardown
-    # Reset PaperTrail 
-    PaperTrail.request.whodunnit = nil
-    PaperTrail.request.controller_info = {}
+    teardown_paper_trail
   end
 
   test "tasks are sorted by updated_at with fallback to created_at" do

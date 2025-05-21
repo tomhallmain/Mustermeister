@@ -15,18 +15,11 @@ class TaskCreationTest < ActionDispatch::IntegrationTest
     }
     follow_redirect!
     
-    # Setup PaperTrail for tests
-    PaperTrail.request.whodunnit = @user.id
-    PaperTrail.request.controller_info = {
-      ip: "127.0.0.1",
-      user_agent: "Rails Testing"
-    }
+    setup_paper_trail
   end
   
   def teardown
-    # Reset PaperTrail 
-    PaperTrail.request.whodunnit = nil
-    PaperTrail.request.controller_info = {}
+    teardown_paper_trail
   end
 
   test "should inherit project default priority when creating a task" do

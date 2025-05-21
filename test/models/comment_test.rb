@@ -8,16 +8,11 @@ class CommentTest < ActiveSupport::TestCase
     @comment = comments(:one)
 
     # Simulate controller context for PaperTrail
-    PaperTrail.request.whodunnit = @user.id
-    PaperTrail.request.controller_info = {
-      ip: "192.168.1.1",
-      user_agent: "TestAgent"
-    }
+    setup_paper_trail(ip: "192.168.1.1", user_agent: "TestAgent")
   end
 
   def teardown
-    PaperTrail.request.whodunnit = nil
-    PaperTrail.request.controller_info = {}
+    teardown_paper_trail
   end
 
   test "should be valid" do

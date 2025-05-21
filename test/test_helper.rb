@@ -29,6 +29,24 @@ class ActiveSupport::TestCase
   def debug(message)
     puts message if @verbose
   end
+
+  def setup_paper_trail(user = nil, ip: "127.0.0.1", user_agent: "Rails Testing")
+    user ||= @user
+    PaperTrail.request.whodunnit = user.id
+    PaperTrail.request.controller_info = {
+      ip: ip,
+      user_agent: user_agent
+    }
+    
+    debug "PaperTrail setup:"
+    debug "whodunnit: #{PaperTrail.request.whodunnit}"
+    debug "controller_info: #{PaperTrail.request.controller_info.inspect}"
+  end
+
+  def teardown_paper_trail
+    PaperTrail.request.whodunnit = nil
+    PaperTrail.request.controller_info = {}
+  end
 end
 
 class ActionDispatch::IntegrationTest
@@ -61,5 +79,23 @@ class ActionDispatch::IntegrationTest
 
   def debug(message)
     puts message if @verbose
+  end
+
+  def setup_paper_trail(user = nil, ip: "127.0.0.1", user_agent: "Rails Testing")
+    user ||= @user
+    PaperTrail.request.whodunnit = user.id
+    PaperTrail.request.controller_info = {
+      ip: ip,
+      user_agent: user_agent
+    }
+    
+    debug "PaperTrail setup:"
+    debug "whodunnit: #{PaperTrail.request.whodunnit}"
+    debug "controller_info: #{PaperTrail.request.controller_info.inspect}"
+  end
+
+  def teardown_paper_trail
+    PaperTrail.request.whodunnit = nil
+    PaperTrail.request.controller_info = {}
   end
 end
