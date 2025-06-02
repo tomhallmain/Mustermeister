@@ -33,6 +33,28 @@ class ProjectPaginationTest < ActionDispatch::IntegrationTest
     teardown_paper_trail
   end
 
+  test "default priority is displayed correctly" do
+    get project_path(@project)
+    assert_redirected_to project_path(@project, show_completed: false)
+    
+    # Follow the redirect
+    get response.location
+    assert_response :success
+    
+    # Find the priority tag
+    priority_tag = css_select("span:contains('#{@project.default_priority.capitalize}')").first
+    assert_not_nil priority_tag, "Priority tag not found"
+    
+    # Verify the correct CSS classes are applied based on priority
+    expected_classes = case @project.default_priority
+                      when 'high' then 'bg-red-100 text-red-800'
+                      when 'medium' then 'bg-yellow-100 text-yellow-800'
+                      else 'bg-green-100 text-green-800'
+                      end
+    
+    assert_includes priority_tag['class'], expected_classes, "Priority tag has incorrect styling"
+  end
+
   test "pagination works with show_completed preference" do
     # First page with completed tasks hidden
     get project_path(@project, show_completed: false)

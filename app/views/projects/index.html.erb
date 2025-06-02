@@ -15,14 +15,24 @@
             <h2 class="text-base font-semibold text-gray-900">
               <%= link_to project.title, project_path(project), class: "hover:text-blue-600" %>
             </h2>
-            <span class="px-2 py-0.5 text-xs rounded-full
-              <%= case project.status
-                  when 'completed' then 'bg-green-100 text-green-800'
-                  when 'in_progress' then 'bg-blue-100 text-blue-800'
-                  else 'bg-gray-100 text-gray-800'
-                  end %>">
-              <%= project.status.titleize %>
-            </span>
+            <div class="flex space-x-2">
+              <span class="px-2 py-0.5 text-xs rounded-full
+                <%= case project.status
+                    when 'completed' then 'bg-green-100 text-green-800'
+                    when 'in_progress' then 'bg-blue-100 text-blue-800'
+                    else 'bg-gray-100 text-gray-800'
+                    end %>">
+                <%= project.status.titleize %>
+              </span>
+              <span class="px-2 py-0.5 text-xs rounded-full
+                <%= case project.default_priority
+                    when 'high' then 'bg-red-100 text-red-800'
+                    when 'medium' then 'bg-yellow-100 text-yellow-800'
+                    else 'bg-green-100 text-green-800'
+                    end %>">
+                <%= project.default_priority&.capitalize %>
+              </span>
+            </div>
           </div>
           
           <p class="mt-1 text-gray-600 text-xs whitespace-pre-line"><%= project.description %></p>
