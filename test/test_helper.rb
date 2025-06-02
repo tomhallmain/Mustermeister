@@ -5,6 +5,7 @@ ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
 require "minitest/mock"
+require "capybara/rails"
 
 class ActiveSupport::TestCase
   # Run tests in parallel with specified workers
@@ -50,6 +51,14 @@ class ActiveSupport::TestCase
 end
 
 class ActionDispatch::IntegrationTest
+  # Make the Capybara DSL available in all integration tests
+  include Capybara::DSL
+
+  # Reset sessions between tests
+  teardown do
+    Capybara.reset_sessions!
+  end
+
   def sign_in_as(user, skip_redirect: false, format: :html)
     if skip_redirect
       # Force JSON format to skip HTML/CSS rendering
@@ -65,15 +74,24 @@ class ActionDispatch::IntegrationTest
       # Directly set the authentication token or session (if using Devise)
       @controller.sign_in(user) if defined?(@controller)
     else
+      # Ensure session is maintained for Capybara
       post user_session_path, params: { 
         user: { 
           email: user.email, 
           password: 'password' 
         } 
-      }, as: format
+      }
       assert_response :redirect
       follow_redirect!
       assert_response :success
+      
+      # Copy the session to Capybara's rack_test driver
+      if Capybara.current_driver == :rack_test
+        Capybara.current_session.driver.browser.set_cookie(
+          "rack.session",
+          @request.session.to_hash.to_json
+        )
+      end
     end
   end
 
@@ -99,3 +117,7 @@ class ActionDispatch::IntegrationTest
     PaperTrail.request.controller_info = {}
   end
 end
+
+# Configure Capybara to use rack_test driver
+Capybara.default_driver = :rack_test
+Capybara.javascript_driver = :rack_test

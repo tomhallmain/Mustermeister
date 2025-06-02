@@ -133,4 +133,23 @@ class ProjectPaginationTest < ActionDispatch::IntegrationTest
     # Verify preference is maintained
     assert_equal true, session[:projects_show_completed][@project.id.to_s]
   end
+
+  test "search functionality works with relevance ordering" do
+    # Search for "muse"
+    get projects_path(search: "muse")
+    assert_response :success
+    
+    # Get all project titles in order
+    project_titles = css_select(".text-base.font-semibold").map(&:text)
+    
+    # Verify ordering:
+    # 1. "Museum Project" should be first (starts with search term)
+    assert_equal "Museum Project", project_titles.first.strip
+    # 2. "My Museum" should be second (search term at start of a word)
+    assert_equal "My Museum", project_titles[1].strip
+    # 3. "The Amazing Project" and "The Great Project" should be last (search term only in description)
+    assert_includes ["The Amazing Project", "The Great Project"], project_titles[2].strip
+    assert_includes ["The Amazing Project", "The Great Project"], project_titles[3].strip
+    assert_not_equal project_titles[2], project_titles[3], "Should have different projects in last two positions"
+  end
 end 

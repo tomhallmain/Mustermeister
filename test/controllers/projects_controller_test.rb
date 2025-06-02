@@ -233,4 +233,36 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to project_path(project)
     assert_match(/Failed to reprioritize tasks/, flash[:alert])
   end
+
+  test "should search projects by title and description" do
+    # Create projects with different search patterns
+    Project.create!(
+      title: "Museum Project",
+      description: "A project about museums",
+      user: @user
+    )
+    Project.create!(
+      title: "Art Gallery",
+      description: "A museum of modern art",
+      user: @user
+    )
+    
+    # Search for "muse"
+    get projects_path(search: "muse")
+    assert_response :success
+    
+    # Should find both projects
+    assert_select ".text-base.font-semibold", count: 2
+    assert_select ".text-base.font-semibold", "Museum Project"
+    assert_select ".text-base.font-semibold", "Art Gallery"
+  end
+  
+  test "should handle empty search results" do
+    # Search for non-existent term
+    get projects_path(search: "nonexistent")
+    assert_response :success
+    
+    # Should show no projects
+    assert_select ".text-base.font-semibold", count: 0
+  end
 end 

@@ -45,3 +45,53 @@ reprioritize_low:
   user: one
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+search_test_one:
+  title: "Zebra Task"
+  description: "A task about zebras"
+  user: one
+  project: one
+  completed: false
+  priority: medium
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+search_test_two:
+  title: "My Zebra"
+  description: "A task with zebra in the middle"
+  user: one
+  project: one
+  completed: false
+  priority: medium
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+search_test_three:
+  title: "The Amazing Task"
+  description: "A task about the zebra"
+  user: one
+  project: one
+  completed: false
+  priority: medium
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+search_test_four:
+  title: "The Great Task"
+  description: "A task about the zebra"
+  user: one
+  project: one
+  completed: false
+  priority: medium
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+search_test_completed:
+  title: "Completed Zebra Task"
+  description: "A completed task about zebras"
+  user: one
+  project: one
+  completed: true
+  priority: medium
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

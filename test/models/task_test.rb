@@ -110,4 +110,16 @@ class TaskTest < ActiveSupport::TestCase
     assert_nil Task.find_by(id: task.id)
     assert_empty Comment.where(task_id: task.id)
   end
+
+  test "should be searchable by title and description" do
+    # Search for "zeb" which should only match our specific test fixtures
+    results = Task.where("title ILIKE ? OR description ILIKE ?", "%zeb%", "%zeb%")
+    
+    # Should find all four search test fixtures
+    assert_equal 5, results.count
+    assert_includes results, tasks(:search_test_one)
+    assert_includes results, tasks(:search_test_two)
+    assert_includes results, tasks(:search_test_three)
+    assert_includes results, tasks(:search_test_four)
+  end
 end

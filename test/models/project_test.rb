@@ -128,4 +128,14 @@ class ProjectTest < ActiveSupport::TestCase
     end
     assert_equal initial_comment_count - 1, Comment.count
   end
+
+  test "should be searchable by title and description" do
+    # Search for "xylo" which should only match our specific test fixtures
+    results = Project.where("title ILIKE ? OR description ILIKE ?", "%xylo%", "%xylo%")
+    
+    # Should find both model search fixtures
+    assert_equal 2, results.count
+    assert_includes results, projects(:model_search_one)
+    assert_includes results, projects(:model_search_two)
+  end
 end

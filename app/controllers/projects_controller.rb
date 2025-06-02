@@ -1,4 +1,5 @@
 class ProjectsController < ApplicationController
+  PROJECTS_PER_PAGE = 12
   TASKS_PER_PAGE = 15
 
   before_action :initialize_show_completed_prefs
@@ -6,8 +7,24 @@ class ProjectsController < ApplicationController
 
   def index
     @projects = current_user.projects.includes(:tasks)
-                          .order(last_activity_at: :desc)
-                          .page(params[:page]).per(12)
+    
+    if params[:search].present?
+      search_term = params[:search]
+      @projects = @projects.where("title ILIKE ? OR description ILIKE ?", 
+                                "%#{search_term}%", 
+                                "%#{search_term}%")
+                          .order(Arel.sql("
+                            CASE 
+                              WHEN title ILIKE '#{search_term}%' THEN 1
+                              WHEN title ILIKE '% #{search_term}%' THEN 2
+                              ELSE 3
+                            END,
+                            last_activity_at DESC"))
+    else
+      @projects = @projects.order(last_activity_at: :desc)
+    end
+    
+    @projects = @projects.page(params[:page]).per(PROJECTS_PER_PAGE)
   end
 
   def report

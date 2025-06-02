@@ -31,8 +31,24 @@ class TasksController < ApplicationController
     # Now load the tasks based on the current preference
     @tasks = current_user.tasks.not_archived.includes(:project, :tags)
     @tasks = @tasks.not_completed unless current_preference
-    @tasks = @tasks.order(Arel.sql('COALESCE(updated_at, created_at) DESC, created_at DESC'))
-                   .page(params[:page]).per(TASKS_PER_PAGE)
+
+    if params[:search].present?
+      search_term = params[:search]
+      @tasks = @tasks.where("title ILIKE ? OR description ILIKE ?", 
+                           "%#{search_term}%", 
+                           "%#{search_term}%")
+                     .order(Arel.sql("
+                       CASE 
+                         WHEN title ILIKE '#{search_term}%' THEN 1
+                         WHEN title ILIKE '% #{search_term}%' THEN 2
+                         ELSE 3
+                       END,
+                       COALESCE(updated_at, created_at) DESC, created_at DESC"))
+    else
+      @tasks = @tasks.order(Arel.sql('COALESCE(updated_at, created_at) DESC, created_at DESC'))
+    end
+    
+    @tasks = @tasks.page(params[:page]).per(TASKS_PER_PAGE)
   end
 
   def show

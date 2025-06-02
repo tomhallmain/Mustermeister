@@ -114,4 +114,32 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     @task.reload
     assert @task.archived
   end
+
+  test "should search tasks by title and description" do
+    # Search for "zeb" which should match our search test fixtures
+    get tasks_path(search: "zeb", show_completed: false)
+    assert_response :success
+    
+    # Verify all search results are present
+    assert_select ".task-item", 4
+    assert_select ".task-item", text: /Zebra Task/
+    assert_select ".task-item", text: /My Zebra/
+    assert_select ".task-item", text: /The Amazing Task/
+    assert_select ".task-item", text: /The Great Task/
+  end
+
+  test "should combine search with show_completed filter" do
+    # Mark one of the search tasks as completed
+    tasks(:search_test_one).update!(completed: true)
+    
+    # Search with completed tasks hidden
+    get tasks_path(search: "zeb", show_completed: false)
+    assert_response :success
+    assert_select ".task-item", 3
+    
+    # Search with completed tasks shown
+    get tasks_path(search: "zeb", show_completed: true)
+    assert_response :success
+    assert_select ".task-item", 5
+  end
 end 

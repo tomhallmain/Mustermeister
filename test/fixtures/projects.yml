@@ -35,3 +35,57 @@ sorting_test_project:
   updated_at: <%= Time.current %>
   last_activity_at: <%= Time.current %>
   default_priority: "medium"
+
+search_test_one:
+  title: "Museum Project"
+  description: "A project about museums"
+  user: two
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+  last_activity_at: <%= Time.current %>
+  default_priority: "medium"
+
+search_test_two:
+  title: "My Museum"
+  description: "A project with museum in the middle"
+  user: two
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+  last_activity_at: <%= Time.current %>
+  default_priority: "medium"
+
+search_test_three:
+  title: "The Amazing Project"
+  description: "A project about the museum"
+  user: two
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+  last_activity_at: <%= Time.current %>
+  default_priority: "medium"
+
+search_test_four:
+  title: "The Great Project"
+  description: "A project about the museum"
+  user: two
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+  last_activity_at: <%= Time.current %>
+  default_priority: "medium"
+
+model_search_one:
+  title: "Xylophone Project"
+  description: "A project about xylophones"
+  user: one
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+  last_activity_at: <%= Time.current %>
+  default_priority: "medium"
+
+model_search_two:
+  title: "My Xylophone"
+  description: "A project with xylophone in the middle"
+  user: one
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+  last_activity_at: <%= Time.current %>
+  default_priority: "medium"
