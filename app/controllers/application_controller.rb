@@ -23,4 +23,10 @@ class ApplicationController < ActionController::Base
     end
     session[:last_seen_at] = Time.current
   end
+
+  def handle_unverified_request
+    sign_out current_user if current_user
+    flash[:alert] = "Your session has expired. Please sign in again."
+    redirect_to new_user_session_path
+  end
 end
