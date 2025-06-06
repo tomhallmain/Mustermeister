@@ -16,7 +16,7 @@ class ApplicationController < ActionController::Base
   private
 
   def set_session_timeout
-    if current_user && session[:last_seen_at] && session[:last_seen_at] < 30.minutes.ago
+    if current_user && session[:last_seen_at] && session[:last_seen_at] < 1.hours.ago
       sign_out current_user
       flash[:alert] = "Your session has expired. Please sign in again."
       redirect_to new_user_session_path
