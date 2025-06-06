@@ -1,5 +1,7 @@
 require "test_helper"
 
+# TODO replace with capybara tests in "copy" file in this directory
+
 class TaskPaginationTest < ActionDispatch::IntegrationTest
   TASKS_PER_PAGE = TasksController::TASKS_PER_PAGE
   
