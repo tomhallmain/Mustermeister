@@ -3,23 +3,6 @@
     <div class="flex justify-between items-start">
       <div>
         <h1 class="text-2xl font-bold text-gray-900"><%= @project.title %></h1>
-        <p class="mt-1 text-gray-600 text-sm whitespace-pre-line"><%= @project.description %></p>
-        <div class="mt-2 text-xs text-gray-500">
-          Created: <%= @project.created_at.strftime("%B %d, %Y at %I:%M %p") %>
-          <% if @project.updated_at != @project.created_at %>
-            <br>Last Updated: <%= @project.updated_at.strftime("%B %d, %Y at %I:%M %p") %>
-          <% end %>
-        </div>
-        <div class="mt-2">
-          <span class="text-sm px-2 py-1 rounded-full
-            <%= case @project.default_priority
-                when 'high' then 'bg-red-100 text-red-800'
-                when 'medium' then 'bg-yellow-100 text-yellow-800'
-                else 'bg-green-100 text-green-800'
-                end %>">
-            Default Priority: <%= @project.default_priority&.capitalize || 'Medium' %>
-          </span>
-        </div>
       </div>
       <div class="flex space-x-4">
         <%= link_to 'Edit Project', edit_project_path(@project), 
@@ -62,6 +45,43 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
           </svg>
           <span><%= show_completed ? 'Hide Completed' : 'Show Completed' %></span>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="flex justify-between items-start mt-4">
+      <div class="flex items-center gap-4">
+        <p class="text-gray-600 text-sm whitespace-pre-line"><%= @project.description %></p>
+        <div class="text-xs text-gray-500">
+          Created: <%= @project.created_at.strftime("%B %d, %Y at %I:%M %p") %>
+          <% if @project.updated_at != @project.created_at %>
+            <br>Last Updated: <%= @project.updated_at.strftime("%B %d, %Y at %I:%M %p") %>
+          <% end %>
+        </div>
+        <div>
+          <span class="text-sm px-2 py-1 rounded-full
+            <%= case @project.default_priority
+                when 'high' then 'bg-red-100 text-red-800'
+                when 'medium' then 'bg-yellow-100 text-yellow-800'
+                else 'bg-green-100 text-green-800'
+                end %>">
+            Default Priority: <%= @project.default_priority&.capitalize || 'Medium' %>
+          </span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 ml-8 flex-1">
+        <%= form_with url: project_path(@project), method: :get, class: "flex gap-2 w-full", data: { turbo: false } do |f| %>
+          <div class="flex-1">
+            <%= f.text_field :search, 
+                placeholder: "Search tasks...", 
+                value: params[:search],
+                class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+          </div>
+          <%= f.hidden_field :show_completed, value: show_completed %>
+          <%= f.submit "Search", class: "bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-1.5 px-3 rounded" %>
+          <% if params[:search].present? %>
+            <%= link_to "Clear", project_path(@project, show_completed: show_completed), class: "bg-gray-500 hover:bg-gray-700 text-white text-sm font-bold py-1.5 px-3 rounded" %>
+          <% end %>
         <% end %>
       </div>
     </div>

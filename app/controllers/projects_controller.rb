@@ -40,6 +40,22 @@ class ProjectsController < ApplicationController
   end
 
   def show
+    @tasks = @project.tasks
+
+    if params[:search].present?
+      search_term = params[:search]
+      @tasks = @tasks.where("title ILIKE ? OR description ILIKE ?", 
+                           "%#{search_term}%", 
+                           "%#{search_term}%")
+                     .order(Arel.sql("
+                       CASE 
+                         WHEN title ILIKE '#{search_term}%' THEN 1
+                         WHEN title ILIKE '% #{search_term}%' THEN 2
+                         ELSE 3
+                       END,
+                       created_at DESC"))
+    end
+
     # Initialize preferences for this project if not already set
     session[:projects_show_completed] ||= {}
     
@@ -54,15 +70,12 @@ class ProjectsController < ApplicationController
     # If show_completed param is present, update the session preference
     if params[:show_completed].present?
       show_completed = params[:show_completed] == 'true'
-      Rails.logger.debug "UPDATING session to: #{show_completed.inspect}"
       session[:projects_show_completed][@project.id.to_s] = show_completed
     end
     
     # Get the current stored preference (default to false if nil)
     stored_preference = session[:projects_show_completed][@project.id.to_s]
     stored_preference = false if stored_preference.nil?
-    
-    Rails.logger.debug "STORED preference: #{stored_preference.inspect}"
     
     # If no param and we have a stored preference, redirect to include it
     if params[:show_completed].nil?
@@ -72,17 +85,11 @@ class ProjectsController < ApplicationController
       return
     end
     
-    # Add more debug info for the params
-    Rails.logger.debug "Request referrer: #{request.referrer.inspect}"
-    Rails.logger.debug "Request headers: #{request.headers.env.select {|k,v| k.start_with?('HTTP_')}.inspect}"
-    
     # Current preference is from params (already stored in session above)
     current_preference = params[:show_completed] == 'true'
     
-    Rails.logger.debug "CURRENT preference for tasks: #{current_preference.inspect}"
-    
     # Now load the tasks based on the current preference
-    @tasks = @project.tasks.includes(:tags, :user)
+    @tasks = @tasks.includes(:tags, :user)
     @tasks = @tasks.not_completed unless current_preference
     @tasks = @tasks.order(Arel.sql('COALESCE(updated_at, created_at) DESC, created_at DESC'))
                    .page(params[:page]).per(TASKS_PER_PAGE)

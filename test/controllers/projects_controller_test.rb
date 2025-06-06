@@ -265,4 +265,87 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     # Should show no projects
     assert_select ".text-base.font-semibold", count: 0
   end
+
+  test "searching tasks within a project finds matches in both title and description" do
+    # Create a project with some tasks
+    project = Project.create!(
+      title: "Project Show Page Search Test",
+      description: "A project for testing task search within project show page",
+      user: @user
+    )
+    
+    # Create tasks with different search patterns
+    Task.create!(
+      title: "Zebra Task",
+      description: "A task about zebras",
+      project: project,
+      user: @user
+    )
+    Task.create!(
+      title: "Regular Task",
+      description: "A task about something else",
+      project: project,
+      user: @user
+    )
+    
+    # Search for "zeb" with show_completed explicitly set to false
+    get project_path(project, search: "zeb", show_completed: false)
+    assert_response :success
+    
+    # Should only find the zebra task
+    assert_select ".task-item", count: 1
+    assert_select ".task-item", text: /Zebra Task/
+    assert_select ".task-item", text: /Regular Task/, count: 0
+  end
+
+  test "searching tasks respects show_completed preference" do
+    project = Project.create!(
+      title: "Project Show Page Completed Tasks Search",
+      description: "A project for testing completed task search within project show page",
+      user: @user
+    )
+    
+    # Create tasks with different completion states
+    Task.create!(
+      title: "Completed Zebra Task",
+      description: "A completed task about zebras",
+      project: project,
+      user: @user,
+      completed: true
+    )
+    Task.create!(
+      title: "Uncompleted Zebra Task",
+      description: "Another task about zebras",
+      project: project,
+      user: @user,
+      completed: false
+    )
+    Task.create!(
+      title: "Regular Task",
+      description: "A task about something else",
+      project: project,
+      user: @user,
+      completed: true
+    )
+    
+    # Search with show_completed=false
+    get project_path(project, search: "zeb", show_completed: false)
+    assert_response :success
+    
+    # Should only show uncompleted zebra task
+    assert_select ".task-item", count: 1
+    assert_select ".task-item", text: /Uncompleted Zebra Task/
+    assert_select ".task-item", text: /Completed Zebra Task/, count: 0
+    assert_select ".task-item", text: /Regular Task/, count: 0
+    
+    # Search with show_completed=true
+    get project_path(project, search: "zeb", show_completed: true)
+    assert_response :success
+    
+    # Should show both zebra tasks
+    assert_select ".task-item", count: 2
+    assert_select ".task-item", text: /Completed Zebra Task/
+    assert_select ".task-item", text: /Uncompleted Zebra Task/
+    assert_select ".task-item", text: /Regular Task/, count: 0
+  end
 end 
