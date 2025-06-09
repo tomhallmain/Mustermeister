@@ -2,6 +2,21 @@
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold text-gray-900">Tasks</h1>
     <div class="flex items-center space-x-4">
+      <div class="relative group">
+        <%= link_to '#', class: 'bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow-md flex items-center' do %>
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          New Task
+        <% end %>
+        <div class="absolute right-0 top-full w-64 bg-white rounded-lg shadow-lg py-2 hidden group-hover:block z-10">
+          <div class="px-4 py-2 text-sm text-gray-700 border-b border-gray-200">Select a project:</div>
+          <% Project.order(:title).each do |project| %>
+            <%= link_to project.title, new_project_task_path(project, show_completed: params[:show_completed]), 
+                class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+          <% end %>
+        </div>
+      </div>
       <%= link_to params[:show_completed] == 'true' ? tasks_path(show_completed: false) : tasks_path(show_completed: true),
           class: "flex items-center space-x-2 px-4 py-2 rounded-md #{params[:show_completed] == 'true' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'} hover:bg-opacity-80",
           data: { turbo: false } do %>
