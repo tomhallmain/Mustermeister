@@ -12,14 +12,16 @@ class Task < ApplicationRecord
   belongs_to :project
   belongs_to :user
   belongs_to :archived_by_user, class_name: 'User', foreign_key: 'archived_by', optional: true
+  belongs_to :status
   has_and_belongs_to_many :tags
   has_many :comments, dependent: :destroy
 
   validates :title, presence: true
   validates :priority, inclusion: { in: %w[low medium high] }, allow_nil: true
   validate :archived_at_presence_if_archived
+  validate :status_belongs_to_project
   
-  before_create :set_defaults
+  before_validation :set_defaults
   before_destroy :ensure_no_active_dependencies
   after_save :update_project_activity
   
@@ -34,13 +36,42 @@ class Task < ApplicationRecord
   scope :completed_before, ->(date) { completed.where('completed_at < ?', date) }
   scope :not_completed, -> { where(completed: false) }
   
+  # Status helper methods
+  def not_started?
+    status.name == Status.default_statuses[:not_started]
+  end
+
+  def to_investigate?
+    status.name == Status.default_statuses[:to_investigate]
+  end
+
+  def investigated_not_started?
+    status.name == Status.default_statuses[:investigated_not_started]
+  end
+
+  def in_progress?
+    status.name == Status.default_statuses[:in_progress]
+  end
+
+  def ready_to_test?
+    status.name == Status.default_statuses[:ready_to_test]
+  end
+
+  def closed?
+    status.name == Status.default_statuses[:closed]
+  end
+
+  def complete?
+    status.name == Status.default_statuses[:complete]
+  end
+
   # Class methods for bulk operations
-  def self.bulk_update_status(ids, status, current_user)
+  def self.bulk_update_status(ids, status_id, current_user)
     transaction do
       tasks = where(id: ids)
       tasks.each do |task|
         task.paper_trail_event = 'bulk_status_update'
-        task.update!(completed: status)
+        task.update!(status_id: status_id)
       end
       
       # Log the bulk operation
@@ -57,6 +88,7 @@ class Task < ApplicationRecord
       self.completed = true
       self.completed_at = Time.current
       self.completed_by = user.id
+      self.status = project.status_by_key(:complete)
       save!
       
       # Update any dependent records
@@ -103,6 +135,7 @@ class Task < ApplicationRecord
     self.completed ||= false
     self.priority ||= project&.default_priority || 'medium'
     self.archived ||= false
+    self.status ||= project&.status_by_key(:not_started)
   end
   
   def ensure_no_active_dependencies
@@ -115,6 +148,12 @@ class Task < ApplicationRecord
   def archived_at_presence_if_archived
     if archived? && archived_at.blank?
       errors.add(:archived_at, "must be present when task is archived")
+    end
+  end
+
+  def status_belongs_to_project
+    if status && project && status.project_id != project_id
+      errors.add(:status, "must belong to the same project")
     end
   end
   

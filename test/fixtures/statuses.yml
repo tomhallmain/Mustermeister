@@ -1,0 +1,23 @@
+project_one_not_started:
+  name: Not Started
+  project: one
+
+project_one_in_progress:
+  name: In Progress
+  project: one
+
+project_one_complete:
+  name: Complete
+  project: one
+
+project_two_not_started:
+  name: Not Started
+  project: two
+
+project_two_in_progress:
+  name: In Progress
+  project: two
+
+project_two_complete:
+  name: Complete
+  project: two 

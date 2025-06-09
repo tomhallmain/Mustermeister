@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_05_20_120000) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_09_182203) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -38,6 +38,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_20_120000) do
     t.datetime "last_activity_at"
     t.string "default_priority", default: "medium"
     t.index ["user_id"], name: "index_projects_on_user_id"
+  end
+
+  create_table "statuses", force: :cascade do |t|
+    t.string "name", null: false
+    t.bigint "project_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["project_id", "name"], name: "index_statuses_on_project_id_and_name", unique: true
+    t.index ["project_id"], name: "index_statuses_on_project_id"
   end
 
   create_table "tags", force: :cascade do |t|
@@ -69,11 +78,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_20_120000) do
     t.boolean "archived", default: false
     t.datetime "archived_at"
     t.integer "archived_by"
+    t.bigint "status_id", null: false
     t.index ["archived"], name: "index_tasks_on_archived"
     t.index ["completed", "due_date"], name: "index_tasks_on_completed_and_due_date"
     t.index ["completed_by"], name: "index_tasks_on_completed_by"
     t.index ["project_id", "completed"], name: "index_tasks_on_project_id_and_completed"
     t.index ["project_id"], name: "index_tasks_on_project_id"
+    t.index ["status_id"], name: "index_tasks_on_status_id"
     t.index ["user_id"], name: "index_tasks_on_user_id"
   end
 
@@ -110,7 +121,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_20_120000) do
   add_foreign_key "comments", "tasks"
   add_foreign_key "comments", "users"
   add_foreign_key "projects", "users"
+  add_foreign_key "statuses", "projects"
   add_foreign_key "tasks", "projects"
+  add_foreign_key "tasks", "statuses"
   add_foreign_key "tasks", "users"
   add_foreign_key "tasks", "users", column: "archived_by"
   add_foreign_key "tasks", "users", column: "completed_by"

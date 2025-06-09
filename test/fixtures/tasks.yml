@@ -9,6 +9,7 @@ one:
   archived: false
   project: one
   user: one
+  status: project_one_not_started
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
@@ -21,6 +22,7 @@ two:
   archived: false
   project: one
   user: one
+  status: project_one_not_started
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
@@ -32,6 +34,7 @@ reprioritize_high:
   archived: false
   project: reprioritize_test
   user: one
+  status: project_one_not_started
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
@@ -43,6 +46,7 @@ reprioritize_low:
   archived: false
   project: reprioritize_test
   user: one
+  status: project_one_not_started
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
@@ -53,6 +57,7 @@ search_test_one:
   project: one
   completed: false
   priority: medium
+  status: project_one_not_started
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
@@ -63,6 +68,7 @@ search_test_two:
   project: one
   completed: false
   priority: medium
+  status: project_one_not_started
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
@@ -73,6 +79,7 @@ search_test_three:
   project: one
   completed: false
   priority: medium
+  status: project_one_not_started
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
@@ -83,6 +90,7 @@ search_test_four:
   project: one
   completed: false
   priority: medium
+  status: project_one_not_started
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
@@ -93,5 +101,6 @@ search_test_completed:
   project: one
   completed: true
   priority: medium
+  status: project_one_complete
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>

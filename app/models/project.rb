@@ -11,6 +11,7 @@ class Project < ApplicationRecord
   
   has_many :tasks, dependent: :destroy
   has_many :comments, dependent: :destroy
+  has_many :statuses, dependent: :destroy
   belongs_to :user
 
   validates :title, presence: true
@@ -18,6 +19,7 @@ class Project < ApplicationRecord
   
   before_save :update_last_activity
   before_create :set_initial_activity
+  after_create :create_default_statuses
   
   scope :not_completed, -> { 
     joins(:tasks)
@@ -37,6 +39,21 @@ class Project < ApplicationRecord
     'not_started'
   end
 
+  # Helper method to find a status by its default key
+  def status_by_key(key)
+    statuses.find_by(name: Status.default_statuses[key])
+  end
+
+  # Helper method to create a task with default status
+  def create_task!(attributes = {})
+    tasks.create!(attributes.merge(status: status_by_key(:not_started)))
+  end
+
+  # Helper method to build a task with default status
+  def build_task(attributes = {})
+    tasks.build(attributes.merge(status: status_by_key(:not_started)))
+  end
+
   private
 
   def set_initial_activity
@@ -45,6 +62,12 @@ class Project < ApplicationRecord
 
   def update_last_activity
     self.last_activity_at = Time.current
+  end
+
+  def create_default_statuses
+    Status.default_statuses.each do |key, name|
+      statuses.create!(name: name)
+    end
   end
 
   # PaperTrail metadata methods

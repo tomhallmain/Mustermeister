@@ -10,6 +10,13 @@ class TaskTest < ActiveSupport::TestCase
       user: @user,
       project: @project
     )
+    @status = @project.status_by_key(:not_started)
+    @task.status = @status
+    setup_paper_trail
+  end
+
+  def teardown
+    teardown_paper_trail
   end
 
   test "should be valid" do
@@ -21,8 +28,88 @@ class TaskTest < ActiveSupport::TestCase
     assert_not @task.valid?
   end
 
+  test "priority should be valid" do
+    @task.priority = "invalid"
+    assert_not @task.valid?
+  end
+
+  test "priority can be nil" do
+    @task.priority = nil
+    assert @task.valid?
+  end
+
+  test "status should belong to same project" do
+    other_project = projects(:two)
+    other_status = Status.new(name: "Other Status", project: other_project)
+    @task.status = other_status
+    assert_not @task.valid?
+    assert_includes @task.errors[:status], "must belong to the same project"
+  end
+
+  test "status helper methods work correctly" do
+    Status.default_statuses.each do |key, name|
+      @task.status = Status.new(name: name, project: @project)
+      assert @task.send("#{key}?"), "Expected #{key}? to be true for status '#{name}'"
+    end
+  end
+
+  test "status helper methods return false for non-matching statuses" do
+    @task.status = Status.new(name: "Custom Status", project: @project)
+    assert_not @task.not_started?
+    assert_not @task.in_progress?
+    assert_not @task.complete?
+  end
+
+  test "sets default status to not_started" do
+    new_task = Task.new(
+      title: "New Task",
+      project: @project,
+      user: @user
+    )
+    assert_nil new_task.status
+    new_task.save!
+    assert_equal Status.default_statuses[:not_started], new_task.status.name
+  end
+
+  test "mark_as_complete! sets correct attributes" do
+    @task.mark_as_complete!(@user)
+    assert @task.completed
+    assert_not_nil @task.completed_at
+    assert_equal @user.id, @task.completed_by
+    assert_equal Status.default_statuses[:complete], @task.status.name
+  end
+
+  test "mark_as_complete! closes open comments" do
+    @task.save!
+    comment = @task.comments.create!(
+      content: "Test comment",
+      user: @user,
+      status: 'open'
+    )
+    @task.mark_as_complete!(@user)
+    assert_equal 'closed', comment.reload.status
+  end
+
+  test "bulk_update_status updates multiple tasks" do
+    @task.save!
+    other_task = Task.create!(
+      title: "Other Task",
+      description: "Other Description",
+      user: @user,
+      project: @project
+    )
+    new_status = Status.new(name: "New Status", project: @project)
+    new_status.save!
+
+    Task.bulk_update_status([@task.id, other_task.id], new_status.id, @user)
+    
+    [@task, other_task].each do |task|
+      assert_equal new_status, task.reload.status
+    end
+  end
+
   test "should have default values" do
-    task = Task.new(title: "New Task", user: @user)
+    task = Task.new(title: "New Task", user: @user, project: @project)
     assert_equal false, task.completed
     assert_equal 'medium', task.priority
     assert_equal false, task.archived
@@ -37,7 +124,7 @@ class TaskTest < ActiveSupport::TestCase
     )
     
     # Create a task with explicit low priority
-    task = project.tasks.build(
+    task = project.build_task(
       title: "Low Priority Task", 
       user: @user,
       priority: 'low'
@@ -53,7 +140,10 @@ class TaskTest < ActiveSupport::TestCase
     project = Project.create!(title: "Test Project", user: @user)
     assert_equal 0, project.completion_percentage
 
-    task = project.tasks.create!(title: "New Task", user: @user)
+    task = project.create_task!(
+      title: "New Task", 
+      user: @user
+    )
     assert_equal 0, project.reload.completion_percentage
 
     task.update!(completed: true)
