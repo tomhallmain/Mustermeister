@@ -20,4 +20,16 @@ project_two_in_progress:
 
 project_two_complete:
   name: Complete
-  project: two 
+  project: two
+
+reprioritize_test_not_started:
+  name: Not Started
+  project: reprioritize_test
+
+reprioritize_test_in_progress:
+  name: In Progress
+  project: reprioritize_test
+
+reprioritize_test_complete:
+  name: Complete
+  project: reprioritize_test 

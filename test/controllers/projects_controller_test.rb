@@ -43,6 +43,30 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "high", new_project.default_priority
     assert_redirected_to project_path(new_project)
   end
+
+  test "should create default statuses for new project" do
+    assert_difference('Project.count') do
+      post projects_path, params: {
+        project: {
+          title: "New Project",
+          description: "Project Description"
+        }
+      }
+    end
+
+    new_project = Project.find_by(title: "New Project")
+    
+    # Verify all default statuses were created
+    Status.default_statuses.each do |key, name|
+      assert new_project.statuses.exists?(name: name), 
+             "Expected status '#{name}' to exist for new project"
+    end
+    
+    # Verify we can find statuses by key
+    assert_not_nil new_project.status_by_key(:not_started)
+    assert_not_nil new_project.status_by_key(:in_progress)
+    assert_not_nil new_project.status_by_key(:complete)
+  end
   
   test "should default to medium priority when creating project without specified priority" do
     assert_difference('Project.count') do

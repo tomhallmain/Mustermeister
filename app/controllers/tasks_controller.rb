@@ -136,6 +136,13 @@ class TasksController < ApplicationController
   def toggle
     @task.update(completed: !@task.completed)
     
+    # Update status based on completion
+    if @task.completed
+      @task.update(status: @task.project.status_by_key(:complete))
+    else
+      @task.update(status: @task.project.status_by_key(:not_started))
+    end
+    
     # If show_completed param is present, use it for the redirect
     show_completed = if params[:show_completed].present?
                        params[:show_completed]
@@ -243,6 +250,6 @@ class TasksController < ApplicationController
 
   def task_params
     params.require(:task).permit(:title, :description, :completed, :due_date, 
-                               :priority, :project_id, tag_ids: [])
+                               :priority, :project_id, :status_id, tag_ids: [])
   end
 end 

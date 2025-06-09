@@ -53,7 +53,7 @@ class ProjectTest < ActiveSupport::TestCase
     # This test verifies that medium is used as a fallback in the Task model
     # when no default_priority is set on the project
     project = Project.create!(title: "No Priority Project", user: @user)
-    task = project.tasks.create!(title: "Task with default priority", user: @user)
+    task = project.create_task!(title: "Task with default priority", user: @user)
     
     assert_equal 'medium', task.priority
   end
@@ -71,8 +71,8 @@ class ProjectTest < ActiveSupport::TestCase
   test "should calculate completion percentage" do
     # Create a new project to avoid fixture interference
     project = Project.create!(title: "Test Project", user: @user)
-    project.tasks.create!(title: "Task 1", completed: true, user: @user)
-    project.tasks.create!(title: "Task 2", completed: false, user: @user)
+    project.create_task!(title: "Task 1", completed: true, user: @user)
+    project.create_task!(title: "Task 2", completed: false, user: @user)
     
     assert_equal 50, project.completion_percentage
   end
@@ -84,8 +84,8 @@ class ProjectTest < ActiveSupport::TestCase
 
   test "should return 100 completion percentage with all tasks completed" do
     project = Project.create!(title: "Completed Project", user: @user)
-    project.tasks.create!(title: "Task 1", completed: true, user: @user)
-    project.tasks.create!(title: "Task 2", completed: true, user: @user)
+    project.create_task!(title: "Task 1", completed: true, user: @user)
+    project.create_task!(title: "Task 2", completed: true, user: @user)
     
     assert_equal 100, project.completion_percentage
   end
@@ -98,7 +98,7 @@ class ProjectTest < ActiveSupport::TestCase
 
   test "should update last_activity_at when task is updated" do
     project = Project.create!(title: "Test Project", user: @user)
-    task = project.tasks.create!(title: "Test Task", user: @user)
+    task = project.create_task!(title: "Test Task", user: @user)
     original_activity = project.last_activity_at
     sleep(1)
     task.update!(title: "Updated Task")
@@ -109,7 +109,7 @@ class ProjectTest < ActiveSupport::TestCase
 
   test "should destroy associated tasks when destroyed" do
     project = Project.create!(title: "Test Project", user: @user)
-    task = project.tasks.create!(title: "Task", user: @user)
+    task = project.create_task!(title: "Task", user: @user)
     initial_task_count = Task.count
     
     assert_difference('Task.count', -1) do
@@ -137,5 +137,33 @@ class ProjectTest < ActiveSupport::TestCase
     assert_equal 2, results.count
     assert_includes results, projects(:model_search_one)
     assert_includes results, projects(:model_search_two)
+  end
+
+  test "completion percentage should be calculated correctly" do
+    project = Project.create!(title: "Test Project", user: @user)
+    assert_equal 0, project.completion_percentage
+
+    project.create_task!(title: "Task 1", completed: true, user: @user)
+    project.create_task!(title: "Task 2", completed: false, user: @user)
+    assert_equal 50, project.reload.completion_percentage
+  end
+
+  test "status should be completed when all tasks are completed" do
+    project = Project.create!(title: "Test Project", user: @user)
+    assert_equal "not_started", project.status
+
+    project.create_task!(title: "Task 1", completed: true, user: @user)
+    project.create_task!(title: "Task 2", completed: true, user: @user)
+    assert_equal "completed", project.reload.status
+  end
+
+  test "should update last_activity_at when task is created" do
+    project = Project.create!(title: "Test Project", user: @user)
+    initial_activity = project.last_activity_at
+    
+    travel 1.hour do
+      project.create_task!(title: "Test Task", user: @user)
+      assert project.reload.last_activity_at > initial_activity
+    end
   end
 end

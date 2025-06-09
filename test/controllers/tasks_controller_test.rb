@@ -36,7 +36,7 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to tasks_path(show_completed: false)
   end
 
-  test "should create task" do
+  test "should create task with default status" do
     assert_difference('Task.count') do
       post tasks_path, params: {
         task: {
@@ -47,7 +47,26 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to project_path(Task.last.project, show_completed: false)
+    task = Task.last
+    assert_equal "Not Started", task.status.name
+    assert_redirected_to project_path(task.project, show_completed: false)
+  end
+
+  test "should create task with specified status" do
+    assert_difference('Task.count') do
+      post tasks_path, params: {
+        task: {
+          title: "New Task",
+          description: "Task Description",
+          project_id: @project.id,
+          status_id: @project.status_by_key(:in_progress).id
+        }
+      }
+    end
+
+    task = Task.last
+    assert_equal "In Progress", task.status.name
+    assert_redirected_to project_path(task.project, show_completed: false)
   end
 
   test "should use specified priority when creating task" do
@@ -93,6 +112,18 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Updated Task", @task.title
   end
 
+  test "should update task status" do
+    new_status = @project.status_by_key(:in_progress)
+    patch task_path(@task), params: {
+      task: {
+        status_id: new_status.id
+      }
+    }
+    assert_redirected_to project_path(@task.project, show_completed: false)
+    @task.reload
+    assert_equal "In Progress", @task.status.name
+  end
+
   test "should destroy task" do
     assert_difference('Task.count', -1) do
       delete task_path(@task)
@@ -106,6 +137,7 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to tasks_path(show_completed: false)
     @task.reload
     assert @task.completed
+    assert_equal "Complete", @task.status.name
   end
 
   test "should archive task" do

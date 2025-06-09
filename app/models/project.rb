@@ -54,6 +54,14 @@ class Project < ApplicationRecord
     tasks.build(attributes.merge(status: status_by_key(:not_started)))
   end
 
+  # Public method to create default statuses
+  def create_default_statuses!
+    return if statuses.any?  # Don't recreate if statuses already exist
+    Status.default_statuses.each do |key, name|
+      statuses.create!(name: name)
+    end
+  end
+
   private
 
   def set_initial_activity

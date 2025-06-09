@@ -34,7 +34,7 @@ reprioritize_high:
   archived: false
   project: reprioritize_test
   user: one
-  status: project_one_not_started
+  status: reprioritize_test_not_started
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
@@ -46,7 +46,7 @@ reprioritize_low:
   archived: false
   project: reprioritize_test
   user: one
-  status: project_one_not_started
+  status: reprioritize_test_not_started
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 

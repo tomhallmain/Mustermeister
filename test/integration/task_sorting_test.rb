@@ -11,10 +11,13 @@ class TaskSortingTest < ActionDispatch::IntegrationTest
     # Clear any existing tasks for this project to ensure clean state
     @project.tasks.destroy_all
     
+    # Ensure default statuses exist
+    @project.create_default_statuses!
+    
     # Create tasks with different timestamps
     base_time = Time.zone.local(2025, 5, 15, 12, 0, 0)
     
-    @task1 = @project.tasks.create!(
+    @task1 = @project.create_task!(
       title: "Task 1",
       description: "First task",
       user: @user,
@@ -22,7 +25,7 @@ class TaskSortingTest < ActionDispatch::IntegrationTest
       updated_at: base_time - 2.days
     )
     
-    @task2 = @project.tasks.create!(
+    @task2 = @project.create_task!(
       title: "Task 2",
       description: "Second task",
       user: @user,
@@ -30,7 +33,7 @@ class TaskSortingTest < ActionDispatch::IntegrationTest
       updated_at: base_time  # Most recently updated
     )
     
-    @task3 = @project.tasks.create!(
+    @task3 = @project.create_task!(
       title: "Task 3",
       description: "Third task",
       user: @user,
@@ -38,7 +41,7 @@ class TaskSortingTest < ActionDispatch::IntegrationTest
       updated_at: base_time  # Same updated_at as Task 2, but created later
     )
     
-    @task4 = @project.tasks.create!(
+    @task4 = @project.create_task!(
       title: "Task 4",
       description: "Fourth task",
       user: @user,
@@ -46,7 +49,7 @@ class TaskSortingTest < ActionDispatch::IntegrationTest
       updated_at: base_time - 1.day  # Updated yesterday
     )
     
-    @task5 = @project.tasks.create!(
+    @task5 = @project.create_task!(
       title: "Task 5",
       description: "Fifth task",
       user: @user,
