@@ -10,6 +10,13 @@
         <% end %>
       </select>
 
+      <select id="priority-filter" class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+        <option value="">All Priorities</option>
+        <option value="high" <%= 'selected' if @priority_filter == 'high' %>>High</option>
+        <option value="medium" <%= 'selected' if @priority_filter == 'medium' %>>Medium</option>
+        <option value="low" <%= 'selected' if @priority_filter == 'low' %>>Low</option>
+      </select>
+
       <select id="sort-by" class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
         <option value="updated_at" <%= 'selected' if @sort_by == 'updated_at' %>>Last Updated</option>
         <option value="created_at" <%= 'selected' if @sort_by == 'created_at' %>>Created Date</option>
@@ -48,6 +55,7 @@
   document.addEventListener('DOMContentLoaded', function() {
     const board = document.getElementById('kanban-board');
     const projectFilter = document.getElementById('project-filter');
+    const priorityFilter = document.getElementById('priority-filter');
     const sortBy = document.getElementById('sort-by');
     const showAllCompleted = document.getElementById('show-all-completed');
     let currentPage = 1;
@@ -80,6 +88,10 @@
 
       if (projectFilter.value) {
         params.append('project_id', projectFilter.value);
+      }
+
+      if (priorityFilter.value) {
+        params.append('priority', priorityFilter.value);
       }
 
       fetch(`/kanban/tasks?${params}`)
@@ -205,6 +217,13 @@
 
     // Add event listeners for filters
     projectFilter.addEventListener('change', loadTasks);
+    priorityFilter.addEventListener('change', function() {
+      // If priority filter is set and sort is by priority, change to updated_at
+      if (this.value && sortBy.value === 'priority') {
+        sortBy.value = 'updated_at';
+      }
+      loadTasks();
+    });
     sortBy.addEventListener('change', loadTasks);
     showAllCompleted.addEventListener('change', loadTasks);
 

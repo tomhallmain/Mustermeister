@@ -237,6 +237,7 @@ class TasksController < ApplicationController
     @statuses = Status.default_statuses
     @current_project = params[:project_id].present? ? current_user.projects.find(params[:project_id]) : nil
     @sort_by = params[:sort_by] || 'updated_at'
+    @priority_filter = params[:priority]
     @page = (params[:page] || 1).to_i
     @per_page = 100
 
@@ -249,11 +250,12 @@ class TasksController < ApplicationController
   def kanban_tasks
     @current_project = params[:project_id].present? ? current_user.projects.find(params[:project_id]) : nil
     @sort_by = params[:sort_by] || 'updated_at'
+    @priority_filter = params[:priority]
     @page = (params[:page] || 1).to_i
     @per_page = 100
     @show_all_completed = params[:show_all_completed] == 'true'
 
-    Rails.logger.debug "Kanban tasks request - Project: #{@current_project&.id}, Sort: #{@sort_by}, Page: #{@page}, Show All Completed: #{@show_all_completed}"
+    Rails.logger.debug "Kanban tasks request - Project: #{@current_project&.id}, Sort: #{@sort_by}, Page: #{@page}, Show All Completed: #{@show_all_completed}, Priority: #{@priority_filter}"
 
     tasks = current_user.tasks
       .includes(:project, :status, :user)
@@ -262,6 +264,10 @@ class TasksController < ApplicationController
 
     if @current_project
       tasks = tasks.where(project: @current_project)
+    end
+
+    if @priority_filter.present?
+      tasks = tasks.where(priority: @priority_filter)
     end
 
     # Group tasks by status
