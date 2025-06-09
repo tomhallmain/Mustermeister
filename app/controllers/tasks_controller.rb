@@ -280,6 +280,7 @@ class TasksController < ApplicationController
 
     # Group tasks by status
     @tasks_by_status = {}
+    has_more = false
     Status.default_statuses.each do |key, name|
       next if name == 'Closed' # Skip Closed status as it's included in Complete column
       
@@ -293,7 +294,9 @@ class TasksController < ApplicationController
         end
       end
       
-      @tasks_by_status[key] = status_tasks.page(@page).per(@per_page)
+      paginated_tasks = status_tasks.page(@page).per(@per_page)
+      @tasks_by_status[key] = paginated_tasks
+      has_more ||= paginated_tasks.total_pages > @page
       Rails.logger.debug "Status #{key}: #{@tasks_by_status[key].count} tasks"
     end
 
@@ -313,7 +316,8 @@ class TasksController < ApplicationController
                 priority: task.priority
               }
             }
-          }
+          },
+          has_more: has_more
         }
       }
     end
