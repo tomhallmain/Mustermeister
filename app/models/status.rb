@@ -10,7 +10,7 @@ class Status < ApplicationRecord
     {
       not_started: 'Not Started',
       to_investigate: 'To Investigate',
-      investigated_not_started: 'Investigated / Not Started',
+      investigated: 'Investigated',
       in_progress: 'In Progress',
       ready_to_test: 'Ready to Test',
       closed: 'Closed',

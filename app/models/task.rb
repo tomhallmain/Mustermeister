@@ -24,6 +24,7 @@ class Task < ApplicationRecord
   before_validation :set_defaults
   before_destroy :ensure_no_active_dependencies
   after_save :update_project_activity
+  after_save :handle_status_completion
   
   scope :active, -> { where(completed: false, archived: false) }
   scope :completed, -> { where(completed: true) }
@@ -45,8 +46,8 @@ class Task < ApplicationRecord
     status.name == Status.default_statuses[:to_investigate]
   end
 
-  def investigated_not_started?
-    status.name == Status.default_statuses[:investigated_not_started]
+  def investigated?
+    status.name == Status.default_statuses[:investigated]
   end
 
   def in_progress?
@@ -83,11 +84,11 @@ class Task < ApplicationRecord
   end
   
   # Instance methods
-  def mark_as_complete!(user)
+  def mark_as_complete!(user_or_id)
     transaction do
       self.completed = true
       self.completed_at = Time.current
-      self.completed_by = user.id
+      self.completed_by = user_or_id.is_a?(User) ? user_or_id.id : user_or_id
       self.status = project.status_by_key(:complete)
       save!
       
@@ -96,6 +97,15 @@ class Task < ApplicationRecord
       
       # Notify relevant users
       NotificationService.task_completed(self) if defined?(NotificationService)
+    end
+  end
+
+  def mark_as_incomplete!
+    transaction do
+      self.completed = false
+      self.completed_at = nil
+      self.completed_by = nil
+      save!
     end
   end
 
@@ -141,6 +151,19 @@ class Task < ApplicationRecord
     self.priority ||= project&.default_priority || 'medium'
     self.archived ||= false
     self.status ||= project&.status_by_key(:not_started)
+  end
+  
+  def handle_status_completion
+    if saved_change_to_status_id?
+      # Ignore changes if current status is 'Closed'
+      return if status.name == Status.default_statuses[:closed]
+      
+      if status.name == Status.default_statuses[:complete]
+        mark_as_complete!(PaperTrail.request.whodunnit)
+      elsif status.name_was == Status.default_statuses[:complete]
+        mark_as_incomplete!
+      end
+    end
   end
   
   def ensure_no_active_dependencies
