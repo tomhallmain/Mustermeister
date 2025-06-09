@@ -126,5 +126,5 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_09_182203) do
   add_foreign_key "tasks", "statuses"
   add_foreign_key "tasks", "users"
   add_foreign_key "tasks", "users", column: "archived_by"
-  add_foreign_key "tasks", "users", column: "completed_by"
+  add_foreign_key "tasks", "users", column: "completed_by", validate: false
 end
