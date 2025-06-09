@@ -37,6 +37,7 @@ Rails.application.routes.draw do
     collection do
       get 'all_reports'
     end
+    resources :comments, only: [:create, :update, :destroy]
   end
 
   resources :tasks do
@@ -44,7 +45,7 @@ Rails.application.routes.draw do
       patch :toggle
       post :archive
     end
-    resources :comments, only: [:create, :destroy], shallow: true
+    resources :comments, only: [:create, :update, :destroy], shallow: true
   end
 
   resources :tags, except: [:show]
@@ -55,4 +56,7 @@ Rails.application.routes.draw do
 
   # CSP violation reporting endpoint
   post '/csp-violation-report', to: 'csp_violation_reports#create'
+
+  get 'kanban', to: 'tasks#kanban', as: :kanban
+  get 'kanban/tasks', to: 'tasks#kanban_tasks', as: :kanban_tasks
 end

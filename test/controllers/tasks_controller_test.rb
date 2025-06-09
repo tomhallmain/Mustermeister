@@ -174,4 +174,22 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".task-item", 5
   end
+
+  test "should set status to complete when creating task with completed checkbox" do
+    assert_difference('Task.count') do
+      post tasks_path, params: {
+        task: {
+          title: "Completed Task",
+          description: "This task is completed",
+          project_id: @project.id,
+          completed: true
+        }
+      }
+    end
+
+    task = Task.last
+    assert_equal Status.find_by(name: Status.default_statuses[:complete]), task.status
+    assert task.completed?
+    assert task.complete?
+  end
 end 

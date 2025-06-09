@@ -2,4 +2,7 @@
 // import "@hotwired/turbo-rails"
 import "controllers"
 import Rails from "@rails/ujs"
+import Sortable from "sortablejs"
+
 Rails.start()
+window.Sortable = Sortable

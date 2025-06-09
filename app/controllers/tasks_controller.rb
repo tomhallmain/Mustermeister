@@ -79,6 +79,9 @@ class TasksController < ApplicationController
     @task = current_user.tasks.build(task_params)
 
     if @task.save
+      # If the task is marked as completed, call mark_as_complete!
+      @task.mark_as_complete!(current_user) if @task.completed
+
       if @task.project
         show_completed = session[:projects_show_completed][@task.project.id.to_s]
         # Default to false if not set in session
@@ -226,6 +229,71 @@ class TasksController < ApplicationController
     rescue TaskManagementService::Error => e
       redirect_to reschedule_path, 
                   alert: "Failed to reschedule tasks: #{e.message}"
+    end
+  end
+
+  def kanban
+    @projects = current_user.projects.order(:title)
+    @statuses = Status.default_statuses
+    @current_project = params[:project_id].present? ? current_user.projects.find(params[:project_id]) : nil
+    @sort_by = params[:sort_by] || 'updated_at'
+    @page = (params[:page] || 1).to_i
+    @per_page = 100
+
+    respond_to do |format|
+      format.html
+      format.json { render json: { projects: @projects, statuses: @statuses } }
+    end
+  end
+
+  def kanban_tasks
+    @current_project = params[:project_id].present? ? current_user.projects.find(params[:project_id]) : nil
+    @sort_by = params[:sort_by] || 'updated_at'
+    @page = (params[:page] || 1).to_i
+    @per_page = 100
+
+    Rails.logger.debug "Kanban tasks request - Project: #{@current_project&.id}, Sort: #{@sort_by}, Page: #{@page}"
+
+    tasks = current_user.tasks
+      .includes(:project, :status, :user)
+      .where(archived: false)
+      .order(@sort_by => :desc)
+
+    if @current_project
+      tasks = tasks.where(project: @current_project)
+    end
+
+    # Group tasks by status
+    @tasks_by_status = {}
+    Status.default_statuses.each do |key, name|
+      status_tasks = tasks.where(status: { name: name })
+      # Also include 'Closed' status tasks in the 'Complete' column
+      if key == :complete
+        status_tasks = status_tasks.or(tasks.where(status: { name: 'Closed' }))
+      end
+      @tasks_by_status[key] = status_tasks.page(@page).per(@per_page)
+      Rails.logger.debug "Status #{key}: #{@tasks_by_status[key].count} tasks"
+    end
+
+    respond_to do |format|
+      format.json { 
+        render json: {
+          tasks: @tasks_by_status.transform_values { |tasks| 
+            tasks.map { |task| 
+              {
+                id: task.id,
+                title: task.title,
+                description: task.description,
+                status: task.status.name,
+                project: task.project.title,
+                user: task.user.name,
+                updated_at: task.updated_at,
+                priority: task.priority
+              }
+            }
+          }
+        }
+      }
     end
   end
 
