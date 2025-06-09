@@ -10,6 +10,7 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     @user = users(:one)
     @project = projects(:one)
     @task = tasks(:one)
+    @project.create_default_statuses!  # Ensure default statuses are created
     sign_in_as(@user, skip_redirect: true)
     
     setup_paper_trail
@@ -53,13 +54,14 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should create task with specified status" do
+    status = @project.status_by_key(:in_progress)
     assert_difference('Task.count') do
       post tasks_path, params: {
         task: {
           title: "New Task",
           description: "Task Description",
           project_id: @project.id,
-          status_id: @project.status_by_key(:in_progress).id
+          status_id: status.id
         }
       }
     end
@@ -112,8 +114,10 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Updated Task", @task.title
   end
 
-  test "should update task status" do
-    new_status = @project.status_by_key(:in_progress)
+  test "should update task with new status" do
+    new_status = @project.status_by_key(:ready_to_test)
+    assert_not_nil new_status, "Ready to Test status should exist"
+    
     patch task_path(@task), params: {
       task: {
         status_id: new_status.id
@@ -121,7 +125,37 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     }
     assert_redirected_to project_path(@task.project, show_completed: false)
     @task.reload
-    assert_equal "In Progress", @task.status.name
+    assert_equal "Ready to Test", @task.status.name
+  end
+
+  test "should maintain status when updating other fields" do
+    original_status = @task.status
+    patch task_path(@task), params: {
+      task: {
+        title: "Updated Title",
+        description: "Updated Description"
+      }
+    }
+    assert_redirected_to project_path(@task.project, show_completed: false)
+    @task.reload
+    assert_equal original_status, @task.status
+  end
+
+  test "should handle invalid status id gracefully" do
+    original_status = @task.status
+    
+    patch task_path(@task), params: {
+      task: {
+        status_id: 999999  # Non-existent status ID
+      }
+    }
+    
+    # Should redirect back to the project page
+    assert_redirected_to project_path(@task.project, show_completed: false)
+    
+    # Status should remain unchanged
+    @task.reload
+    assert_equal original_status, @task.status
   end
 
   test "should destroy task" do

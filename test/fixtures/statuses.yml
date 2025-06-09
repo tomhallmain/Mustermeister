@@ -10,6 +10,10 @@ project_one_complete:
   name: Complete
   project: one
 
+project_one_ready_to_test:
+  name: Ready to Test
+  project: one
+
 project_two_not_started:
   name: Not Started
   project: two

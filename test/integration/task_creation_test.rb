@@ -126,4 +126,53 @@ class TaskCreationTest < ActionDispatch::IntegrationTest
     # Now assert that the selected option has the project's default priority
     assert_equal @project.default_priority, selected_option['value']
   end
+
+  test "should create task with specified status" do
+    status = @project.status_by_key(:in_progress)
+    
+    # Visit the new task form with project_id
+    get new_task_path, params: { project_id: @project.id }
+    assert_response :redirect
+    follow_redirect!
+    assert_response :success
+    
+    assert_difference('Task.count') do
+      post tasks_path, params: {
+        task: {
+          title: "Status Task",
+          description: "This should have In Progress status",
+          project_id: @project.id,
+          status_id: status.id
+        }
+      }
+    end
+    
+    # The task should be created with the specified status
+    task = Task.find_by(title: "Status Task")
+    assert_equal "In Progress", task.status.name
+  end
+
+  test "should maintain status when updating task" do
+    # Create a task with a specific status
+    status = @project.status_by_key(:ready_to_test)
+    task = Task.create!(
+      title: "Test Task",
+      description: "Test Description",
+      project: @project,
+      user: @user,
+      status: status,
+      priority: 'medium'
+    )
+    
+    # Update the task's title
+    patch task_path(task), params: {
+      task: {
+        title: "Updated Test Task"
+      }
+    }
+    
+    # The status should remain unchanged
+    task.reload
+    assert_equal "Ready to Test", task.status.name
+  end
 end 
