@@ -129,6 +129,11 @@ class Task < ApplicationRecord
     false
   end
   
+  def status_name=(name)
+    return unless name.present? && project
+    self.status = project.statuses.find_by(name: name)
+  end
+  
   private
   
   def set_defaults

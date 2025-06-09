@@ -102,18 +102,26 @@ class TasksController < ApplicationController
 
   def update
     if @task.update(task_params)
-      if @task.project
-        show_completed = session[:projects_show_completed][@task.project.id.to_s]
-        # Default to false if not set in session
-        show_completed = show_completed.nil? ? false : show_completed
-        redirect_to project_path(@task.project, show_completed: show_completed), 
-                    notice: 'Task was successfully updated.'
+      if params[:kanban]
+        render json: { success: true }
       else
-        redirect_to tasks_path(show_completed: session[:tasks_show_completed] || false), 
-                    notice: 'Task was successfully updated.'
+        if @task.project
+          show_completed = session[:projects_show_completed][@task.project.id.to_s]
+          # Default to false if not set in session
+          show_completed = show_completed.nil? ? false : show_completed
+          redirect_to project_path(@task.project, show_completed: show_completed), 
+                      notice: 'Task was successfully updated.'
+        else
+          redirect_to tasks_path(show_completed: session[:tasks_show_completed] || false), 
+                      notice: 'Task was successfully updated.'
+        end
       end
     else
-      render :edit, status: :unprocessable_entity
+      if params[:kanban]
+        render json: { error: @task.errors.full_messages.join(", ") }, status: :unprocessable_entity
+      else
+        render :edit, status: :unprocessable_entity
+      end
     end
   end
 
@@ -321,8 +329,12 @@ class TasksController < ApplicationController
   def set_task
     @task = Task.not_archived.find(params[:id])
   rescue ActiveRecord::RecordNotFound
-    redirect_to tasks_path(show_completed: session[:tasks_show_completed] || false), 
-                alert: 'Task not found or already archived.'
+    if params[:kanban]
+      render json: { error: 'Task not found or already archived.' }, status: :not_found
+    else
+      redirect_to tasks_path(show_completed: session[:tasks_show_completed] || false), 
+                  alert: 'Task not found or already archived.'
+    end
   end
 
   def load_projects_and_tags
@@ -332,6 +344,6 @@ class TasksController < ApplicationController
 
   def task_params
     params.require(:task).permit(:title, :description, :completed, :due_date, 
-                               :priority, :project_id, :status_id, tag_ids: [])
+                               :priority, :project_id, :status_id, :status_name, tag_ids: [])
   end
 end 

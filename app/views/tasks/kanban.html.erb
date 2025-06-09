@@ -36,13 +36,21 @@
   <div id="kanban-board" class="flex space-x-2 overflow-x-auto pb-4">
     <% {
       not_started: 'Not Started',
-      investigations: 'Investigations',
+      investigations: 'To Investigate',
       in_progress: 'In Progress',
       ready_to_test: 'Ready to Test',
       complete: 'Complete'
     }.each do |key, name| %>
-      <div class="kanban-column flex-shrink-0 w-64 bg-gray-100 rounded-lg p-2" data-status="<%= key %>">
-        <h3 class="text-sm font-semibold text-gray-900 mb-2"><%= name %></h3>
+      <div class="kanban-column flex-shrink-0 w-64 bg-gray-100 rounded-lg p-2" 
+           data-status="<%= key %>"
+           data-status-id="<%= Status.find_by(name: name)&.id %>">
+        <h3 class="text-sm font-semibold text-gray-900 mb-2">
+          <%= case key
+              when 'investigations' then 'Investigations'
+              when 'complete' then 'Complete'
+              else name
+              end %>
+        </h3>
         <div class="kanban-tasks space-y-2 min-h-[200px]" data-status="<%= key %>">
           <!-- Tasks will be loaded here via JavaScript -->
         </div>
@@ -191,7 +199,15 @@
 
     // Update task status
     function updateTaskStatus(taskId, newStatus) {
-      fetch(`/tasks/${taskId}`, {
+      const statusMapping = {
+        not_started: 'Not Started',
+        investigations: 'To Investigate',  // Use the first status for investigations
+        in_progress: 'In Progress',
+        ready_to_test: 'Ready to Test',
+        complete: 'Complete'  // Use Complete status for the complete column
+      };
+
+      fetch(`/tasks/${taskId}?kanban=true`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -199,18 +215,21 @@
         },
         body: JSON.stringify({
           task: {
-            status_id: document.querySelector(`.kanban-column[data-status="${newStatus}"]`).dataset.statusId
+            status_name: statusMapping[newStatus]
           }
         })
       })
       .then(response => {
         if (!response.ok) {
-          throw new Error('Failed to update task status');
+          return response.json().then(data => {
+            throw new Error(data.error || 'Failed to update task status');
+          });
         }
         loadTasks(); // Reload tasks to ensure correct order
       })
       .catch(error => {
         console.error('Error updating task status:', error);
+        alert(error.message); // Show error to user
         loadTasks(); // Reload tasks to reset the board
       });
     }
