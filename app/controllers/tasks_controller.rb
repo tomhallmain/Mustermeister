@@ -251,8 +251,9 @@ class TasksController < ApplicationController
     @sort_by = params[:sort_by] || 'updated_at'
     @page = (params[:page] || 1).to_i
     @per_page = 100
+    @show_all_completed = params[:show_all_completed] == 'true'
 
-    Rails.logger.debug "Kanban tasks request - Project: #{@current_project&.id}, Sort: #{@sort_by}, Page: #{@page}"
+    Rails.logger.debug "Kanban tasks request - Project: #{@current_project&.id}, Sort: #{@sort_by}, Page: #{@page}, Show All Completed: #{@show_all_completed}"
 
     tasks = current_user.tasks
       .includes(:project, :status, :user)
@@ -266,11 +267,18 @@ class TasksController < ApplicationController
     # Group tasks by status
     @tasks_by_status = {}
     Status.default_statuses.each do |key, name|
+      next if name == 'Closed' # Skip Closed status as it's included in Complete column
+      
       status_tasks = tasks.where(status: { name: name })
-      # Also include 'Closed' status tasks in the 'Complete' column
+      
+      # For completed tasks, only show those from the last 7 days unless show_all_completed is true
       if key == :complete
         status_tasks = status_tasks.or(tasks.where(status: { name: 'Closed' }))
+        unless @show_all_completed
+          status_tasks = status_tasks.where('tasks.updated_at >= ?', 7.days.ago)
+        end
       end
+      
       @tasks_by_status[key] = status_tasks.page(@page).per(@per_page)
       Rails.logger.debug "Status #{key}: #{@tasks_by_status[key].count} tasks"
     end
