@@ -262,21 +262,17 @@
         
         // Split into words
         const words = text.split(/\s+/);
-        
-        // Check for long words
-        const longWordIndex = words.findIndex(word => word.length >= maxWordLength);
-        if (longWordIndex !== -1) {
-          const longWord = words[longWordIndex];
-          const truncatedWords = words.slice(0, longWordIndex);
-          return truncatedWords.join(' ') + ' ' + longWord.substring(0, maxWordLength - 10) + '...';
-        }
-        
-        // Count lines based on character width
         let currentLineLength = 0;
         let lineCount = 1;
         let truncatedWords = [];
         
         for (const word of words) {
+          // Check if this word is too long
+          if (word.length >= maxWordLength) {
+            truncatedWords.push(word.substring(0, maxWordLength - 10) + '...');
+            return truncatedWords.join(' ');
+          }
+          
           // Add word length plus a space
           const wordLength = word.length + 1;
           
@@ -296,7 +292,7 @@
           truncatedWords.push(word);
         }
         
-        return text;
+        return truncatedWords.join(' ');
       };
 
       return `
