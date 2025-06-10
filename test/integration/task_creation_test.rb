@@ -175,4 +175,54 @@ class TaskCreationTest < ActionDispatch::IntegrationTest
     task.reload
     assert_equal "Ready to Test", task.status.name
   end
+
+  test "status dropdown should only show statuses from current project" do
+    # Visit the new task form for the project
+    get new_task_path, params: { project_id: @project.id }
+    assert_response :redirect
+    follow_redirect!
+    assert_response :success
+    
+    # Debug: Print the entire select element HTML
+    status_select = css_select("select[name='task[status_id]']").first
+    puts "\nStatus select HTML:"
+    puts status_select.to_html if status_select
+    
+    # Get all status options from the dropdown
+    status_options = css_select("select[name='task[status_id]'] option")
+    
+    # Debug: Print each option's HTML
+    puts "\nStatus options HTML:"
+    status_options.each do |opt|
+      puts "Option: #{opt.to_html}"
+    end
+    
+    # Get all status names from the options (excluding the blank option)
+    status_names = status_options.map { |opt| opt.text.strip }.reject(&:empty?)
+    
+    # Debug output
+    puts "\nFound statuses in dropdown:"
+    status_names.each { |name| puts "  - #{name}" }
+    puts "\nExpected default statuses:"
+    Status.default_statuses.values.each { |name| puts "  - #{name}" }
+    
+    # Verify that each default status appears exactly once
+    default_statuses = Status.default_statuses.values
+    default_statuses.each do |status_name|
+      count = status_names.count(status_name)
+      assert_equal 1, count, 
+        "Expected exactly one instance of '#{status_name}' in the dropdown, but found #{count}. " \
+        "Current dropdown contents: #{status_names.join(', ')}"
+    end
+    
+    # Verify that there are no unexpected statuses
+    unexpected_statuses = status_names - default_statuses
+    assert_empty unexpected_statuses,
+      "Found unexpected statuses in the dropdown: #{unexpected_statuses.join(', ')}"
+    
+    # TODO: Once custom statuses are implemented, update this test to:
+    # 1. Create a project with custom statuses
+    # 2. Verify that only statuses belonging to the current project are shown
+    # 3. Verify that no statuses from other projects are included
+  end
 end 

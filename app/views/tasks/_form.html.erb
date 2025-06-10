@@ -29,7 +29,9 @@
     <div>
       <%= f.label :status_id, "Status", class: "block text-sm font-medium text-gray-700" %>
       <% 
-        statuses = Status.all.map { |s| [s.name, s.id] }
+        # Get statuses only from the current project
+        current_project = task.project || @project
+        statuses = current_project.statuses.map { |s| [s.name, s.id] }
         current_status = task.status_id
       %>
       <%= f.select :status_id, 
