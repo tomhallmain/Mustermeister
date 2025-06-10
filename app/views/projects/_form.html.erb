@@ -30,7 +30,7 @@
   <div>
     <%= f.label :default_priority, class: "block text-sm font-medium text-gray-700" %>
     <%= f.select :default_priority, 
-               options_for_select([['Low', 'low'], ['Medium', 'medium'], ['High', 'high']], project.default_priority || 'medium'), 
+               options_for_select([['Low', 'low'], ['Medium', 'medium'], ['High', 'high'], ['Leisure', 'leisure']], project.default_priority || 'medium'), 
                {}, 
                { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" } %>
   </div>

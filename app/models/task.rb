@@ -17,7 +17,7 @@ class Task < ApplicationRecord
   has_many :comments, dependent: :destroy
 
   validates :title, presence: true
-  validates :priority, inclusion: { in: %w[low medium high] }, allow_nil: true
+  validates :priority, inclusion: { in: %w[low medium high leisure] }, allow_nil: true
   validate :archived_at_presence_if_archived
   validate :status_belongs_to_project
   

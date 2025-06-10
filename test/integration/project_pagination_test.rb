@@ -49,6 +49,7 @@ class ProjectPaginationTest < ActionDispatch::IntegrationTest
     expected_classes = case @project.default_priority
                       when 'high' then 'bg-red-100 text-red-800'
                       when 'medium' then 'bg-yellow-100 text-yellow-800'
+                      when 'leisure' then 'bg-purple-100 text-purple-800'
                       else 'bg-green-100 text-green-800'
                       end
     

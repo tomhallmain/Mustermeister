@@ -1,0 +1,22 @@
+<%# Priority badge partial that handles all priority styling %>
+<%# Usage: render 'shared/priority_badge', priority: task.priority, size: 'text-xs', additional_classes: 'mt-1' %>
+<%
+  # Default size if not provided
+  size ||= 'text-xs'
+  
+  # Determine the color classes based on priority
+  color_classes = case priority
+                 when 'high' then 'bg-red-100 text-red-800'
+                 when 'medium' then 'bg-yellow-100 text-yellow-800'
+                 when 'leisure' then 'bg-purple-100 text-purple-800'
+                 else 'bg-green-100 text-green-800'
+                 end
+                 
+  # Combine all classes
+  all_classes = [size, 'px-2 py-1 rounded-full', color_classes]
+  all_classes << additional_classes if defined?(additional_classes)
+%>
+
+<span class="<%= all_classes.join(' ') %>">
+  <%= priority&.capitalize %>
+</span> 

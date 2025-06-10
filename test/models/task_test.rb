@@ -31,6 +31,19 @@ class TaskTest < ActiveSupport::TestCase
   test "priority should be valid" do
     @task.priority = "invalid"
     assert_not @task.valid?
+    
+    # Test valid priorities
+    @task.priority = "low"
+    assert @task.valid?
+    
+    @task.priority = "medium"
+    assert @task.valid?
+    
+    @task.priority = "high"
+    assert @task.valid?
+    
+    @task.priority = "leisure"
+    assert @task.valid?
   end
 
   test "priority can be nil" do

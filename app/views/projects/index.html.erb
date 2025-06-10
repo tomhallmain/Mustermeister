@@ -39,14 +39,7 @@
                     end %>">
                 <%= project.status.titleize %>
               </span>
-              <span class="px-2 py-0.5 text-xs rounded-full
-                <%= case project.default_priority
-                    when 'high' then 'bg-red-100 text-red-800'
-                    when 'medium' then 'bg-yellow-100 text-yellow-800'
-                    else 'bg-green-100 text-green-800'
-                    end %>">
-                <%= project.default_priority&.capitalize %>
-              </span>
+              <%= render 'shared/priority_badge', priority: project.default_priority %>
             </div>
           </div>
           

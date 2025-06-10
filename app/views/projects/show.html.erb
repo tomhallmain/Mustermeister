@@ -59,14 +59,8 @@
           <% end %>
         </div>
         <div>
-          <span class="text-sm px-2 py-1 rounded-full
-            <%= case @project.default_priority
-                when 'high' then 'bg-red-100 text-red-800'
-                when 'medium' then 'bg-yellow-100 text-yellow-800'
-                else 'bg-green-100 text-green-800'
-                end %>">
-            Default Priority: <%= @project.default_priority&.capitalize || 'Medium' %>
-          </span>
+          <span class="text-sm">Default Priority: </span>
+          <%= render 'shared/priority_badge', priority: @project.default_priority, size: 'text-sm' %>
         </div>
       </div>
       <div class="flex items-center gap-2 ml-8 flex-1">
@@ -130,14 +124,10 @@
                   Due: <%= task.due_date.strftime("%b %d, %Y") %>
                 </span>
               <% end %>
-              <span class="text-sm px-2 py-1 rounded-full
-                <%= case task.priority
-                    when 'high' then 'bg-red-100 text-red-800'
-                    when 'medium' then 'bg-yellow-100 text-yellow-800'
-                    else 'bg-green-100 text-green-800'
-                    end %>">
-                <%= task.priority&.capitalize %>
-              </span>
+              <%= render 'shared/priority_badge', 
+                  priority: task.priority, 
+                  size: 'text-sm',
+                  additional_classes: 'px-2 py-1' %>
               <span class="text-sm px-2 py-1 rounded-full
                 <%= case task.status.name
                     when 'Not Started' then 'bg-gray-100 text-gray-800'

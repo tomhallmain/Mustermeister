@@ -44,6 +44,9 @@ class ProjectTest < ActiveSupport::TestCase
     @project.default_priority = 'high'
     assert @project.valid?
     
+    @project.default_priority = 'leisure'
+    assert @project.valid?
+    
     # Nil should be allowed
     @project.default_priority = nil
     assert @project.valid?

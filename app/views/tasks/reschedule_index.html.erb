@@ -58,14 +58,7 @@
                     Due: <%= task.due_date.strftime("%b %d, %Y") %>
                   </span>
                 <% end %>
-                <span class="text-sm px-2 py-1 rounded-full
-                  <%= case task.priority
-                      when 'high' then 'bg-red-100 text-red-800'
-                      when 'medium' then 'bg-yellow-100 text-yellow-800'
-                      else 'bg-green-100 text-green-800'
-                      end %>">
-                  <%= task.priority&.capitalize %>
-                </span>
+                <%= render 'shared/priority_badge', priority: task.priority %>
               </div>
             </div>
           </div>
