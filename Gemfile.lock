@@ -184,7 +184,11 @@ GEM
     kaminari-core (1.2.2)
     language_server-protocol (3.17.0.4)
     lint_roller (1.1.0)
+    little-plugger (1.1.4)
     logger (1.6.6)
+    logging (2.4.0)
+      little-plugger (~> 1.1)
+      multi_json (~> 1.14)
     loofah (2.24.0)
       crass (~> 1.0.2)
       nokogiri (>= 1.12.0)
@@ -198,6 +202,7 @@ GEM
     mini_mime (1.1.5)
     minitest (5.25.5)
     msgpack (1.8.0)
+    multi_json (1.15.0)
     nested_form (0.3.2)
     net-imap (0.5.6)
       date
@@ -473,6 +478,7 @@ DEPENDENCIES
   jsbundling-rails
   kamal
   kaminari
+  logging
   paper_trail
   pg (~> 1.1)
   propshaft
