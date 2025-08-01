@@ -216,8 +216,12 @@ class BackupService
     if rails_should_backup?
       reason = rails_backup_reason
       Rails.logger.info "Creating Rails backup: #{reason}"
-      rails_backup
-      { success: true, reason: reason }
+      result = rails_backup
+      if result[:success]
+        { success: true, reason: reason }
+      else
+        { success: false, error: result[:error] }
+      end
     else
       reason = rails_skip_reason
       Rails.logger.info "Skipping Rails backup: #{reason}"
@@ -361,12 +365,128 @@ class BackupService
   end
   
   def generate_table_structure(table)
-    # Get table creation SQL
-    result = ActiveRecord::Base.connection.execute("SELECT pg_get_tabledef('#{table}'::regclass)")
-    if result.any?
-      result.first['pg_get_tabledef']
+    # Get table creation SQL using a more compatible approach
+    begin
+      # Get column information
+      columns_result = ActiveRecord::Base.connection.execute(<<-SQL)
+        SELECT 
+          column_name,
+          data_type,
+          is_nullable,
+          column_default,
+          character_maximum_length,
+          numeric_precision,
+          numeric_scale
+        FROM information_schema.columns 
+        WHERE table_name = '#{table}' 
+        ORDER BY ordinal_position
+      SQL
+      
+      return "-- Could not generate structure for #{table}" if columns_result.empty?
+      
+      # Build CREATE TABLE statement
+      create_table_sql = "CREATE TABLE #{table} (\n"
+      column_definitions = []
+      
+      columns_result.each do |col|
+        column_def = "  #{col['column_name']} #{get_column_type(col)}"
+        column_def += " NOT NULL" if col['is_nullable'] == 'NO'
+        column_def += " DEFAULT #{col['column_default']}" if col['column_default'].present?
+        column_definitions << column_def
+      end
+      
+      create_table_sql += column_definitions.join(",\n")
+      create_table_sql += "\n);"
+      
+      # Add primary key if exists
+      pk_result = ActiveRecord::Base.connection.execute(<<-SQL)
+        SELECT c.column_name
+        FROM information_schema.table_constraints tc
+        JOIN information_schema.constraint_column_usage AS ccu USING (constraint_schema, constraint_name)
+        JOIN information_schema.columns AS c ON c.table_schema = tc.constraint_schema
+          AND tc.table_name = c.table_name AND ccu.column_name = c.column_name
+        WHERE constraint_type = 'PRIMARY KEY' AND tc.table_name = '#{table}'
+      SQL
+      
+      if pk_result.any?
+        pk_columns = pk_result.map { |row| row['column_name'] }
+        create_table_sql += "\n\nALTER TABLE #{table} ADD CONSTRAINT #{table}_pkey PRIMARY KEY (#{pk_columns.join(', ')});"
+      end
+      
+      # Add indexes
+      indexes_result = ActiveRecord::Base.connection.execute(<<-SQL)
+        SELECT 
+          indexname,
+          indexdef
+        FROM pg_indexes 
+        WHERE tablename = '#{table}' 
+        AND indexname NOT LIKE '%_pkey'
+        ORDER BY indexname
+      SQL
+      
+      if indexes_result.any?
+        create_table_sql += "\n"
+        indexes_result.each do |index|
+          create_table_sql += "\n#{index['indexdef']};"
+        end
+      end
+      
+      create_table_sql
+    rescue => e
+      "-- Could not generate structure for #{table}: #{e.message}"
+    end
+  end
+  
+  def get_column_type(column)
+    case column['data_type']
+    when 'character varying'
+      if column['character_maximum_length']
+        "varchar(#{column['character_maximum_length']})"
+      else
+        'varchar'
+      end
+    when 'character'
+      if column['character_maximum_length']
+        "char(#{column['character_maximum_length']})"
+      else
+        'char'
+      end
+    when 'numeric'
+      if column['numeric_precision'] && column['numeric_scale']
+        "numeric(#{column['numeric_precision']},#{column['numeric_scale']})"
+      elsif column['numeric_precision']
+        "numeric(#{column['numeric_precision']})"
+      else
+        'numeric'
+      end
+    when 'integer'
+      'integer'
+    when 'bigint'
+      'bigint'
+    when 'smallint'
+      'smallint'
+    when 'text'
+      'text'
+    when 'boolean'
+      'boolean'
+    when 'timestamp without time zone'
+      'timestamp'
+    when 'timestamp with time zone'
+      'timestamptz'
+    when 'date'
+      'date'
+    when 'time without time zone'
+      'time'
+    when 'time with time zone'
+      'timetz'
+    when 'json'
+      'json'
+    when 'jsonb'
+      'jsonb'
+    when 'uuid'
+      'uuid'
     else
-      "-- Could not generate structure for #{table}"
+      column['data_type']
     end
   end
   
