@@ -318,7 +318,7 @@ class BackupService
   end
   
   def ensure_backup_directory_exists
-    Dir.mkdir(@backup_dir) unless Dir.exist?(@backup_dir)
+    FileUtils.mkdir_p(@backup_dir)
   end
   
   # Rails-specific private methods
