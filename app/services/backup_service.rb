@@ -1,15 +1,69 @@
 class BackupService
-  BACKUP_DIR = "db_backups"
-  DB_NAME = "myapp_development"
+  CONFIG_FILE = "config/backup_config.yml"
   
-  # Minimum time between backups (6 hours)
-  MIN_BACKUP_INTERVAL = 6.hours
+  # Default configuration values
+  DEFAULT_CONFIG = {
+    'backup_dir' => 'db_backups',
+    'db_name' => 'myapp_development',
+    'min_backup_interval_hours' => 6,
+    'force_backup_interval_hours' => 24,
+    'emergency_backup_interval_days' => 7,
+    'keep_backup_count' => 5,
+    'batch_size' => 1000
+  }.freeze
   
-  # Force backup after this time (24 hours)
-  FORCE_BACKUP_INTERVAL = 24.hours
+  # Load configuration
+  def self.config
+    @config ||= load_config
+  end
   
-  # Emergency backup after this time (7 days)
-  EMERGENCY_BACKUP_INTERVAL = 7.days
+  def self.load_config
+    if File.exist?(CONFIG_FILE)
+      YAML.load_file(CONFIG_FILE)
+    else
+      # Generate default config file
+      generate_default_config
+      DEFAULT_CONFIG
+    end
+  rescue => e
+    Rails.logger.warn "Failed to load backup config: #{e.message}, using defaults"
+    DEFAULT_CONFIG
+  end
+  
+  def self.generate_default_config
+    FileUtils.mkdir_p(File.dirname(CONFIG_FILE))
+    File.write(CONFIG_FILE, DEFAULT_CONFIG.to_yaml)
+    Rails.logger.info "Generated default backup config: #{CONFIG_FILE}"
+  end
+  
+  # Configuration accessors
+  def self.backup_dir
+    config['backup_dir']
+  end
+  
+  def self.db_name
+    config['db_name']
+  end
+  
+  def self.min_backup_interval
+    config['min_backup_interval_hours'].hours
+  end
+  
+  def self.force_backup_interval
+    config['force_backup_interval_hours'].hours
+  end
+  
+  def self.emergency_backup_interval
+    config['emergency_backup_interval_days'].days
+  end
+  
+  def self.keep_backup_count
+    config['keep_backup_count']
+  end
+  
+  def self.batch_size
+    config['batch_size']
+  end
   
   class << self
     def auto_backup
@@ -55,8 +109,8 @@ class BackupService
   end
   
   def initialize
-    @backup_dir = BACKUP_DIR
-    @db_name = DB_NAME
+    @backup_dir = self.class.backup_dir
+    @db_name = self.class.db_name
     ensure_backup_directory_exists
   end
   
@@ -98,9 +152,9 @@ class BackupService
     
     time_since_last = time_since_last_backup
     
-    time_since_last >= EMERGENCY_BACKUP_INTERVAL ||
-    time_since_last >= FORCE_BACKUP_INTERVAL ||
-    time_since_last >= MIN_BACKUP_INTERVAL
+    time_since_last >= self.class.emergency_backup_interval ||
+    time_since_last >= self.class.force_backup_interval ||
+    time_since_last >= self.class.min_backup_interval
   end
   
   def last_backup_time
@@ -116,11 +170,11 @@ class BackupService
   def backup_reason
     time_since_last = time_since_last_backup
     
-    if time_since_last >= EMERGENCY_BACKUP_INTERVAL
+    if time_since_last >= self.class.emergency_backup_interval
       "emergency backup (been #{time_since_last / 1.day} days)"
-    elsif time_since_last >= FORCE_BACKUP_INTERVAL
+    elsif time_since_last >= self.class.force_backup_interval
       "force backup (been #{time_since_last / 1.hour} hours)"
-    elsif time_since_last >= MIN_BACKUP_INTERVAL
+    elsif time_since_last >= self.class.min_backup_interval
       "regular backup (been #{time_since_last / 1.hour} hours)"
     else
       "unknown reason"
@@ -129,7 +183,7 @@ class BackupService
   
   def skip_reason
     time_since_last = time_since_last_backup
-    "only #{time_since_last / 1.hour} hours since last backup (minimum #{MIN_BACKUP_INTERVAL / 1.hour} hours)"
+    "only #{time_since_last / 1.hour} hours since last backup (minimum #{self.class.min_backup_interval / 1.hour} hours)"
   end
   
   def list_backups
@@ -143,7 +197,8 @@ class BackupService
     end
   end
   
-  def cleanup_old_backups(keep_count = 5)
+  def cleanup_old_backups(keep_count = nil)
+    keep_count ||= self.class.keep_backup_count
     return if recent_backups.length <= keep_count
     
     to_delete = recent_backups[keep_count..-1]
@@ -192,9 +247,9 @@ class BackupService
     
     time_since_last = rails_time_since_last_backup
     
-    time_since_last >= EMERGENCY_BACKUP_INTERVAL ||
-    time_since_last >= FORCE_BACKUP_INTERVAL ||
-    time_since_last >= MIN_BACKUP_INTERVAL
+    time_since_last >= self.class.emergency_backup_interval ||
+    time_since_last >= self.class.force_backup_interval ||
+    time_since_last >= self.class.min_backup_interval
   end
   
   def rails_last_backup_time
@@ -210,11 +265,11 @@ class BackupService
   def rails_backup_reason
     time_since_last = rails_time_since_last_backup
     
-    if time_since_last >= EMERGENCY_BACKUP_INTERVAL
+    if time_since_last >= self.class.emergency_backup_interval
       "emergency Rails backup (been #{time_since_last / 1.day} days)"
-    elsif time_since_last >= FORCE_BACKUP_INTERVAL
+    elsif time_since_last >= self.class.force_backup_interval
       "force Rails backup (been #{time_since_last / 1.hour} hours)"
-    elsif time_since_last >= MIN_BACKUP_INTERVAL
+    elsif time_since_last >= self.class.min_backup_interval
       "regular Rails backup (been #{time_since_last / 1.hour} hours)"
     else
       "unknown reason"
@@ -223,7 +278,7 @@ class BackupService
   
   def rails_skip_reason
     time_since_last = rails_time_since_last_backup
-    "only #{time_since_last / 1.hour} hours since last Rails backup (minimum #{MIN_BACKUP_INTERVAL / 1.hour} hours)"
+    "only #{time_since_last / 1.hour} hours since last Rails backup (minimum #{self.class.min_backup_interval / 1.hour} hours)"
   end
   
   def rails_list_backups
@@ -238,7 +293,8 @@ class BackupService
     end
   end
   
-  def rails_cleanup_old_backups(keep_count = 5)
+  def rails_cleanup_old_backups(keep_count = nil)
+    keep_count ||= self.class.keep_backup_count
     return if rails_recent_backups.length <= keep_count
     
     to_delete = rails_recent_backups[keep_count..-1]
@@ -334,7 +390,7 @@ class BackupService
     columns = columns_result.map { |row| row['column_name'] }
     
     # Get data in batches to avoid memory issues
-    batch_size = 1000
+    batch_size = self.class.batch_size
     offset = 0
     data_lines = []
     

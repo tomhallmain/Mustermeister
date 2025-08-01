@@ -71,7 +71,7 @@ namespace :db do
 
   desc "List available backups"
   task list_backups: :environment do
-    backup_dir = "db_backups"
+    backup_dir = BackupService.backup_dir
     if Dir.exist?(backup_dir)
       backups = Dir.glob("#{backup_dir}/*.sql").sort_by { |f| File.mtime(f) }.reverse
       if backups.empty?
@@ -91,11 +91,12 @@ namespace :db do
 
   desc "Clean old backups (keep last 5)"
   task clean_backups: :environment do
-    backup_dir = "db_backups"
+    backup_dir = BackupService.backup_dir
     if Dir.exist?(backup_dir)
       backups = Dir.glob("#{backup_dir}/*.sql").sort_by { |f| File.mtime(f) }
-      if backups.length > 5
-        to_delete = backups[0...-5]
+      keep_count = BackupService.keep_backup_count
+      if backups.length > keep_count
+        to_delete = backups[0...-keep_count]
         puts "Deleting #{to_delete.length} old backups..."
         to_delete.each do |backup|
           File.delete(backup)
@@ -151,11 +152,14 @@ namespace :db do
     
     puts "\n=== Backup Configuration ==="
     backup_service = BackupService.new
-    puts "Backup directory: #{BackupService::BACKUP_DIR}"
-    puts "Database name: #{BackupService::DB_NAME}"
-    puts "Minimum interval: #{BackupService::MIN_BACKUP_INTERVAL / 1.hour} hours"
-    puts "Force interval: #{BackupService::FORCE_BACKUP_INTERVAL / 1.hour} hours"
-    puts "Emergency interval: #{BackupService::EMERGENCY_BACKUP_INTERVAL / 1.day} days"
+    puts "Config file: #{BackupService::CONFIG_FILE}"
+    puts "Backup directory: #{BackupService.backup_dir}"
+    puts "Database name: #{BackupService.db_name}"
+    puts "Minimum interval: #{BackupService.min_backup_interval / 1.hour} hours"
+    puts "Force interval: #{BackupService.force_backup_interval / 1.hour} hours"
+    puts "Emergency interval: #{BackupService.emergency_backup_interval / 1.day} days"
+    puts "Keep backup count: #{BackupService.keep_backup_count}"
+    puts "Batch size: #{BackupService.batch_size}"
   end
 
   # ============================================================================
@@ -209,7 +213,7 @@ namespace :db do
     backups = backup_service.rails_list_backups
     
     if backups.empty?
-      puts "No Rails backups found in #{BackupService::BACKUP_DIR}"
+      puts "No Rails backups found in #{BackupService.backup_dir}"
     else
       puts "Available Rails backups:"
       backups.each do |backup|
@@ -240,5 +244,49 @@ namespace :db do
     else
       puts "Status: UP_TO_DATE"
     end
+  end
+
+  desc "Generate or show backup configuration"
+  task config: :environment do
+    config_file = BackupService::CONFIG_FILE
+    
+    if File.exist?(config_file)
+      puts "=== Current Backup Configuration ==="
+      puts "Config file: #{config_file}"
+      puts ""
+      puts File.read(config_file)
+      puts ""
+      puts "To modify the configuration, edit: #{config_file}"
+    else
+      puts "=== Generating Default Backup Configuration ==="
+      BackupService.generate_default_config
+      puts "Default configuration generated at: #{config_file}"
+      puts "Please review and modify the configuration as needed."
+    end
+  end
+
+  desc "Show backup configuration help"
+  task config_help: :environment do
+    puts "=== Backup Configuration Help ==="
+    puts ""
+    puts "Configuration file: #{BackupService::CONFIG_FILE}"
+    puts ""
+    puts "Available settings:"
+    puts "  backup_dir: Directory to store backup files (can be external path)"
+    puts "  db_name: Database name to backup"
+    puts "  min_backup_interval_hours: Minimum time between backups (default: 6)"
+    puts "  force_backup_interval_hours: Force backup after this time (default: 24)"
+    puts "  emergency_backup_interval_days: Emergency backup after this time (default: 7)"
+    puts "  keep_backup_count: Number of backups to keep (default: 5)"
+    puts "  batch_size: Number of rows to process in batches (default: 1000)"
+    puts ""
+    puts "Example external backup directory:"
+    puts "  backup_dir: '/mnt/external_drive/backups'  # Linux/Mac"
+    puts "  backup_dir: 'D:\\Backups\\Database'        # Windows"
+    puts ""
+    puts "Commands:"
+    puts "  rake db:config          # Show current configuration"
+    puts "  rake db:config_help     # Show this help"
+    puts "  rake db:rails_init_backup  # Initialize Rails backup system"
   end
 end 
