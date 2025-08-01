@@ -57,6 +57,8 @@ Rails.application.routes.draw do
   # User profile
   get 'profile', to: 'users#profile', as: :profile
   patch 'profile', to: 'users#update'
+  get 'profile/export', to: 'users#export_data', as: :export_data
+  post 'profile/import', to: 'users#import_data', as: :import_data
 
   # CSP violation reporting endpoint
   post '/csp-violation-report', to: 'csp_violation_reports#create'

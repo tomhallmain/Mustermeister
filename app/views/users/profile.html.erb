@@ -32,6 +32,68 @@
         <% end %>
       </div>
 
+      <div class="border-t border-gray-200 pt-6 mb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Data Export & Import</h2>
+        <div class="space-y-6">
+          <!-- Export Section -->
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h3 class="text-lg font-medium text-gray-900 mb-3">Export Your Data</h3>
+            <p class="text-gray-600 mb-4">Download your data in JSON format or as an encrypted ZIP file for security.</p>
+            
+            <div class="space-y-3">
+              <!-- JSON Export -->
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="font-medium text-gray-900">JSON Export</h4>
+                  <p class="text-sm text-gray-600">Human-readable format, good for data portability</p>
+                </div>
+                <%= link_to "Download JSON", export_data_path(format: 'json'), 
+                    class: "inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>
+              </div>
+              
+              <!-- Encrypted ZIP Export -->
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="font-medium text-gray-900">Encrypted ZIP Export</h4>
+                  <p class="text-sm text-gray-600">Compressed and encrypted, smaller file size</p>
+                </div>
+                <a href="#" onclick="showEncryptedExport(); return false;" 
+                   class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                  Download Encrypted
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Import Section -->
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h3 class="text-lg font-medium text-gray-900 mb-3">Import Data</h3>
+            <p class="text-gray-600 mb-4">Import previously exported data. Supports JSON and encrypted ZIP files.</p>
+            
+            <%= form_with(url: import_data_path, method: :post, multipart: true, class: "space-y-4") do |f| %>
+              <div>
+                <%= f.label :file, "Select File", class: "block text-sm font-medium text-gray-700" %>
+                <%= f.file_field :file, accept: '.json,.zip', 
+                    class: "mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" %>
+                <p class="mt-1 text-sm text-gray-500">Maximum file size: 50MB</p>
+              </div>
+              
+              <div id="password-field" class="hidden">
+                <%= f.label :password, "Encryption Password", class: "block text-sm font-medium text-gray-700" %>
+                <%= f.password_field :password, 
+                    class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+                <p class="mt-1 text-sm text-gray-500">Required for encrypted ZIP files</p>
+              </div>
+              
+              <div>
+                <%= f.submit "Import Data", 
+                    class: "inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500" %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
       <div class="border-t border-gray-200 pt-6">
         <h2 class="text-xl font-semibold text-gray-900 mb-4">About Mustermeister</h2>
         <div class="prose max-w-none">
@@ -48,9 +110,108 @@
             <li>Archive completed tasks for future reference</li>
             <li>Reschedule and prioritize work efficiently</li>
             <li>Monitor project timelines and deadlines</li>
+            <li>Export and import your data for backup and portability</li>
           </ul>
         </div>
       </div>
     </div>
   </div>
-</div> 
+</div>
+
+<!-- Encrypted Export Modal -->
+<div id="encrypted-export-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+  <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+    <div class="mt-3">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">Encrypted Export</h3>
+      <p class="text-sm text-gray-600 mb-4">Enter a password to encrypt your data. You'll need this password to import the file later.</p>
+      
+      <form id="encrypted-export-form" class="space-y-4">
+        <div>
+          <label for="export-password" class="block text-sm font-medium text-gray-700">Password</label>
+          <input type="password" id="export-password" name="password" required
+                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+        </div>
+        
+        <div>
+          <label for="export-password-confirm" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+          <input type="password" id="export-password-confirm" name="password_confirm" required
+                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+          <button type="button" onclick="hideEncryptedExport()"
+                  class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+            Cancel
+          </button>
+          <button type="submit"
+                  class="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+            Download
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function showEncryptedExport() {
+  document.getElementById('encrypted-export-modal').classList.remove('hidden');
+}
+
+function hideEncryptedExport() {
+  document.getElementById('encrypted-export-modal').classList.add('hidden');
+  document.getElementById('encrypted-export-form').reset();
+}
+
+document.getElementById('encrypted-export-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const password = document.getElementById('export-password').value;
+  const passwordConfirm = document.getElementById('export-password-confirm').value;
+  
+  if (password !== passwordConfirm) {
+    alert('Passwords do not match!');
+    return;
+  }
+  
+  if (password.length < 6) {
+    alert('Password must be at least 6 characters long!');
+    return;
+  }
+  
+  // Create form and submit
+  const form = document.createElement('form');
+  form.method = 'GET';
+  form.action = '<%= export_data_path %>';
+  
+  const formatInput = document.createElement('input');
+  formatInput.type = 'hidden';
+  formatInput.name = 'format';
+  formatInput.value = 'encrypted_zip';
+  form.appendChild(formatInput);
+  
+  const passwordInput = document.createElement('input');
+  passwordInput.type = 'hidden';
+  passwordInput.name = 'password';
+  passwordInput.value = password;
+  form.appendChild(passwordInput);
+  
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
+  
+  hideEncryptedExport();
+});
+
+// Show password field for ZIP files
+document.querySelector('input[type="file"]').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  const passwordField = document.getElementById('password-field');
+  
+  if (file && file.name.toLowerCase().endsWith('.zip')) {
+    passwordField.classList.remove('hidden');
+  } else {
+    passwordField.classList.add('hidden');
+  }
+});
+</script> 

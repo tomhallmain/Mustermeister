@@ -71,6 +71,9 @@ gem 'rails_admin', '~> 3.3.0'
 gem "sassc-rails" # For Windows compatibility
 gem "jsbundling-rails"
 
+# Data export/import functionality
+gem "rubyzip", "~> 2.3"
+
 # Add logging with rotation support
 gem "logging"
 

@@ -489,6 +489,7 @@ DEPENDENCIES
   redis (>= 4.0.1)
   rspec-rails
   rubocop-rails-omakase
+  rubyzip (~> 2.3)
   sassc-rails
   scenic
   secure_headers
