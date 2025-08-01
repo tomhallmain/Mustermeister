@@ -23,7 +23,7 @@
   </head>
 
   <body class="bg-gray-100" data-turbo="false">
-    <nav class="bg-white shadow-lg">
+    <nav class="bg-white">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
           <div class="flex">
@@ -82,40 +82,60 @@
     </nav>
 
     <% if notice %>
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-        <div id="flash-success" class="bg-green-50 border-l-4 border-green-400 p-4">
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4" 
+           data-controller="toast" 
+           data-toast-auto-dismiss-value="true"
+           data-toast-dismiss-delay-value="15000">
+        <div id="flash-success" class="bg-green-50 border-l-4 border-green-400 p-3 rounded-md transition-all duration-150 ease-in-out">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <svg class="h-4 w-4 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div class="ml-2">
+                <p class="text-xs text-green-700"><%= notice %></p>
+              </div>
+            </div>
+            <button data-action="click->toast#dismiss" class="text-green-400 hover:text-green-600 ml-2">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
-            </div>
-            <div class="ml-3">
-              <p class="text-sm text-green-700"><%= notice %></p>
-            </div>
+            </button>
           </div>
         </div>
       </div>
     <% end %>
 
     <% if alert %>
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-        <div class="bg-red-50 border-l-4 border-red-400 p-4">
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4" 
+           data-controller="toast" 
+           data-toast-auto-dismiss-value="true"
+           data-toast-dismiss-delay-value="15000">
+        <div class="bg-red-50 border-l-4 border-red-400 p-3 rounded-md transition-all duration-150 ease-in-out">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <svg class="h-4 w-4 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div class="ml-2">
+                <p class="text-xs text-red-700"><%= alert %></p>
+              </div>
+            </div>
+            <button data-action="click->toast#dismiss" class="text-red-400 hover:text-red-600 ml-2">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
-            </div>
-            <div class="ml-3">
-              <p class="text-sm text-red-700"><%= alert %></p>
-            </div>
+            </button>
           </div>
         </div>
       </div>
     <% end %>
 
-    <main class="py-6">
+    <main class="pt-2 pb-4">
       <%= yield %>
     </main>
     <%= javascript_include_tag "application", "data-turbo-track": "reload", defer: true, type: "module" %>
