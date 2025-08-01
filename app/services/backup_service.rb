@@ -4,7 +4,6 @@ class BackupService
   # Default configuration values
   DEFAULT_CONFIG = {
     'backup_dir' => 'db_backups',
-    'db_name' => 'myapp_development',
     'min_backup_interval_hours' => 6,
     'force_backup_interval_hours' => 24,
     'emergency_backup_interval_days' => 7,
@@ -38,11 +37,28 @@ class BackupService
   
   # Configuration accessors
   def self.backup_dir
-    config['backup_dir']
+    config['backup_dir']&.gsub('\\', '/')
   end
   
   def self.db_name
-    config['db_name']
+    # Dynamically get database name from Rails configuration
+    database_config = Rails.configuration.database_configuration[Rails.env]
+    database_config['database']
+  end
+  
+  def self.db_host
+    database_config = Rails.configuration.database_configuration[Rails.env]
+    database_config['host'] || 'localhost'
+  end
+  
+  def self.db_port
+    database_config = Rails.configuration.database_configuration[Rails.env]
+    database_config['port'] || 5432
+  end
+  
+  def self.db_username
+    database_config = Rails.configuration.database_configuration[Rails.env]
+    database_config['username']
   end
   
   def self.min_backup_interval
@@ -111,18 +127,24 @@ class BackupService
   def initialize
     @backup_dir = self.class.backup_dir
     @db_name = self.class.db_name
+    @db_host = self.class.db_host
+    @db_port = self.class.db_port
+    @db_username = self.class.db_username
+    
+    # Validate that we can access the database configuration
+    validate_database_config
     ensure_backup_directory_exists
   end
   
   def auto_backup
     if should_backup?
       reason = backup_reason
-      Rails.logger.info "Creating backup: #{reason}"
+      Rails.logger.info "Creating backup for database '#{@db_name}': #{reason}"
       backup
       { success: true, reason: reason }
     else
       reason = skip_reason
-      Rails.logger.info "Skipping backup: #{reason}"
+      Rails.logger.info "Skipping backup for database '#{@db_name}': #{reason}"
       { success: false, reason: reason, skipped: true }
     end
   end
@@ -139,10 +161,10 @@ class BackupService
     
     if success
       cleanup_old_backups
-      Rails.logger.info "Backup completed successfully: #{backup_file}"
+      Rails.logger.info "Backup completed successfully for database '#{@db_name}': #{backup_file}"
       { success: true, file: backup_file }
     else
-      Rails.logger.error "Backup failed"
+      Rails.logger.error "Backup failed for database '#{@db_name}'"
       { success: false, error: "Backup command failed" }
     end
   end
@@ -171,11 +193,14 @@ class BackupService
     time_since_last = time_since_last_backup
     
     if time_since_last >= self.class.emergency_backup_interval
-      "emergency backup (been #{time_since_last / 1.day} days)"
+      formatted_time = format_time_duration(time_since_last / 1.day * 24)
+      "emergency backup (been #{formatted_time})"
     elsif time_since_last >= self.class.force_backup_interval
-      "force backup (been #{time_since_last / 1.hour} hours)"
+      formatted_time = format_time_duration(time_since_last / 1.hour)
+      "force backup (been #{formatted_time})"
     elsif time_since_last >= self.class.min_backup_interval
-      "regular backup (been #{time_since_last / 1.hour} hours)"
+      formatted_time = format_time_duration(time_since_last / 1.hour)
+      "regular backup (been #{formatted_time})"
     else
       "unknown reason"
     end
@@ -183,7 +208,8 @@ class BackupService
   
   def skip_reason
     time_since_last = time_since_last_backup
-    "only #{time_since_last / 1.hour} hours since last backup (minimum #{self.class.min_backup_interval / 1.hour} hours)"
+    formatted_time = format_time_duration(time_since_last / 1.hour)
+    "only #{formatted_time} since last backup (minimum #{self.class.min_backup_interval / 1.hour} hours)"
   end
   
   def list_backups
@@ -215,7 +241,7 @@ class BackupService
   def rails_auto_backup
     if rails_should_backup?
       reason = rails_backup_reason
-      Rails.logger.info "Creating Rails backup: #{reason}"
+      Rails.logger.info "Creating Rails backup for database '#{@db_name}': #{reason}"
       result = rails_backup
       if result[:success]
         { success: true, reason: reason }
@@ -224,7 +250,7 @@ class BackupService
       end
     else
       reason = rails_skip_reason
-      Rails.logger.info "Skipping Rails backup: #{reason}"
+      Rails.logger.info "Skipping Rails backup for database '#{@db_name}': #{reason}"
       { success: false, reason: reason, skipped: true }
     end
   end
@@ -238,10 +264,10 @@ class BackupService
       File.write(backup_file, sql_content)
       
       rails_cleanup_old_backups
-      Rails.logger.info "Rails backup completed successfully: #{backup_file}"
+      Rails.logger.info "Rails backup completed successfully for database '#{@db_name}': #{backup_file}"
       { success: true, file: backup_file, size: File.size(backup_file) }
     rescue => e
-      Rails.logger.error "Rails backup failed: #{e.message}"
+      Rails.logger.error "Rails backup failed for database '#{@db_name}': #{e.message}"
       { success: false, error: e.message }
     end
   end
@@ -270,11 +296,14 @@ class BackupService
     time_since_last = rails_time_since_last_backup
     
     if time_since_last >= self.class.emergency_backup_interval
-      "emergency Rails backup (been #{time_since_last / 1.day} days)"
+      formatted_time = format_time_duration(time_since_last / 1.day * 24)
+      "emergency Rails backup (been #{formatted_time})"
     elsif time_since_last >= self.class.force_backup_interval
-      "force Rails backup (been #{time_since_last / 1.hour} hours)"
+      formatted_time = format_time_duration(time_since_last / 1.hour)
+      "force Rails backup (been #{formatted_time})"
     elsif time_since_last >= self.class.min_backup_interval
-      "regular Rails backup (been #{time_since_last / 1.hour} hours)"
+      formatted_time = format_time_duration(time_since_last / 1.hour)
+      "regular Rails backup (been #{formatted_time})"
     else
       "unknown reason"
     end
@@ -282,7 +311,8 @@ class BackupService
   
   def rails_skip_reason
     time_since_last = rails_time_since_last_backup
-    "only #{time_since_last / 1.hour} hours since last Rails backup (minimum #{self.class.min_backup_interval / 1.hour} hours)"
+    formatted_time = format_time_duration(time_since_last / 1.hour)
+    "only #{formatted_time} since last Rails backup (minimum #{self.class.min_backup_interval / 1.hour} hours)"
   end
   
   def rails_list_backups
@@ -311,21 +341,38 @@ class BackupService
   private
   
   def recent_backups
-    @recent_backups ||= Dir.glob("#{@backup_dir}/#{@db_name}_*.sql")
-                          .reject { |f| f.include?('_rails_') }  # Exclude Rails backups
-                          .sort_by { |f| File.mtime(f) }
-                          .reverse
+    pattern = "#{@backup_dir}/#{@db_name}_*.sql"
+    
+    files = Dir.glob(pattern)
+    filtered_files = files.reject { |f| f.include?('_rails_') }
+    @recent_backups ||= filtered_files.sort_by { |f| File.mtime(f) }.reverse
   end
   
   def ensure_backup_directory_exists
     FileUtils.mkdir_p(@backup_dir)
   end
   
+  def validate_database_config
+    unless @db_name.present?
+      raise "Database name is not configured. Please check your database.yml file."
+    end
+    
+    begin
+      # Test database connection
+      ActiveRecord::Base.connection.execute("SELECT 1")
+      Rails.logger.info "Database configuration validated successfully for '#{@db_name}'"
+    rescue => e
+      Rails.logger.error "Database configuration validation failed for '#{@db_name}': #{e.message}"
+      raise "Database configuration is not valid for '#{@db_name}'. Please check your database.yml and environment variables."
+    end
+  end
+  
   # Rails-specific private methods
   def rails_recent_backups
-    @rails_recent_backups ||= Dir.glob("#{@backup_dir}/#{@db_name}_rails_*.sql")
-                                 .sort_by { |f| File.mtime(f) }
-                                 .reverse
+    pattern = "#{@backup_dir}/#{@db_name}_rails_*.sql"
+    
+    files = Dir.glob(pattern)
+    @rails_recent_backups ||= files.sort_by { |f| File.mtime(f) }.reverse
   end
   
   def generate_rails_sql_dump
@@ -567,5 +614,29 @@ class BackupService
     end
     
     data_lines.join("\n")
+  end
+
+  # Helper method to format time duration in a human-readable way
+  def format_time_duration(hours)
+    if hours < 1
+      minutes = (hours * 60).round
+      "#{minutes} minute#{minutes == 1 ? '' : 's'}"
+    elsif hours < 24
+      whole_hours = hours.floor
+      remaining_minutes = ((hours - whole_hours) * 60).round
+      if remaining_minutes == 0
+        "#{whole_hours} hour#{whole_hours == 1 ? '' : 's'}"
+      else
+        "#{whole_hours} hour#{whole_hours == 1 ? '' : 's'} #{remaining_minutes} minute#{remaining_minutes == 1 ? '' : 's'}"
+      end
+    else
+      days = (hours / 24).floor
+      remaining_hours = (hours % 24).round
+      if remaining_hours == 0
+        "#{days} day#{days == 1 ? '' : 's'}"
+      else
+        "#{days} day#{days == 1 ? '' : 's'} #{remaining_hours} hour#{remaining_hours == 1 ? '' : 's'}"
+      end
+    end
   end
 end 

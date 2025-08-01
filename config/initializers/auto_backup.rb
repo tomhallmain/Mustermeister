@@ -7,7 +7,8 @@ Rails.application.config.after_initialize do
                when 'production'
                  true  # Always run in production
                when 'development'
-                 ENV['ENABLE_AUTO_BACKUP'] == 'true' || ENV['AUTO_BACKUP_DEV'] == 'true'
+                 true
+                 # ENV['ENABLE_AUTO_BACKUP'] == 'true' || ENV['AUTO_BACKUP_DEV'] == 'true'
                else
                  ENV['ENABLE_AUTO_BACKUP'] == 'true'
                end
@@ -19,13 +20,13 @@ Rails.application.config.after_initialize do
       
       if result[:success]
         Rails.logger.info "Rails auto-backup completed: #{result[:reason]}"
-        puts "✓ Rails auto-backup completed: #{result[:reason]}" if Rails.env.development?
+        puts "✓ Rails auto-backup completed: #{result[:reason]}" if (Rails.env.development? || Rails.env.production?)
       elsif result[:skipped]
         Rails.logger.info "Rails auto-backup skipped: #{result[:reason]}"
-        puts "⏭ Rails auto-backup skipped: #{result[:reason]}" if Rails.env.development?
+        puts "⏭ Rails auto-backup skipped: #{result[:reason]}" if (Rails.env.development? || Rails.env.production?)
       else
         Rails.logger.error "Rails auto-backup failed: #{result[:error]}"
-        puts "✗ Rails auto-backup failed: #{result[:error]}" if Rails.env.development?
+        puts "✗ Rails auto-backup failed: #{result[:error]}" if (Rails.env.development? || Rails.env.production?)
       end
     rescue => e
       Rails.logger.error "Rails auto-backup failed: #{e.message}"
