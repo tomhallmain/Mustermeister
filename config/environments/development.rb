@@ -49,6 +49,26 @@ Rails.application.configure do
   # Show less verbose logs by default
   config.log_level = :info
 
+  # SQL Logging Control Options:
+  #
+  # 1. To completely disable SQL logging (recommended for backup operations):
+  config.active_record.logger = nil
+  #
+  # 2. To disable verbose query logs:
+  # config.active_record.verbose_query_logs = false
+  #
+  # 3. To enable verbose query logs (shows full SQL statements):
+  # config.active_record.verbose_query_logs = true
+  #
+  # 4. To control logging level for ActiveRecord specifically:
+  # config.active_record.logger.level = Logger::WARN  # Only warnings and errors
+  # config.active_record.logger.level = Logger::ERROR # Only errors
+  #
+  # 5. To temporarily disable SQL logging in specific code blocks:
+  # ActiveRecord::Base.logger.silence do
+  #   # Your backup code here
+  # end
+
   # Uncomment to see detailed SQL logs
   # config.active_record.verbose_query_logs = true
 
