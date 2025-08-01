@@ -157,4 +157,88 @@ namespace :db do
     puts "Force interval: #{BackupService::FORCE_BACKUP_INTERVAL / 1.hour} hours"
     puts "Emergency interval: #{BackupService::EMERGENCY_BACKUP_INTERVAL / 1.day} days"
   end
+
+  # ============================================================================
+  # Rails-based backup tasks (completely separate from pg_dump tasks)
+  # ============================================================================
+  
+  desc "Rails backup the database (ActiveRecord-based, no pg_dump required)"
+  task rails_backup: :environment do
+    result = BackupService.rails_backup
+    
+    if result[:success]
+      puts "✓ Rails backup completed successfully: #{result[:file]} (#{result[:size]} bytes)"
+    else
+      puts "✗ Rails backup failed: #{result[:error]}"
+      exit 1
+    end
+  end
+
+  desc "Rails auto backup with smart timing logic (ActiveRecord-based)"
+  task rails_auto_backup: :environment do
+    result = BackupService.rails_auto_backup
+    
+    if result[:success]
+      puts "✓ Rails backup created: #{result[:reason]}"
+    elsif result[:skipped]
+      puts "⏭ Rails backup skipped: #{result[:reason]}"
+    else
+      puts "✗ Rails backup failed: #{result[:error]}"
+      exit 1
+    end
+  end
+
+  desc "Initialize Rails backup system (creates first Rails backup)"
+  task rails_init_backup: :environment do
+    puts "Initializing Rails backup system..."
+    
+    result = BackupService.rails_backup
+    
+    if result[:success]
+      puts "✓ Rails backup system initialized successfully!"
+      puts "Rails auto-backup will now run with smart timing logic."
+    else
+      puts "✗ Rails backup system initialization failed: #{result[:error]}"
+      exit 1
+    end
+  end
+
+  desc "List available Rails backups"
+  task rails_list_backups: :environment do
+    backup_service = BackupService.new
+    backups = backup_service.rails_list_backups
+    
+    if backups.empty?
+      puts "No Rails backups found in #{BackupService::BACKUP_DIR}"
+    else
+      puts "Available Rails backups:"
+      backups.each do |backup|
+        puts "  #{backup[:filename]} (#{backup[:size]} bytes, #{backup[:created_at]})"
+      end
+    end
+  end
+
+  desc "Clean old Rails backups (keep last 5)"
+  task rails_clean_backups: :environment do
+    backup_service = BackupService.new
+    backup_service.rails_cleanup_old_backups
+    puts "Rails backup cleanup completed"
+  end
+
+  desc "Check Rails backup system status"
+  task rails_check_status: :environment do
+    backup_service = BackupService.new
+    
+    puts "=== Rails Backup System Status ==="
+    puts "Last Rails backup: #{backup_service.rails_last_backup_time&.strftime('%Y-%m-%d %H:%M:%S') || 'Never'}"
+    puts "Time since last: #{backup_service.rails_time_since_last_backup / 1.hour} hours"
+    puts "Should backup: #{backup_service.rails_should_backup?}"
+    puts "Available backups: #{backup_service.rails_list_backups.count}"
+    
+    if backup_service.rails_should_backup?
+      puts "Status: NEEDS_BACKUP"
+    else
+      puts "Status: UP_TO_DATE"
+    end
+  end
 end 

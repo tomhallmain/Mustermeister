@@ -14,22 +14,22 @@ Rails.application.config.after_initialize do
   
   if should_run
     begin
-      puts "Running auto-backup check..."
-      result = BackupService.auto_backup
+      puts "Running Rails auto-backup check..."
+      result = BackupService.rails_auto_backup
       
       if result[:success]
-        Rails.logger.info "Auto-backup completed: #{result[:reason]}"
-        puts "✓ Auto-backup completed: #{result[:reason]}" if Rails.env.development?
+        Rails.logger.info "Rails auto-backup completed: #{result[:reason]}"
+        puts "✓ Rails auto-backup completed: #{result[:reason]}" if Rails.env.development?
       elsif result[:skipped]
-        Rails.logger.info "Auto-backup skipped: #{result[:reason]}"
-        puts "⏭ Auto-backup skipped: #{result[:reason]}" if Rails.env.development?
+        Rails.logger.info "Rails auto-backup skipped: #{result[:reason]}"
+        puts "⏭ Rails auto-backup skipped: #{result[:reason]}" if Rails.env.development?
       else
-        Rails.logger.error "Auto-backup failed: #{result[:error]}"
-        puts "✗ Auto-backup failed: #{result[:error]}" if Rails.env.development?
+        Rails.logger.error "Rails auto-backup failed: #{result[:error]}"
+        puts "✗ Rails auto-backup failed: #{result[:error]}" if Rails.env.development?
       end
     rescue => e
-      Rails.logger.error "Auto-backup failed: #{e.message}"
-      puts "Auto-backup failed: #{e.message}" if Rails.env.development?
+      Rails.logger.error "Rails auto-backup failed: #{e.message}"
+      puts "Rails auto-backup failed: #{e.message}" if Rails.env.development?
     end
   end
 end 
