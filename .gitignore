@@ -44,4 +44,6 @@ i
 *.crt
 *.key
 
+db_backups/
+
 planning/*

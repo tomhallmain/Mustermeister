@@ -3,7 +3,9 @@ setlocal enabledelayedexpansion
 
 :: Configuration
 set BACKUP_DIR=db_backups
-set DB_NAME=rails_test_app_development
+set DB_NAME=myapp_development
+set DB_USER=myapp
+set DB_PASS=test
 
 :: Check if backup file is provided
 if "%~1"=="" (
@@ -30,12 +32,13 @@ if /i not "%CONFIRM%"=="y" (
 
 :: Drop and recreate database
 echo Dropping and recreating database...
-dropdb -U postgres %DB_NAME%
-createdb -U postgres %DB_NAME%
+set PGPASSWORD=%DB_PASS%
+dropdb -U %DB_USER% -h localhost %DB_NAME%
+createdb -U %DB_USER% -h localhost %DB_NAME%
 
 :: Restore from backup
 echo Restoring from backup...
-pg_restore -U postgres -d %DB_NAME% -v "%BACKUP_FILE%"
+pg_restore -U %DB_USER% -h localhost -d %DB_NAME% -v "%BACKUP_FILE%"
 
 if %ERRORLEVEL% EQU 0 (
     echo Restore completed successfully.

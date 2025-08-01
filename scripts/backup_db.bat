@@ -5,7 +5,9 @@ setlocal enabledelayedexpansion
 set TIMESTAMP=%date:~-4%%date:~3,2%%date:~0,2%_%time:~0,2%%time:~3,2%%time:~6,2%
 set TIMESTAMP=%TIMESTAMP: =0%
 set BACKUP_DIR=db_backups
-set DB_NAME=rails_test_app_development
+set DB_NAME=myapp_development
+set DB_USER=myapp
+set DB_PASS=test
 set BACKUP_FILE=%BACKUP_DIR%\%DB_NAME%_%TIMESTAMP%.sql
 
 :: Create backup directory if it doesn't exist
@@ -13,7 +15,8 @@ if not exist "%BACKUP_DIR%" mkdir "%BACKUP_DIR%"
 
 :: Create backup
 echo Creating backup of %DB_NAME%...
-pg_dump -U postgres -F c -b -v -f "%BACKUP_FILE%" %DB_NAME%
+set PGPASSWORD=%DB_PASS%
+pg_dump -U %DB_USER% -h localhost -F c -b -v -f "%BACKUP_FILE%" %DB_NAME%
 
 :: Check if backup was successful
 if %ERRORLEVEL% EQU 0 (
