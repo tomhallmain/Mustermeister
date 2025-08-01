@@ -338,14 +338,40 @@ class BackupService
     sql_lines << "-- Rails version: #{Rails.version}"
     sql_lines << ""
     
-    # Get all tables
-    tables = ActiveRecord::Base.connection.tables.sort
+    # Get all tables in dependency order (respecting foreign key constraints)
+    tables = get_tables_in_dependency_order
     
     tables.each do |table|
       sql_lines << generate_table_dump(table)
     end
     
     sql_lines.join("\n")
+  end
+  
+  def get_tables_in_dependency_order
+    all_tables = ActiveRecord::Base.connection.tables
+    
+    # Define the correct order based on foreign key dependencies
+    # Tables with no dependencies come first, then tables that depend on them
+    dependency_order = [
+      'ar_internal_metadata',  # System table, no dependencies
+      'schema_migrations',     # System table, no dependencies
+      'users',                 # No foreign key dependencies
+      'projects',              # Depends on users
+      'statuses',              # Depends on projects
+      'tags',                  # No foreign key dependencies
+      'tasks',                 # Depends on projects, users, statuses
+      'comments',              # Depends on projects, tasks, users
+      'versions',              # No foreign keys but references other tables
+      'tags_tasks'             # Junction table, depends on tags and tasks
+    ]
+    
+    # Filter to only include tables that exist in the database
+    existing_tables = dependency_order.select { |table| all_tables.include?(table) }
+    
+    # Add any remaining tables that weren't in our predefined order
+    remaining_tables = all_tables - existing_tables
+    existing_tables + remaining_tables.sort
   end
   
   def generate_table_dump(table)
@@ -382,7 +408,7 @@ class BackupService
         ORDER BY ordinal_position
       SQL
       
-      return "-- Could not generate structure for #{table}" if columns_result.empty?
+      return "-- Could not generate structure for #{table}" if columns_result.count == 0
       
       # Build CREATE TABLE statement
       create_table_sql = "CREATE TABLE #{table} (\n"
@@ -408,7 +434,7 @@ class BackupService
         WHERE constraint_type = 'PRIMARY KEY' AND tc.table_name = '#{table}'
       SQL
       
-      if pk_result.any?
+      if pk_result.count > 0
         pk_columns = pk_result.map { |row| row['column_name'] }
         create_table_sql += "\n\nALTER TABLE #{table} ADD CONSTRAINT #{table}_pkey PRIMARY KEY (#{pk_columns.join(', ')});"
       end
@@ -424,7 +450,7 @@ class BackupService
         ORDER BY indexname
       SQL
       
-      if indexes_result.any?
+      if indexes_result.count > 0
         create_table_sql += "\n"
         indexes_result.each do |index|
           create_table_sql += "\n#{index['indexdef']};"
@@ -432,9 +458,10 @@ class BackupService
       end
       
       create_table_sql
-    rescue => e
-      "-- Could not generate structure for #{table}: #{e.message}"
-    end
+     rescue => e
+       Rails.logger.error "Failed to generate structure for #{table}: #{e.message}"
+       raise e
+     end
   end
   
   def get_column_type(column)
