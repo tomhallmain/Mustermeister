@@ -1,4 +1,4 @@
-# BackupService provides automated database backup functionality with two strategies:
+# BackupService provides automated database backup functionality with three strategies:
 #
 # 1. **pg_dump method (default)**: Uses PostgreSQL's native pg_dump utility for fast,
 #    reliable backups. Requires pg_dump to be installed and accessible in PATH.
@@ -9,6 +9,10 @@
 #    creates human-readable SQL files that can be restored to any PostgreSQL database.
 #    No external dependencies required, but may be slower for large databases.
 #
+# 3. **both method**: Runs both pg_dump and Rails backups for maximum redundancy.
+#    If pg_dump is unavailable or fails, the Rails method will still run.
+#    Provides the best of both worlds - fast pg_dump backups plus reliable Rails fallback.
+#
 # Configuration is managed via config/backup_config.yml with sensible defaults.
 # The service automatically determines backup intervals, manages retention,
 # and validates database connectivity before attempting backups.
@@ -17,7 +21,7 @@ class BackupService
   
   # Default configuration values
   DEFAULT_CONFIG = {
-    'backup_method' => 'pg_dump',  # 'pg_dump' or 'rails'
+    'backup_method' => 'pg_dump',  # 'pg_dump', 'rails', or 'both'
     'backup_dir' => 'db_backups',
     'min_backup_interval_hours' => 6,
     'force_backup_interval_hours' => 24,
@@ -239,6 +243,15 @@ class BackupService
     def smart_auto_backup
       new.smart_auto_backup
     end
+    
+    # Both backup methods
+    def both_auto_backup
+      new.both_auto_backup
+    end
+    
+    def both_backup
+      new.both_backup
+    end
   end
   
   def initialize
@@ -259,6 +272,8 @@ class BackupService
       rails_auto_backup
     when 'pg_dump', nil
       auto_backup
+    when 'both'
+      both_auto_backup
     else
       Rails.logger.warn "Unknown backup method '#{self.class.backup_method}', using pg_dump"
       auto_backup
@@ -510,6 +525,93 @@ class BackupService
       File.delete(backup)
       Rails.logger.info "Deleted old Rails backup: #{File.basename(backup)}"
     end
+  end
+  
+  # ============================================================================
+  # Both backup methods (pg_dump + Rails)
+  # ============================================================================
+  
+  def both_auto_backup
+    # Check if we should backup based on either method
+    should_pg_dump = should_backup?
+    should_rails = rails_should_backup?
+    
+    if should_pg_dump || should_rails
+      reason = both_backup_reason(should_pg_dump, should_rails)
+      Rails.logger.info "Creating both pg_dump and Rails backups for database '#{@db_name}': #{reason}"
+      
+      results = both_backup
+      
+      # Determine overall success
+      pg_dump_success = results[:pg_dump][:success]
+      rails_success = results[:rails][:success]
+      
+      if pg_dump_success && rails_success
+        { success: true, reason: reason, results: results }
+      elsif pg_dump_success || rails_success
+        # At least one method succeeded
+        successful_method = pg_dump_success ? 'pg_dump' : 'rails'
+        { success: true, reason: "#{reason} (only #{successful_method} succeeded)", results: results }
+      else
+        # Both methods failed
+        { success: false, error: "Both backup methods failed", results: results }
+      end
+    else
+      reason = both_skip_reason
+      Rails.logger.info "Skipping both backups for database '#{@db_name}': #{reason}"
+      { success: false, reason: reason, skipped: true }
+    end
+  end
+  
+  def both_backup
+    results = {}
+    
+    # Try pg_dump backup first
+    begin
+      compatibility = self.class.version_compatibility_check
+      if compatibility[:pg_dump_available] && compatibility[:compatible]
+        results[:pg_dump] = backup
+      else
+        results[:pg_dump] = { success: false, error: "pg_dump not available or incompatible" }
+      end
+    rescue => e
+      results[:pg_dump] = { success: false, error: e.message }
+    end
+    
+    # Always try Rails backup (no external dependencies)
+    begin
+      results[:rails] = rails_backup
+    rescue => e
+      results[:rails] = { success: false, error: e.message }
+    end
+    
+    # Clean up old backups for both methods
+    cleanup_old_backups
+    rails_cleanup_old_backups
+    
+    results
+  end
+  
+  def both_backup_reason(should_pg_dump, should_rails)
+    if should_pg_dump && should_rails
+      "both methods due (pg_dump: #{backup_reason}, Rails: #{rails_backup_reason})"
+    elsif should_pg_dump
+      "pg_dump due (#{backup_reason})"
+    elsif should_rails
+      "Rails due (#{rails_backup_reason})"
+    else
+      "unknown reason"
+    end
+  end
+  
+  def both_skip_reason
+    pg_dump_time = time_since_last_backup
+    rails_time = rails_time_since_last_backup
+    
+    pg_dump_formatted = format_time_duration(pg_dump_time / 1.hour)
+    rails_formatted = format_time_duration(rails_time / 1.hour)
+    
+    "pg_dump: #{pg_dump_formatted} since last backup, Rails: #{rails_formatted} since last backup (minimum #{self.class.min_backup_interval / 1.hour} hours)"
   end
   
   private

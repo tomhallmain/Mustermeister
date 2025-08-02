@@ -252,6 +252,85 @@ namespace :db do
     end
   end
 
+  # ============================================================================
+  # Both backup methods (pg_dump + Rails)
+  # ============================================================================
+
+  desc "Both backup methods (pg_dump + Rails) - immediate execution"
+  task both_backup: :environment do
+    result = BackupService.both_backup
+    
+    puts "=== Both Backup Methods Results ==="
+    
+    if result[:pg_dump]
+      pg_result = result[:pg_dump]
+      if pg_result[:success]
+        puts "✓ pg_dump: #{pg_result[:file]}"
+      else
+        puts "✗ pg_dump: #{pg_result[:error]}"
+      end
+    end
+    
+    if result[:rails]
+      rails_result = result[:rails]
+      if rails_result[:success]
+        puts "✓ Rails: #{rails_result[:file]} (#{rails_result[:size]} bytes)"
+      else
+        puts "✗ Rails: #{rails_result[:error]}"
+      end
+    end
+    
+    # Determine overall success
+    pg_success = result[:pg_dump]&.dig(:success) || false
+    rails_success = result[:rails]&.dig(:success) || false
+    
+    if pg_success && rails_success
+      puts "\n✓ Both backup methods completed successfully!"
+    elsif pg_success || rails_success
+      successful_method = pg_success ? 'pg_dump' : 'rails'
+      puts "\n⚠️  Only #{successful_method} backup completed successfully"
+    else
+      puts "\n✗ Both backup methods failed"
+      exit 1
+    end
+  end
+
+  desc "Both backup methods (pg_dump + Rails) with smart timing logic"
+  task both_auto_backup: :environment do
+    result = BackupService.both_auto_backup
+    
+    if result[:success]
+      puts "✓ Both backups created: #{result[:reason]}"
+      
+      # Show detailed results if available
+      if result[:results]
+        puts "\nDetailed results:"
+        if result[:results][:pg_dump]
+          pg_result = result[:results][:pg_dump]
+          if pg_result[:success]
+            puts "  ✓ pg_dump: #{pg_result[:file]}"
+          else
+            puts "  ✗ pg_dump: #{pg_result[:error]}"
+          end
+        end
+        
+        if result[:results][:rails]
+          rails_result = result[:results][:rails]
+          if rails_result[:success]
+            puts "  ✓ Rails: #{rails_result[:file]} (#{rails_result[:size]} bytes)"
+          else
+            puts "  ✗ Rails: #{rails_result[:error]}"
+          end
+        end
+      end
+    elsif result[:skipped]
+      puts "⏭ Both backups skipped: #{result[:reason]}"
+    else
+      puts "✗ Both backups failed: #{result[:error]}"
+      exit 1
+    end
+  end
+
   desc "Generate or show backup configuration"
   task config: :environment do
     config_file = BackupService::CONFIG_FILE
