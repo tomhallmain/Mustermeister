@@ -15,22 +15,19 @@ Rails.application.config.after_initialize do
   
   if should_run
     begin
-      puts "Running Rails auto-backup check..."
-      result = BackupService.rails_auto_backup
+      backup_method = BackupService.backup_method
+      Rails.logger.info "Running #{backup_method} auto-backup check..."
+      result = BackupService.smart_auto_backup # This will probably be a NOOP on test
       
       if result[:success]
-        Rails.logger.info "Rails auto-backup completed: #{result[:reason]}"
-        puts "✓ Rails auto-backup completed: #{result[:reason]}" if (Rails.env.development? || Rails.env.production?)
+        Rails.logger.info "#{backup_method} auto-backup completed: #{result[:reason]}"
       elsif result[:skipped]
-        Rails.logger.info "Rails auto-backup skipped: #{result[:reason]}"
-        puts "⏭ Rails auto-backup skipped: #{result[:reason]}" if (Rails.env.development? || Rails.env.production?)
+        Rails.logger.info "#{backup_method} auto-backup skipped: #{result[:reason]}"
       else
-        Rails.logger.error "Rails auto-backup failed: #{result[:error]}"
-        puts "✗ Rails auto-backup failed: #{result[:error]}" if (Rails.env.development? || Rails.env.production?)
+        Rails.logger.error "#{backup_method} auto-backup failed: #{result[:error]}"
       end
     rescue => e
-      Rails.logger.error "Rails auto-backup failed: #{e.message}"
-      puts "Rails auto-backup failed: #{e.message}" if Rails.env.development?
+      Rails.logger.error "Auto-backup failed: #{e.message}"
     end
   end
 end 

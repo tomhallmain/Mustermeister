@@ -1,14 +1,29 @@
+# BackupService provides automated database backup functionality with two strategies:
+#
+# 1. **pg_dump method (default)**: Uses PostgreSQL's native pg_dump utility for fast,
+#    reliable backups. Requires pg_dump to be installed and accessible in PATH.
+#    This method creates compressed, binary-format backups that are optimized for
+#    PostgreSQL restoration.
+#
+# 2. **Rails method**: Generates pure SQL export using ActiveRecord. This method
+#    creates human-readable SQL files that can be restored to any PostgreSQL database.
+#    No external dependencies required, but may be slower for large databases.
+#
+# Configuration is managed via config/backup_config.yml with sensible defaults.
+# The service automatically determines backup intervals, manages retention,
+# and validates database connectivity before attempting backups.
 class BackupService
   CONFIG_FILE = "config/backup_config.yml"
   
   # Default configuration values
   DEFAULT_CONFIG = {
+    'backup_method' => 'pg_dump',  # 'pg_dump' or 'rails'
     'backup_dir' => 'db_backups',
     'min_backup_interval_hours' => 6,
     'force_backup_interval_hours' => 24,
     'emergency_backup_interval_days' => 7,
     'keep_backup_count' => 5,
-    'batch_size' => 1000
+    'batch_size' => 1000,
   }.freeze
   
   # Load configuration
@@ -81,6 +96,103 @@ class BackupService
     config['batch_size']
   end
   
+  def self.backup_method
+    config['backup_method'] || 'pg_dump'
+  end
+  
+  def self.pg_dump_available?
+    if Gem.win_platform?
+      system("where pg_dump >nul 2>&1")
+    else
+      system("which pg_dump >/dev/null 2>&1")
+    end
+  end
+  
+  def self.pg_dump_version
+    return nil unless pg_dump_available?
+    
+         if Gem.win_platform?
+       # Use inline batch script to match backup script behavior
+       batch_script = <<~BATCH
+         @echo off
+         pg_dump --version 2>&1
+       BATCH
+      
+      # Write temporary batch file and execute it
+      require 'tempfile'
+      temp_file = Tempfile.new(['pg_dump_version', '.bat'])
+      temp_file.write(batch_script)
+      temp_file.close
+      
+      begin
+        version_output = `"#{temp_file.path}" 2>&1`
+        version_output.strip if $?.success?
+      ensure
+        temp_file.unlink
+      end
+    else
+      # Use inline shell script to match backup script behavior
+      shell_script = <<~SHELL
+        #!/bin/bash
+        pg_dump --version 2>&1
+      SHELL
+      
+      # Write temporary shell script and execute it
+      require 'tempfile'
+      temp_file = Tempfile.new(['pg_dump_version', '.sh'])
+      temp_file.write(shell_script)
+      temp_file.close
+      
+      begin
+        # Make executable and run
+        File.chmod(0o755, temp_file.path)
+        version_output = `"#{temp_file.path}" 2>&1`
+        version_output.strip if $?.success?
+      ensure
+        temp_file.unlink
+      end
+    end
+  rescue
+    nil
+  end
+  
+  def self.postgresql_server_version
+    return nil unless defined?(ActiveRecord::Base)
+    
+    begin
+      result = ActiveRecord::Base.connection.execute("SHOW server_version")
+      result.first['server_version'] if result.any?
+    rescue
+      nil
+    end
+  end
+  
+  def self.version_compatibility_check
+    pg_dump_ver = pg_dump_version
+    server_ver = postgresql_server_version
+    
+    return {
+      pg_dump_available: pg_dump_ver.present?,
+      pg_dump_version: pg_dump_ver,
+      server_version: server_ver,
+      compatible: pg_dump_ver.present? && server_ver.present? && versions_compatible?(pg_dump_ver, server_ver),
+      warnings: []
+    }
+  end
+  
+  def self.versions_compatible?(pg_dump_ver, server_ver)
+    return false unless pg_dump_ver && server_ver
+    
+    # Extract major version numbers (e.g., "15.4" -> 15)
+    pg_dump_major = pg_dump_ver.match(/(\d+)\./).to_a[1]&.to_i
+    server_major = server_ver.match(/(\d+)\./).to_a[1]&.to_i
+    
+    return false unless pg_dump_major && server_major
+    
+    # pg_dump should be same major version or newer than server
+    pg_dump_major >= server_major
+  end
+  
   class << self
     def auto_backup
       new.auto_backup
@@ -122,6 +234,11 @@ class BackupService
     def rails_time_since_last_backup
       new.rails_time_since_last_backup
     end
+    
+    # Unified auto-backup method that uses configured backup method
+    def smart_auto_backup
+      new.smart_auto_backup
+    end
   end
   
   def initialize
@@ -136,6 +253,18 @@ class BackupService
     ensure_backup_directory_exists
   end
   
+  def smart_auto_backup
+    case self.class.backup_method
+    when 'rails'
+      rails_auto_backup
+    when 'pg_dump', nil
+      auto_backup
+    else
+      Rails.logger.warn "Unknown backup method '#{self.class.backup_method}', using pg_dump"
+      auto_backup
+    end
+  end
+
   def auto_backup
     if should_backup?
       reason = backup_reason
@@ -150,13 +279,58 @@ class BackupService
   end
   
   def backup
+    # Test pg_dump availability and version compatibility
+    compatibility = self.class.version_compatibility_check
+    
+    unless compatibility[:pg_dump_available]
+      error_msg = <<~ERROR
+        ⚠️  PGD_DUMP NOT AVAILABLE ⚠️
+        
+        The pg_dump executable is not found in your system PATH.
+        This is required for the default backup method.
+        
+        🔧 SOLUTIONS:
+        1. Install PostgreSQL client tools (recommended)
+        2. Add PostgreSQL bin directory to your PATH
+        3. Switch to Rails backup method by setting 'backup_method: rails' in config/backup_config.yml
+        
+        💡 The Rails backup method generates pure SQL and requires no external dependencies.
+      ERROR
+      
+      Rails.logger.error error_msg
+      return { success: false, error: error_msg }
+    end
+    
+    # Check version compatibility
+    unless compatibility[:compatible]
+      error_msg = <<~ERROR
+        ⚠️  VERSION COMPATIBILITY ISSUE ⚠️
+        
+        pg_dump version (#{compatibility[:pg_dump_version]}) may not be compatible 
+        with PostgreSQL server version (#{compatibility[:server_version]}).
+        
+        🔧 SOLUTIONS:
+        1. Update pg_dump to match or exceed server version (recommended)
+        2. Switch to Rails backup method by setting 'backup_method: rails' in config/backup_config.yml
+        
+        💡 The Rails backup method generates pure SQL and requires no external dependencies.
+      ERROR
+      
+      Rails.logger.error error_msg
+      return { success: false, error: error_msg }
+    end
+    
+    # Log version information
+    Rails.logger.info "Using pg_dump: #{compatibility[:pg_dump_version]}"
+    Rails.logger.info "PostgreSQL server: #{compatibility[:server_version]}"
+    
     timestamp = Time.now.strftime("%Y%m%d_%H%M%S")
     backup_file = "#{@backup_dir}/#{@db_name}_#{timestamp}.sql"
     
     if Gem.win_platform?
-      success = system("scripts\\backup_db.bat")
+      success = system("scripts\\backup_db.bat", @backup_dir)
     else
-      success = system("scripts/backup_db.sh")
+      success = system("scripts/backup_db.sh", @backup_dir)
     end
     
     if success

@@ -4,7 +4,14 @@ setlocal enabledelayedexpansion
 :: Configuration
 set TIMESTAMP=%date:~-4%%date:~3,2%%date:~0,2%_%time:~0,2%%time:~3,2%%time:~6,2%
 set TIMESTAMP=%TIMESTAMP: =0%
-set BACKUP_DIR=db_backups
+
+:: Use backup directory from parameter or default to db_backups
+if "%~1"=="" (
+    set BACKUP_DIR=db_backups
+) else (
+    set BACKUP_DIR=%~1
+)
+
 set DB_NAME=myapp_development
 set DB_USER=myapp
 set DB_PASS=test

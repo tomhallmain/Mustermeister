@@ -2,7 +2,14 @@
 
 # Configuration
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_DIR="db_backups"
+
+# Use backup directory from parameter or default to db_backups
+if [ -z "$1" ]; then
+    BACKUP_DIR="db_backups"
+else
+    BACKUP_DIR="$1"
+fi
+
 DB_NAME="myapp_development"
 DB_USER="myapp"
 DB_PASS="test"

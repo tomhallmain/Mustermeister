@@ -114,19 +114,29 @@ namespace :db do
   task check_pg_setup: :environment do
     puts "=== PostgreSQL Setup Check ==="
     
-    # Check if pg_dump is available
-    if Gem.win_platform?
-      pg_dump_version = `pg_dump --version 2>&1`
-    else
-      pg_dump_version = `pg_dump --version 2>&1`
-    end
+    # Use BackupService to check compatibility
+    compatibility = BackupService.version_compatibility_check
     
-    if $?.success?
-      puts "✓ pg_dump found: #{pg_dump_version.strip}"
+    if compatibility[:pg_dump_available]
+      puts "✓ pg_dump found: #{compatibility[:pg_dump_version]}"
     else
       puts "✗ pg_dump not found or not in PATH"
       puts "  Please install PostgreSQL client tools"
       exit 1
+    end
+    
+    if compatibility[:server_version]
+      puts "✓ PostgreSQL server version: #{compatibility[:server_version]}"
+    else
+      puts "✗ Could not determine PostgreSQL server version"
+      exit 1
+    end
+    
+    if compatibility[:compatible]
+      puts "✓ Version compatibility: OK"
+    else
+      puts "⚠️  Version compatibility: WARNING"
+      puts "   pg_dump version may not be compatible with server version"
     end
     
     # Check database connection
@@ -141,20 +151,16 @@ namespace :db do
       ActiveRecord::Base.connection.execute("SELECT version()")
       puts "✓ Database connection successful"
       
-      # Get server version
-      server_version = ActiveRecord::Base.connection.execute("SHOW server_version").first['server_version']
-      puts "✓ PostgreSQL server version: #{server_version}"
-      
     rescue => e
       puts "✗ Database connection failed: #{e.message}"
       exit 1
     end
     
     puts "\n=== Backup Configuration ==="
-    backup_service = BackupService.new
     puts "Config file: #{BackupService::CONFIG_FILE}"
     puts "Backup directory: #{BackupService.backup_dir}"
     puts "Database name: #{BackupService.db_name}"
+    puts "Backup method: #{BackupService.backup_method}"
     puts "Minimum interval: #{BackupService.min_backup_interval / 1.hour} hours"
     puts "Force interval: #{BackupService.force_backup_interval / 1.hour} hours"
     puts "Emergency interval: #{BackupService.emergency_backup_interval / 1.day} days"
