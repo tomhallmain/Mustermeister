@@ -29,3 +29,76 @@
 
 en:
   hello: "Hello world"
+  
+  # Load structured locale files
+  # Models
+  activerecord:
+    models:
+      task:
+        one: Task
+        other: Tasks
+      project:
+        one: Project
+        other: Projects
+    attributes:
+      task:
+        title: Title
+        description: Description
+        priority: Priority
+        status: Status
+        due_date: Due Date
+      project:
+        title: Title
+        description: Description
+        default_priority: Default Priority
+        due_date: Due Date
+  
+  # Priorities and Statuses
+  priorities:
+    leisure: Leisure
+    low: Low
+    medium: Medium
+    high: High
+  
+  statuses:
+    not_started: Not Started
+    to_investigate: To Investigate
+    investigated: Investigated
+    in_progress: In Progress
+    ready_to_test: Ready to Test
+    complete: Complete
+    closed: Closed
+  
+  # Error messages
+  errors:
+    messages:
+      not_saved: "There was an error saving the %{resource}."
+  
+  # Application-wide translations
+  application:
+    title: "Mustermeister"
+    tagline: "Task and Project Management"
+    navigation:
+      tasks: "Tasks"
+      projects: "Projects"
+      profile: "Profile"
+      sign_out: "Sign Out"
+      sign_in: "Sign In"
+      sign_up: "Sign Up"
+    messages:
+      created: "%{resource} was successfully created."
+      updated: "%{resource} was successfully updated."
+      destroyed: "%{resource} was successfully deleted."
+      archived: "%{resource} was successfully archived."
+      unarchived: "%{resource} was successfully unarchived."
+    time:
+      formats:
+        default: "%B %d, %Y"
+        short: "%b %d"
+        long: "%B %d, %Y at %I:%M %p"
+    pagination:
+      first: "&laquo; First"
+      last: "Last &raquo;"
+      previous: "&lsaquo; Prev"
+      next: "Next &rsaquo;"
+      truncate: "&hellip;"

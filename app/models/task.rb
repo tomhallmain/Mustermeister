@@ -143,7 +143,16 @@ class Task < ApplicationRecord
     return unless name.present? && project
     self.status = project.statuses.find_by(name: name)
   end
-  
+
+  # I18n display methods
+  def priority_display
+    I18n.t("priorities.#{priority}")
+  end
+
+  def status_display
+    I18n.t("statuses.#{status.name.parameterize}")
+  end
+
   private
   
   def set_defaults

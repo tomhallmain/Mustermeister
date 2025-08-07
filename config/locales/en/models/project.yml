@@ -1,0 +1,28 @@
+en:
+  activerecord:
+    models:
+      project:
+        one: Project
+        other: Projects
+    attributes:
+      project:
+        title: Title
+        description: Description
+        default_priority: Default Priority
+        due_date: Due Date
+        created_at: Created At
+        updated_at: Updated At
+        last_activity_at: Last Activity
+        user_id: User
+    errors:
+      models:
+        project:
+          attributes:
+            title:
+              blank: "Title can't be blank"
+              too_short: "Title is too short (minimum is %{count} characters)"
+            default_priority:
+              inclusion: "must be a valid priority level"
+            due_date:
+              invalid: "must be a valid date"
+              in_past: "cannot be in the past"

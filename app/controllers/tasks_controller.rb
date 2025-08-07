@@ -62,16 +62,16 @@ class TasksController < ApplicationController
       return
     end
     
-    project = Project.find(params[:project_id])
+    @project = Project.find(params[:project_id])
     @task = current_user.tasks.build(
       project_id: params[:project_id],
-      priority: project.default_priority
+      priority: @project.default_priority
     )
     
     # If we have a show_completed param, update the session
     if params[:show_completed].present?
       show_completed = params[:show_completed] == 'true'
-      session[:projects_show_completed][project.id.to_s] = show_completed
+      session[:projects_show_completed][@project.id.to_s] = show_completed
     end
   end
 

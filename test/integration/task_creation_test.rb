@@ -177,10 +177,11 @@ class TaskCreationTest < ActionDispatch::IntegrationTest
   end
 
   test "status dropdown should only show statuses from current project" do
+    # Ensure the project has all default statuses
+    @project.create_default_statuses!(force: true)
+    
     # Visit the new task form for the project
-    get new_task_path, params: { project_id: @project.id }
-    assert_response :redirect
-    follow_redirect!
+    get new_project_task_path(@project)
     assert_response :success
     
     # Debug: Print the entire select element HTML
@@ -197,8 +198,8 @@ class TaskCreationTest < ActionDispatch::IntegrationTest
       puts "Option: #{opt.to_html}"
     end
     
-    # Get all status names from the options (excluding the blank option)
-    status_names = status_options.map { |opt| opt.text.strip }.reject(&:empty?)
+    # Get all status names from the options (excluding the blank option and "Select a status")
+    status_names = status_options.map { |opt| opt.text.strip }.reject { |text| text.empty? || text == "Select a status" }
     
     # Debug output
     puts "\nFound statuses in dropdown:"

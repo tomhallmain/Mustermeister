@@ -20,7 +20,7 @@ class ProjectTest < ActiveSupport::TestCase
   test "should require title" do
     @project.title = nil
     assert_not @project.valid?
-    assert_includes @project.errors[:title], "can't be blank"
+    assert_includes @project.errors[:title], "Title can't be blank"
   end
 
   test "should require user" do
@@ -32,7 +32,7 @@ class ProjectTest < ActiveSupport::TestCase
   test "should validate default_priority inclusion" do
     @project.default_priority = 'invalid'
     assert_not @project.valid?
-    assert_includes @project.errors[:default_priority], "is not included in the list"
+    assert_includes @project.errors[:default_priority], "must be a valid priority level"
     
     # Valid values should pass
     @project.default_priority = 'low'

@@ -101,7 +101,7 @@ class Rack::Attack
   end
 
   # Custom throttling response
-  self.throttled_response = lambda do |env|
+  self.throttled_responder = lambda do |env|
     now = Time.now
     match_data = env['rack.attack.match_data']
     headers = {

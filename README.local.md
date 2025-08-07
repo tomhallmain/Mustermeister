@@ -152,6 +152,34 @@ rails test test/models/user_test.rb
 rails test test/models/user_test.rb:10  # Line number
 ```
 
+## Internationalization (i18n) Management
+
+```bash
+# Check translation health (missing, unused, inconsistent keys)
+bundle exec rake "i18n:tasks[health]"
+
+# Find missing translations
+bundle exec rake "i18n:tasks[missing]"
+
+# Find unused translation keys
+bundle exec rake "i18n-tasks[unused]"
+
+# Add missing translations automatically
+bundle exec rake "i18n:tasks[add-missing]"
+
+# Normalize locale files (fix formatting, sort keys)
+bundle exec rake "i18n:tasks[normalize]"
+
+# Find hardcoded strings that should be translated
+bundle exec rake "i18n:tasks[find]"
+
+# Remove unused translation keys
+bundle exec rake "i18n:tasks[remove-unused]"
+
+# Check for inconsistent interpolations
+bundle exec rake "i18n:tasks[check-consistent-interpolations]"
+```
+
 ## Useful Development Commands
 
 ```bash
@@ -188,6 +216,12 @@ rails destroy controller Comments
    yarn install
    yarn build:css
    ```
+
+4. If you see syslog deprecation warnings:
+   ```
+   warning: syslog was loaded from the standard library, but will no longer be part of the default gems starting from Ruby 3.4.0.
+   ```
+   This is a known issue with the `logging` gem on Windows. The warning is harmless and will be resolved when the gem updates its gemspec.
 
 ## Windows-Specific Rails Asset Pipeline Configuration Notes
 

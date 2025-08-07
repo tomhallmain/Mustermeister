@@ -1,6 +1,10 @@
 require 'logging'
 require 'fileutils'
 
+# Note: The logging gem may show a syslog deprecation warning on Windows
+# This is a known issue with the logging gem and will be resolved when
+# the gem updates its gemspec to include syslog as a dependency
+
 # Determine platform-specific log directory
 log_dir = if Gem.win_platform?
   # Windows: AppData/Local/Mustermeister/logs

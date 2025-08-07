@@ -1,19 +1,12 @@
 # Auto-backup initializer
-# Runs smart backup logic on application startup
+# Runs smart backup logic on application startup (only when appropriate)
 
 Rails.application.config.after_initialize do
-  # Run auto-backup based on environment and configuration
-  should_run = case Rails.env
-               when 'production'
-                 true  # Always run in production
-               when 'development'
-                 true
-                 # ENV['ENABLE_AUTO_BACKUP'] == 'true' || ENV['AUTO_BACKUP_DEV'] == 'true'
-               else
-                 ENV['ENABLE_AUTO_BACKUP'] == 'true'
-               end
+  require_relative '../../lib/rails_context_detector'
   
-  if should_run
+  if RailsContextDetector.should_run_auto_backup?
+    Rails.logger.info "Running auto-backup check (context: #{RailsContextDetector.current_context})"
+    
     begin
       backup_method = BackupService.backup_method
       Rails.logger.info "Running #{backup_method} auto-backup check..."
@@ -29,5 +22,7 @@ Rails.application.config.after_initialize do
     rescue => e
       Rails.logger.error "Auto-backup failed: #{e.message}"
     end
+  # else
+  #   Rails.logger.debug "Skipping auto-backup (context: #{RailsContextDetector.current_context})"
   end
 end 

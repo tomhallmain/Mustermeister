@@ -1,0 +1,24 @@
+en:
+  views:
+    projects:
+      form:
+        title: "Project Details"
+        description: "Description"
+        default_priority: "Default Priority"
+        due_date: "Due Date"
+        select_priority: "Select a priority"
+        create_project: "Create Project"
+        update_project: "Update Project"
+        cancel: "Cancel"
+        title_placeholder: "Enter project title"
+        description_placeholder: "Enter project description"
+        due_date_placeholder: "Select due date"
+        title_label: "Title"
+        description_label: "Description"
+        default_priority_label: "Default Priority"
+        due_date_label: "Due Date"
+        project_details: "Project Details"
+        select_default_priority: "Select default priority"
+        new_project: "New Project"
+        edit_project: "Edit Project"
+        submit: "Save Project"

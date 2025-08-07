@@ -66,6 +66,11 @@ gem "paper_trail"
 # Pagination
 gem 'kaminari'
 
+# Internationalization
+gem 'i18n-tasks', group: :development
+gem 'rails-i18n'
+gem 'http_accept_language'
+
 # Admin interface
 gem 'rails_admin', '~> 3.3.0'
 gem "sassc-rails" # For Windows compatibility

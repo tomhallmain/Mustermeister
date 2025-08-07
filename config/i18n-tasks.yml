@@ -1,0 +1,48 @@
+# i18n-tasks configuration
+# This file configures how i18n-tasks behaves
+
+# Base locale (source of truth)
+base_locale: en
+
+# Locales to check
+locales:
+  - en
+
+# Data read from these files
+data:
+  read:
+    - config/locales/**/*.yml
+  write:
+    - config/locales/%{locale}.yml
+
+# Search for these patterns in your code
+search:
+  paths:
+    - app/
+  exclude:
+    - app/assets/
+    - app/javascript/
+    - node_modules/
+    - vendor/
+
+# Translation patterns to look for
+search:
+  patterns:
+    - t\(['"`]([^'"`]+)['"`]
+    - I18n\.t\(['"`]([^'"`]+)['"`]
+    - t\(['"`]([^'"`]+)['"`],.*\)
+
+# Consider translations missing if they don't exist in target locale
+# (even if they exist in base locale)
+missing:
+  consider_fallbacks: false
+
+# Ignore these keys (they might be dynamic or generated)
+ignore:
+  - 'activerecord.errors.messages.*'
+  - 'activerecord.errors.template.*'
+  - 'errors.format'
+  - 'errors.messages.*'
+  - 'number.*'
+  - 'time.*'
+  - 'date.*'

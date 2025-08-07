@@ -2,7 +2,7 @@
   <% if task.errors.any? %>
     <div class="bg-red-50 p-4 rounded-lg">
       <div class="text-red-700 font-medium">
-        <%= pluralize(task.errors.count, "error") %> prohibited this task from being saved:
+        <%= pluralize(task.errors.count, t('views.tasks.form.error'), t('views.tasks.form.errors')) %> <%= t('views.tasks.form.prohibited_save') %>
       </div>
       <ul class="list-disc list-inside text-red-600">
         <% task.errors.full_messages.each do |message| %>
@@ -14,12 +14,12 @@
 
   <div class="space-y-4">
     <div>
-      <%= f.label :title, class: "block text-sm font-medium text-gray-700" %>
+      <%= f.label :title, t('views.tasks.form.title'), class: "block text-sm font-medium text-gray-700" %>
       <%= f.text_field :title, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
     </div>
 
     <div>
-      <%= f.label :description, class: "block text-sm font-medium text-gray-700" %>
+      <%= f.label :description, t('views.tasks.form.description'), class: "block text-sm font-medium text-gray-700" %>
       <%= f.text_area :description, 
           rows: 4, 
           id: "task-description",
@@ -27,7 +27,7 @@
     </div>
 
     <div>
-      <%= f.label :status_id, "Status", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.label :status_id, t('views.tasks.form.status'), class: "block text-sm font-medium text-gray-700" %>
       <% 
         # Get statuses only from the current project
         current_project = task.project || @project
@@ -36,32 +36,32 @@
       %>
       <%= f.select :status_id, 
           options_for_select(statuses, current_status),
-          { include_blank: "Select a status" },
+          { include_blank: t('views.tasks.form.select_status') },
           { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" } %>
     </div>
 
     <div>
-      <%= f.label :priority, class: "block text-sm font-medium text-gray-700" %>
+      <%= f.label :priority, t('views.tasks.form.priority'), class: "block text-sm font-medium text-gray-700" %>
       <%= f.select :priority, 
           [['Leisure', 'leisure'], ['Low', 'low'], ['Medium', 'medium'], ['High', 'high']],
-          { include_blank: "Select priority" },
+          { include_blank: t('views.tasks.form.select_priority') },
           { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" } %>
     </div>
 
     <div>
-      <%= f.label :project_id, class: "block text-sm font-medium text-gray-700" %>
+      <%= f.label :project_id, t('views.tasks.form.project'), class: "block text-sm font-medium text-gray-700" %>
       <%= f.collection_select :project_id, @projects, :id, :title,
-          { prompt: 'Select a project' },
+          { prompt: t('views.tasks.form.select_project') },
           class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
     </div>
 
     <div>
-      <%= f.label :due_date, class: "block text-sm font-medium text-gray-700" %>
+      <%= f.label :due_date, t('views.tasks.form.due_date'), class: "block text-sm font-medium text-gray-700" %>
       <%= f.date_field :due_date, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
     </div>
 
     <div>
-      <%= f.label :tag_ids, 'Tags', class: "block text-sm font-medium text-gray-700" %>
+      <%= f.label :tag_ids, t('views.tasks.form.tags'), class: "block text-sm font-medium text-gray-700" %>
       <div class="mt-2 space-y-2">
         <%= f.collection_check_boxes :tag_ids, @tags, :id, :name do |b| %>
           <div class="flex items-center">

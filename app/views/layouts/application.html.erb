@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Mustermeister" %></title>
+    <title><%= content_for(:title) || t('application.title') %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
@@ -28,34 +28,34 @@
         <div class="flex justify-between h-16">
           <div class="flex">
             <div class="flex-shrink-0 flex items-center">
-              <%= link_to 'Mustermeister', root_path, class: 'text-xl font-bold text-gray-800' %>
+              <%= link_to t('application.title'), root_path, class: 'text-xl font-bold text-gray-800' %>
             </div>
             <% if user_signed_in? %>
               <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <%= link_to 'Projects', projects_path, 
+                <%= link_to t('application.navigation.projects'), projects_path, 
                     class: 'inline-flex items-center px-1 pt-1 text-gray-500 hover:text-gray-700' %>
-                <%= link_to 'Tasks', tasks_path(show_completed: session[:tasks_show_completed] || false), 
+                <%= link_to t('application.navigation.tasks'), tasks_path(show_completed: session[:tasks_show_completed] || false), 
                     class: 'inline-flex items-center px-1 pt-1 text-gray-500 hover:text-gray-700' %>
                 <%= link_to kanban_path,
                     class: 'inline-flex items-center px-1 pt-1 text-gray-500 hover:text-gray-700' do %>
                   <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                   </svg>
-                  Kanban
+                  <%= t('application.navigation.kanban') %>
                 <% end %>
                 <%= link_to archives_path, 
                     class: 'inline-flex items-center px-1 pt-1 text-gray-500 hover:text-gray-700' do %>
                   <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                   </svg>
-                  Archived Tasks
+                  <%= t('application.navigation.archived_tasks') %>
                 <% end %>
                 <%= link_to reschedule_path,
                     class: 'inline-flex items-center px-1 pt-1 text-gray-500 hover:text-gray-700' do %>
                   <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  Reschedule Tasks
+                  <%= t('application.navigation.reschedule_tasks') %>
                 <% end %>
               </div>
             <% end %>
@@ -64,15 +64,15 @@
             <% if user_signed_in? %>
               <div class="flex items-center space-x-4">
                 <span class="text-gray-700"><%= current_user.name %></span>
-                <%= link_to 'Profile', profile_path, class: 'text-gray-500 hover:text-gray-700' %>
-                <%= button_to 'Sign Out', destroy_user_session_path, method: :delete,
+                <%= link_to t('application.navigation.profile'), profile_path, class: 'text-gray-500 hover:text-gray-700' %>
+                <%= button_to t('application.navigation.sign_out'), destroy_user_session_path, method: :delete,
                     class: 'text-gray-500 hover:text-gray-700' %>
               </div>
             <% else %>
               <div class="space-x-4">
-                <%= link_to 'Sign In', new_user_session_path,
+                <%= link_to t('application.navigation.sign_in'), new_user_session_path,
                     class: 'text-gray-500 hover:text-gray-700' %>
-                <%= link_to 'Sign Up', new_user_registration_path,
+                <%= link_to t('application.navigation.sign_up'), new_user_registration_path,
                     class: 'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' %>
               </div>
             <% end %>

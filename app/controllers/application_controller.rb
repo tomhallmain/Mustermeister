@@ -5,6 +5,7 @@ class ApplicationController < ActionController::Base
   before_action :authenticate_user!
   before_action :configure_permitted_parameters, if: :devise_controller?
   before_action :set_session_timeout
+  before_action :set_locale
 
   protected
 
@@ -28,5 +29,17 @@ class ApplicationController < ActionController::Base
     sign_out current_user if current_user
     flash[:alert] = "Your session has expired. Please sign in again."
     redirect_to new_user_session_path
+  end
+
+  def set_locale
+    I18n.locale = params[:locale] || 
+                 session[:locale] || 
+                 http_accept_language.compatible_language_from(I18n.available_locales) ||
+                 I18n.default_locale
+    session[:locale] = I18n.locale
+  end
+
+  def default_url_options
+    { locale: I18n.locale == I18n.default_locale ? nil : I18n.locale }
   end
 end

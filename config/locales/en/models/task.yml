@@ -1,0 +1,48 @@
+en:
+  activerecord:
+    models:
+      task:
+        one: Task
+        other: Tasks
+    attributes:
+      task:
+        title: Title
+        description: Description
+        priority: Priority
+        status: Status
+        due_date: Due Date
+        created_at: Created At
+        updated_at: Updated At
+        completed_at: Completed At
+        archived_at: Archived At
+        project_id: Project
+        user_id: User
+    errors:
+      models:
+        task:
+          attributes:
+            title:
+              blank: "Title can't be blank"
+              too_short: "Title is too short (minimum is %{count} characters)"
+            priority:
+              inclusion: "must be a valid priority level"
+            status:
+              inclusion: "must be a valid status"
+            due_date:
+              invalid: "must be a valid date"
+              in_past: "cannot be in the past"
+  
+  priorities:
+    leisure: Leisure
+    low: Low
+    medium: Medium
+    high: High
+  
+  statuses:
+    not_started: Not Started
+    to_investigate: To Investigate
+    investigated: Investigated
+    in_progress: In Progress
+    ready_to_test: Ready to Test
+    complete: Complete
+    closed: Closed

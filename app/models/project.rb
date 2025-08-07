@@ -55,11 +55,16 @@ class Project < ApplicationRecord
   end
 
   # Public method to create default statuses
-  def create_default_statuses!
-    return if statuses.any?  # Don't recreate if statuses already exist
+  def create_default_statuses!(force: false)
+    return if statuses.any? && !force  # Don't recreate if statuses already exist (unless forced)
     Status.default_statuses.each do |key, name|
-      statuses.create!(name: name)
+      statuses.find_or_create_by!(name: name)
     end
+  end
+
+  # I18n display methods
+  def default_priority_display
+    I18n.t("priorities.#{default_priority}")
   end
 
   private

@@ -12,10 +12,17 @@ module Myapp
     config.tmp_dir = ENV['RAILS_TMPDIR']
     config.paths['tmp'] = [ENV['RAILS_TMPDIR']]
 
-    # Load the PostgreSQL checker before Rails initializes
+    # Load the PostgreSQL checker before Rails initializes (only when appropriate)
     config.before_initialize do
+      require_relative '../lib/rails_context_detector'
       require_relative '../lib/postgres_connection_checker'
-      PostgresConnectionChecker.check!
+      
+      if RailsContextDetector.should_run_startup_checks?
+        Rails.logger.info "Running PostgreSQL connection check (context: #{RailsContextDetector.current_context})"
+        PostgresConnectionChecker.check!
+      else
+        Rails.logger.debug "Skipping PostgreSQL connection check (context: #{RailsContextDetector.current_context})"
+      end
     end
     
     # Initialize configuration defaults for originally generated Rails version.
@@ -40,5 +47,13 @@ module Myapp
 
     # Enable Rack Attack for DDOS protection
     config.middleware.use Rack::Attack
+
+    # Internationalization configuration
+    config.i18n.default_locale = :en
+    config.i18n.available_locales = [:en, :es, :fr, :de]
+    config.i18n.fallbacks = true
+
+    # Configure timezone behavior for Rails 8.1 compatibility
+    config.active_support.to_time_preserves_timezone = :zone
   end
 end

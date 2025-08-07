@@ -1,0 +1,16 @@
+en:
+  views:
+    projects:
+      index:
+        title: "Projects"
+        new_project: "New Project"
+        search_placeholder: "Search projects..."
+        search: "Search"
+        clear: "Clear"
+        project: "Project"
+        tasks: "Tasks"
+        created: "Created"
+        updated: "Updated"
+        last_activity: "Last Activity"
+        delete_confirm: "Are you sure?"
+        no_projects: "No projects found"
