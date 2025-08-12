@@ -62,7 +62,7 @@
             <h3 class="text-sm font-semibold <%= task.completed ? 'line-through text-gray-500' : 'text-gray-900' %>">
               <%= link_to task.title, task_path(task), class: "hover:text-blue-600" %>
             </h3>
-            <div class="text-xs text-gray-600 whitespace-pre-line"><%= task.description %></div>
+            <div class="text-xs text-gray-600 prose prose-sm max-w-none"><%= markdown_robust(task.description) %></div>
             <div class="flex flex-wrap gap-2 mt-1">
               <% if task.project %>
                 <span class="text-xs text-gray-500">

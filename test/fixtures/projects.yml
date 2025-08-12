@@ -91,3 +91,13 @@ model_search_two:
   updated_at: <%= Time.current %>
   last_activity_at: <%= Time.current %>
   default_priority: "medium"
+
+markdown_test_project:
+  title: "Markdown Test Project"
+  description: "A project for testing markdown rendering in task descriptions"
+  user: one
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+  last_activity_at: <%= Time.current %>
+  default_priority: "high"
+  color: "purple"

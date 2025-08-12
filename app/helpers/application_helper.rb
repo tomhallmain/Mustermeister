@@ -64,4 +64,109 @@ module ApplicationHelper
       end
     end
   end
+
+  def markdown(text)
+    return '' if text.blank?
+    
+    renderer = Redcarpet::Render::HTML.new(
+      hard_wrap: true,
+      link_attributes: { target: '_blank', rel: 'noopener' }
+    )
+    
+    markdown = Redcarpet::Markdown.new(renderer, {
+      autolink: true,
+      tables: true,
+      fenced_code_blocks: true,
+      strikethrough: true,
+      superscript: true,
+      underline: true,
+      highlight: true,
+      quote: true,
+      footnotes: true,
+      # Ensure code blocks are properly parsed
+      disable_indented_code_blocks: false,
+      # More aggressive code block detection
+      space_after_headers: false
+    })
+    
+    # Pre-process the text to handle problematic characters in code blocks
+    processed_text = preprocess_markdown(text)
+    
+    markdown.render(processed_text).html_safe
+  end
+  
+  private
+  
+  # Note: Markdown requires proper spacing around code blocks.
+  # Code blocks must be preceded by a blank line to be properly parsed.
+  # Example:
+  #   Not working: "text```lang\ncode```"
+  #   Working: "text\n\n```lang\ncode```"
+  def preprocess_markdown(text)
+    # Handle code blocks with special characters
+    text.gsub(/```(\w+)?\n(.*?)```/m) do |match|
+      lang = $1
+      code_content = $2
+      
+      # Escape problematic characters that might interfere with parsing
+      # Replace > with HTML entity to prevent blockquote interpretation
+      escaped_code = code_content.gsub('>', '&gt;')
+      
+      # Ensure proper code block formatting
+      "```#{lang}\n#{escaped_code}\n```"
+    end
+  end
+  
+  # Alternative method for more robust markdown rendering
+  # This method automatically handles common markdown formatting issues:
+  # - Adds proper spacing around code blocks
+  # - Escapes problematic characters in code content
+  # - Handles long content better
+  def markdown_robust(text)
+    return '' if text.blank?
+    
+    # Use a different approach for problematic content
+    renderer = Redcarpet::Render::HTML.new(
+      hard_wrap: true,
+      link_attributes: { target: '_blank', rel: 'noopener' }
+    )
+    
+    markdown = Redcarpet::Markdown.new(renderer, {
+      autolink: false, # Disable autolink to prevent interference
+      tables: true,
+      fenced_code_blocks: true,
+      strikethrough: true,
+      superscript: true,
+      underline: true,
+      highlight: true,
+      quote: true,
+      footnotes: false, # Disable footnotes to prevent interference
+      disable_indented_code_blocks: false,
+      space_after_headers: false
+    })
+    
+    # More aggressive preprocessing for problematic content
+    processed_text = text.dup
+    
+    # Ensure proper spacing around code blocks
+    # Add newlines before code blocks if they don't have them
+    processed_text.gsub!(/([^\n])(```\w*\n)/, "\\1\n\n\\2")
+    
+    # Handle code blocks more carefully
+    processed_text.gsub!(/```(\w+)?\n(.*?)```/m) do |match|
+      lang = $1 || ''
+      code_content = $2
+      
+      # Escape all potentially problematic characters
+      escaped_code = code_content
+        .gsub('>', '&gt;')
+        .gsub('<', '&lt;')
+        .gsub('&', '&amp;')
+      
+      # Ensure proper formatting
+      "```#{lang}\n#{escaped_code}\n```"
+    end
+    
+    markdown.render(processed_text).html_safe
+  end
 end

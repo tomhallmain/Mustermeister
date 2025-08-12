@@ -112,7 +112,7 @@
             <h3 class="text-sm font-semibold <%= task.completed ? 'line-through text-gray-500' : 'text-gray-900' %>">
               <%= link_to task.title, task_path(task), class: "hover:text-blue-600" %>
             </h3>
-            <p class="text-xs text-gray-600 whitespace-pre-line"><%= task.description %></p>
+            <div class="text-xs text-gray-600 prose prose-sm max-w-none"><%= markdown_robust(task.description) %></div>
             <div class="flex flex-wrap gap-2 mt-2">
               <% task.tags.each do |tag| %>
                 <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
@@ -175,4 +175,6 @@
   <div class="mt-8">
     <%= paginate @tasks, window: 2, outer_window: 1, views_prefix: 'shared', params: { show_completed: show_completed }, data: { turbo: false } %>
   </div>
-</div> 
+</div>
+
+ 

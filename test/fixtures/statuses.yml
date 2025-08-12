@@ -36,4 +36,16 @@ reprioritize_test_in_progress:
 
 reprioritize_test_complete:
   name: Complete
-  project: reprioritize_test 
+  project: reprioritize_test
+
+markdown_test_project_not_started:
+  name: Not Started
+  project: markdown_test_project
+
+markdown_test_project_in_progress:
+  name: In Progress
+  project: markdown_test_project
+
+markdown_test_project_complete:
+  name: Complete
+  project: markdown_test_project 

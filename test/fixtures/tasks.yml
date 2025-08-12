@@ -104,3 +104,41 @@ search_test_completed:
   status: project_one_complete
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+markdown_test_task:
+  title: "Markdown Test Task"
+  description: |
+    This task tests various markdown features:
+
+    **Bold text** and *italic text*
+    
+    - List item 1
+    - List item 2
+      - Nested item
+    
+    `inline code` and code blocks:
+    
+    ```ruby
+    def hello_world
+      puts "Hello, World!"
+      # This is a comment
+      if true
+        puts "Always true"
+      end
+    end
+    ```
+    
+    > This is a blockquote with some important information
+    
+    [Link to example](https://example.com)
+    
+    Due date: <%= 1.week.from_now %>
+  priority: high
+  completed: false
+  archived: false
+  project: markdown_test_project
+  user: one
+  status: markdown_test_project_not_started
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+

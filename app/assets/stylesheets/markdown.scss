@@ -1,0 +1,61 @@
+/* Markdown content styling for task descriptions */
+.prose {
+  line-height: 1.5;
+}
+
+.prose p {
+  margin: 0.25em 0;
+}
+
+.prose ul, .prose ol {
+  margin: 0.25em 0;
+  padding-left: 1.5em;
+}
+
+.prose li {
+  margin: 0.125em 0;
+}
+
+.prose code {
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 0.125em 0.25em;
+  border-radius: 0.25em;
+  font-size: 0.875em;
+}
+
+.prose pre {
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 0.5em;
+  border-radius: 0.25em;
+  overflow-x: auto;
+  margin: 0.5em 0;
+  /* Ensure long content is properly contained */
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* Remove background from code inside pre blocks to avoid double backgrounds */
+.prose pre code {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+.prose blockquote {
+  border-left: 3px solid #e5e7eb;
+  padding-left: 0.75em;
+  margin: 0.5em 0;
+  font-style: italic;
+  color: #6b7280;
+}
+
+.prose a {
+  color: #3b82f6;
+  text-decoration: underline;
+}
+
+.prose a:hover {
+  color: #1d4ed8;
+}

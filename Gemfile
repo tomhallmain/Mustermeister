@@ -36,6 +36,8 @@ gem "shrine"
 gem "secure_headers"
 # Add DDOS protection and rate limiting
 gem "rack-attack"
+# Add markdown rendering support
+gem "redcarpet"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
