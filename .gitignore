@@ -37,7 +37,7 @@
 
 /app/assets/builds/*
 !/app/assets/builds/.keep
-i
+
 /node_modules
 
 /coverage/*
@@ -45,6 +45,7 @@ i
 *.pem
 *.crt
 *.key
+*.swp
 
 db_backups/
 

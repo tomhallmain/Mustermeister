@@ -8,6 +8,7 @@ one:
   updated_at: <%= Time.current %>
   last_activity_at: <%= Time.current %>
   default_priority: "medium"
+  color: "blue"
 
 two:
   title: "Another Project"
@@ -17,6 +18,7 @@ two:
   updated_at: <%= Time.current %>
   last_activity_at: <%= Time.current %>
   default_priority: "medium"
+  color: "red"
 
 reprioritize_test:
   title: "Project for Reprioritize Test"

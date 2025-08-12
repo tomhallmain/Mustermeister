@@ -93,6 +93,49 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "low", @project.default_priority
   end
 
+  test "should create project with color" do
+    assert_difference('Project.count') do
+      post projects_path, params: {
+        project: {
+          title: "Colored Project",
+          description: "A project with a color",
+          color: "green"
+        }
+      }
+    end
+
+    new_project = Project.find_by(title: "Colored Project")
+    assert_equal "green", new_project.color
+    assert_redirected_to project_path(new_project)
+  end
+
+  test "should update project color" do
+    patch project_path(@project), params: {
+      project: {
+        color: "red"
+      }
+    }
+    
+    @project.reload
+    assert_equal "red", @project.color
+  end
+
+  test "should allow empty color value" do
+    # Clear any existing color first
+    @project.update!(color: nil)
+    @project.update!(color: "blue")
+    assert_equal "blue", @project.color
+    
+    patch project_path(@project), params: {
+      project: {
+        color: ""
+      }
+    }
+    
+    @project.reload
+    assert_equal "", @project.color
+  end
+
   test "should store show_completed preference in session" do
     # Visit with show_completed=true
     get project_path(@project, show_completed: true)

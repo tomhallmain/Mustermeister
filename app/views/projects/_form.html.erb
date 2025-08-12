@@ -35,6 +35,37 @@
                { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" } %>
   </div>
 
+  <div>
+    <%= f.label :color, t('views.projects.form.color_label'), class: "block text-sm font-medium text-gray-700" %>
+    <div class="mt-1 flex flex-wrap gap-2">
+      <% ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'gray'].each do |color_option| %>
+        <label class="flex items-center space-x-2 cursor-pointer">
+          <%= f.radio_button :color, color_option, class: "sr-only" %>
+          <div class="w-8 h-8 rounded-full border-2 <%= color_option == project.color ? 'border-gray-900' : 'border-gray-300' %> 
+                      <%= case color_option
+                          when 'red' then 'bg-red-500'
+                          when 'orange' then 'bg-orange-500'
+                          when 'yellow' then 'bg-yellow-500'
+                          when 'green' then 'bg-green-500'
+                          when 'blue' then 'bg-blue-500'
+                          when 'purple' then 'bg-purple-500'
+                          when 'pink' then 'bg-pink-500'
+                          when 'gray' then 'bg-gray-500'
+                          end %>">
+          </div>
+          <span class="text-sm text-gray-700"><%= t("views.projects.form.colors.#{color_option}") %></span>
+        </label>
+      <% end %>
+      <label class="flex items-center space-x-2 cursor-pointer">
+        <%= f.radio_button :color, '', class: "sr-only" %>
+        <div class="w-8 h-8 rounded-full border-2 <%= project.color.blank? ? 'border-gray-900' : 'border-gray-300' %> bg-white">
+        </div>
+        <span class="text-sm text-gray-700"><%= t('views.projects.form.colors.none') %></span>
+      </label>
+    </div>
+    <p class="mt-1 text-sm text-gray-500"><%= t('views.projects.form.color_help') %></p>
+  </div>
+
   <div class="flex justify-end space-x-3">
     <%= link_to 'Cancel', projects_path, class: "px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
     <%= f.submit class: "px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>

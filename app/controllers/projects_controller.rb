@@ -179,6 +179,6 @@ class ProjectsController < ApplicationController
   end
 
   def project_params
-    params.require(:project).permit(:title, :description, :due_date, :default_priority)
+    params.require(:project).permit(:title, :description, :due_date, :default_priority, :color)
   end
 end 

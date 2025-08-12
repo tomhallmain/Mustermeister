@@ -311,6 +311,7 @@ class TasksController < ApplicationController
                 description: task.description,
                 status: task.status.name,
                 project: task.project.title,
+                project_color: task.project.color,
                 user: task.user.name,
                 updated_at: task.updated_at,
                 priority: task.priority

@@ -24,7 +24,7 @@
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     <% @projects.each do |project| %>
-      <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden <%= project.color_classes %>">
         <div class="p-4">
           <div class="flex justify-between items-start">
             <h2 class="text-base font-semibold text-gray-900">
@@ -40,6 +40,11 @@
                 <%= project.status.titleize %>
               </span>
               <%= render 'shared/priority_badge', priority: project.default_priority %>
+              <% if project.color.present? %>
+                <span class="px-2 py-0.5 text-xs rounded-full border <%= project.color_badge_classes %>">
+                  <%= project.color.titleize %>
+                </span>
+              <% end %>
             </div>
           </div>
           
@@ -85,4 +90,26 @@
   <div class="mt-8">
     <%= paginate @projects, window: 2, outer_window: 1, views_prefix: 'shared' %>
   </div>
-</div> 
+</div>
+
+<style>
+  /* Smooth color transitions for project cards */
+  .bg-white {
+    transition: all 0.3s ease-in-out;
+  }
+
+  /* Enhanced color styling for project cards */
+  .border-l-4 {
+    border-left-width: 4px;
+  }
+
+  /* Subtle color tinting for better visual hierarchy */
+  .bg-red-50 { background-color: rgba(254, 242, 242, 0.8); }
+  .bg-orange-50 { background-color: rgba(255, 247, 237, 0.8); }
+  .bg-yellow-50 { background-color: rgba(254, 249, 195, 0.8); }
+  .bg-green-50 { background-color: rgba(240, 253, 244, 0.8); }
+  .bg-blue-50 { background-color: rgba(239, 246, 255, 0.8); }
+  .bg-purple-50 { background-color: rgba(250, 245, 255, 0.8); }
+  .bg-pink-50 { background-color: rgba(253, 242, 248, 0.8); }
+  .bg-gray-50 { background-color: rgba(249, 250, 251, 0.8); }
+</style> 

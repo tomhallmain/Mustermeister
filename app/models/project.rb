@@ -16,6 +16,7 @@ class Project < ApplicationRecord
 
   validates :title, presence: true
   validates :default_priority, inclusion: { in: %w[low medium high leisure] }, allow_nil: true
+  validates :color, inclusion: { in: %w[red orange yellow green blue purple pink gray], message: "must be a valid color" }, allow_nil: true, allow_blank: true
   
   before_save :update_last_activity
   before_create :set_initial_activity
@@ -27,6 +28,57 @@ class Project < ApplicationRecord
       .distinct
   }
   
+  # Color-related methods
+  def color_classes
+    return '' unless color.present?
+    
+    case color
+    when 'red'
+      'border-l-4 border-l-red-500 bg-red-50'
+    when 'orange'
+      'border-l-4 border-l-orange-500 bg-orange-50'
+    when 'yellow'
+      'border-l-4 border-l-yellow-500 bg-yellow-50'
+    when 'green'
+      'border-l-4 border-l-green-500 bg-green-50'
+    when 'blue'
+      'border-l-4 border-l-blue-500 bg-blue-50'
+    when 'purple'
+      'border-l-4 border-l-purple-500 bg-purple-50'
+    when 'pink'
+      'border-l-4 border-l-pink-500 bg-pink-50'
+    when 'gray'
+      'border-l-4 border-l-gray-500 bg-gray-50'
+    else
+      ''
+    end
+  end
+
+  def color_badge_classes
+    return '' unless color.present?
+    
+    case color
+    when 'red'
+      'bg-red-100 text-red-800 border-red-200'
+    when 'orange'
+      'bg-orange-100 text-orange-800 border-orange-200'
+    when 'yellow'
+      'bg-yellow-100 text-yellow-800 border-yellow-200'
+    when 'green'
+      'bg-green-100 text-green-800 border-green-200'
+    when 'blue'
+      'bg-blue-100 text-blue-800 border-blue-200'
+    when 'purple'
+      'bg-purple-100 text-purple-800 border-purple-200'
+    when 'pink'
+      'bg-pink-100 text-pink-800 border-pink-200'
+    when 'gray'
+      'bg-gray-100 text-gray-800 border-gray-200'
+    else
+      ''
+    end
+  end
+
   def completion_percentage
     return 0 if tasks.empty?
     ((tasks.where(completed: true).count.to_f / tasks.count) * 100).round
@@ -65,6 +117,11 @@ class Project < ApplicationRecord
   # I18n display methods
   def default_priority_display
     I18n.t("priorities.#{default_priority}")
+  end
+
+  def color_display
+    return 'None' unless color.present?
+    color.titleize
   end
 
   private

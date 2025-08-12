@@ -97,6 +97,33 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "kanban_tasks should include project color in JSON response" do
+    # Ensure project has a color set
+    @project.update!(color: 'green')
+    
+    # Debug: Check if the project actually has the color set
+    @project.reload
+    assert_equal 'green', @project.color, "Project color should be 'green'"
+    
+    get kanban_tasks_path, as: :json
+    assert_response :success
+    
+    json_response = JSON.parse(response.body)
+    assert_includes json_response.keys, 'tasks'
+    
+    # Check that tasks include project_color
+    # Only check tasks that belong to our updated project
+    json_response['tasks'].each do |status, tasks|
+      tasks.each do |task|
+        assert_includes task.keys, 'project_color'
+        # Only assert the color for tasks from our specific project
+        if task['project'] == @project.title
+          assert_equal 'green', task['project_color'], "Expected project_color to be 'green' for project '#{@project.title}', got '#{task['project_color']}'"
+        end
+      end
+    end
+  end
+
   test "should get edit" do
     get edit_task_path(@task)
     assert_response :success

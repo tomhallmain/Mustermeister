@@ -51,6 +51,45 @@ class ProjectTest < ActiveSupport::TestCase
     @project.default_priority = nil
     assert @project.valid?
   end
+
+  test "should validate color inclusion" do
+    @project.color = 'invalid'
+    assert_not @project.valid?
+    assert_includes @project.errors[:color], "must be a valid color"
+    
+    # Valid values should pass
+    @project.color = 'red'
+    assert @project.valid?
+    
+    @project.color = 'orange'
+    assert @project.valid?
+    
+    @project.color = 'yellow'
+    assert @project.valid?
+    
+    @project.color = 'green'
+    assert @project.valid?
+    
+    @project.color = 'blue'
+    assert @project.valid?
+    
+    @project.color = 'purple'
+    assert @project.valid?
+    
+    @project.color = 'pink'
+    assert @project.valid?
+    
+    @project.color = 'gray'
+    assert @project.valid?
+    
+    # Nil should be allowed
+    @project.color = nil
+    assert @project.valid?
+    
+    # Empty string should be allowed
+    @project.color = ''
+    assert @project.valid?
+  end
   
   test "should set medium as default_priority if not specified" do
     # This test verifies that medium is used as a fallback in the Task model
@@ -168,5 +207,78 @@ class ProjectTest < ActiveSupport::TestCase
       project.create_task!(title: "Test Task", user: @user)
       assert project.reload.last_activity_at > initial_activity
     end
+  end
+
+  test "color_classes should return correct CSS classes" do
+    @project.color = 'red'
+    assert_equal 'border-l-4 border-l-red-500 bg-red-50', @project.color_classes
+    
+    @project.color = 'blue'
+    assert_equal 'border-l-4 border-l-blue-500 bg-blue-50', @project.color_classes
+    
+    @project.color = nil
+    assert_equal '', @project.color_classes
+    
+    @project.color = ''
+    assert_equal '', @project.color_classes
+  end
+
+  test "color_badge_classes should return correct CSS classes" do
+    @project.color = 'green'
+    assert_equal 'bg-green-100 text-green-800 border-green-200', @project.color_badge_classes
+    
+    @project.color = 'purple'
+    assert_equal 'bg-purple-100 text-purple-800 border-purple-200', @project.color_badge_classes
+    
+    @project.color = nil
+    assert_equal '', @project.color_badge_classes
+    
+    @project.color = ''
+    assert_equal '', @project.color_badge_classes
+  end
+
+  test "color_display should return human readable color name" do
+    @project.color = 'red'
+    assert_equal 'Red', @project.color_display
+    
+    @project.color = 'blue'
+    assert_equal 'Blue', @project.color_display
+    
+    @project.color = nil
+    assert_equal 'None', @project.color_display
+    
+    @project.color = ''
+    assert_equal 'None', @project.color_display
+  end
+
+  test "should save and retrieve color field" do
+    project = Project.new(title: "Color Test Project", user: @user, color: 'green')
+    assert project.valid?, "Project should be valid: #{project.errors.full_messages}"
+    project.save!
+    assert_equal 'green', project.color
+    
+    project.update!(color: 'purple')
+    assert_equal 'purple', project.reload.color
+    
+    project.update!(color: '')
+    assert_equal '', project.reload.color
+    
+    project.update!(color: nil)
+    assert_nil project.reload.color
+  end
+
+  test "fixtures should have correct color values" do
+    assert_equal 'blue', projects(:one).color
+    assert_equal 'red', projects(:two).color
+  end
+
+  test "project should have color field" do
+    assert @project.respond_to?(:color)
+    assert @project.respond_to?(:color=)
+  end
+
+  test "database should have color column" do
+    columns = Project.column_names
+    assert_includes columns, 'color', "Color column should exist in database. Available columns: #{columns.join(', ')}"
   end
 end

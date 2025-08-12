@@ -46,7 +46,7 @@
 
   <div class="bg-white shadow-lg rounded-lg">
     <% @tasks.each do |task| %>
-      <div class="task-item border-b border-gray-200 p-3 flex items-center justify-between hover:bg-gray-50">
+      <div class="task-item border-b border-gray-200 p-3 flex items-center justify-between hover:bg-gray-50 <%= task.project&.color_classes %>">
         <div class="flex items-center space-x-3">
           <%= button_to toggle_task_path(task, show_completed: params[:show_completed]), method: :patch, class: "flex-shrink-0" do %>
             <div class="w-5 h-5 border-2 rounded <%= task.completed ? 'bg-green-500 border-green-500' : 'border-gray-400' %>">
@@ -124,4 +124,26 @@
   <div class="mt-8">
     <%= paginate @tasks, window: 2, outer_window: 1, views_prefix: 'shared', params: { show_completed: params[:show_completed] }, data: { turbo: false } %>
   </div>
-</div> 
+</div>
+
+<style>
+  /* Smooth color transitions for task items */
+  .task-item {
+    transition: all 0.3s ease-in-out;
+  }
+
+  /* Enhanced color styling for task items */
+  .border-l-4 {
+    border-left-width: 4px;
+  }
+
+  /* Subtle color tinting for better visual hierarchy */
+  .bg-red-50 { background-color: rgba(254, 242, 242, 0.8); }
+  .bg-orange-50 { background-color: rgba(255, 247, 237, 0.8); }
+  .bg-yellow-50 { background-color: rgba(254, 249, 195, 0.8); }
+  .bg-green-50 { background-color: rgba(240, 253, 244, 0.8); }
+  .bg-blue-50 { background-color: rgba(239, 246, 255, 0.8); }
+  .bg-purple-50 { background-color: rgba(250, 245, 255, 0.8); }
+  .bg-pink-50 { background-color: rgba(253, 242, 248, 0.8); }
+  .bg-gray-50 { background-color: rgba(249, 250, 251, 0.8); }
+</style> 
