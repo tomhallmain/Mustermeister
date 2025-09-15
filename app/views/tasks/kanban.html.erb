@@ -83,6 +83,35 @@
     let isLoading = false;
     let allTasks = {};  // Store all tasks for client-side filtering
 
+    // Check if an error indicates session expiration
+    function isSessionExpiredError(error, response) {
+      // Check for HTTP status codes that indicate authentication issues
+      if (response && (response.status === 401 || response.status === 403)) {
+        return true;
+      }
+      
+      // Check for network errors that might indicate session expiration
+      if (error) {
+        const errorMessage = error.message ? error.message.toLowerCase() : '';
+        const errorName = error.name ? error.name.toLowerCase() : '';
+        
+        // More robust error detection - check for various network error patterns
+        return errorMessage.includes('failed to fetch') ||
+               errorMessage.includes('network error') ||
+               errorMessage.includes('connection') ||
+               errorName === 'typeerror' ||
+               errorName === 'networkerror';
+      }
+      
+      return false;
+    }
+
+    // Handle session expiration by refreshing the page
+    function handleSessionExpiration(context) {
+      console.log(`Session expired during ${context}, refreshing page to redirect to login`);
+      window.location.reload();
+    }
+
     // Initialize Sortable for each column
     document.querySelectorAll('.kanban-column').forEach(function(column) {
       // Initialize the tasks container as the source
@@ -143,15 +172,31 @@
       }
 
       fetch(`/kanban/tasks?${params}`)
-        .then(response => response.json())
+        .then(response => {
+          // Check if session expired based on response status
+          if (isSessionExpiredError(null, response)) {
+            handleSessionExpiration('loading tasks');
+            return;
+          }
+          return response.json();
+        })
         .then(data => {
-          allTasks = data.tasks;  // Store all tasks
-          filterAndDisplayTasks();
-          updatePaginationControls(data.has_more);
+          if (data) {
+            allTasks = data.tasks;  // Store all tasks
+            filterAndDisplayTasks();
+            updatePaginationControls(data.has_more);
+          }
           isLoading = false;
         })
         .catch(error => {
           console.error('Error loading tasks:', error);
+          
+          // Check if this is a session expiration error
+          if (isSessionExpiredError(error, null)) {
+            handleSessionExpiration('loading tasks');
+            return;
+          }
+          
           isLoading = false;
         });
     }
@@ -369,6 +414,11 @@
       })
       .then(response => {
         if (!response.ok) {
+          // Check if session expired based on response status
+          if (isSessionExpiredError(null, response)) {
+            handleSessionExpiration('updating task status');
+            return;
+          }
           return response.json().then(data => {
             throw new Error(data.error || 'Failed to update task status');
           });
@@ -377,6 +427,13 @@
       })
       .catch(error => {
         console.error('Error updating task status:', error);
+        
+        // Check if this is a session expiration error
+        if (isSessionExpiredError(error, null)) {
+          handleSessionExpiration('updating task status');
+          return;
+        }
+        
         alert(error.message); // Show error to user
         loadTasks(); // Reload tasks to reset the board
       });

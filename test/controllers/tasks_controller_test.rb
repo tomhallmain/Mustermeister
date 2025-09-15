@@ -124,6 +124,23 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "kanban task update should redirect to login when session expired" do
+    # Simulate an expired session by manipulating the session cookie expiration
+    # The session store is configured with expire_after: 1.hours
+    travel_to 2.hours.from_now do
+      patch task_path(@task, kanban: true), params: {
+        task: {
+          status_name: 'In Progress'
+        }
+      }, as: :json
+      
+      # Devise redirects to login page when session expires, even for JSON requests
+      # For JSON requests, the redirect URL includes .json extension
+      assert_response :redirect
+      assert_redirected_to new_user_session_path(format: :json)
+    end
+  end
+
   test "should get edit" do
     get edit_task_path(@task)
     assert_response :success
