@@ -9,7 +9,7 @@
           </svg>
           <%= t('views.tasks.index.new_task') %>
         <% end %>
-        <div class="absolute right-0 top-full w-64 bg-white rounded-lg shadow-lg py-2 hidden group-hover:block z-10">
+        <div class="absolute right-0 top-full w-64 surface rounded-lg shadow-lg py-2 hidden group-hover:block z-10">
           <div class="px-4 py-2 text-sm text-gray-700 border-b border-gray-200"><%= t('views.tasks.index.select_project') %></div>
           <% Project.order(:title).each do |project| %>
             <%= link_to project.title, new_project_task_path(project, show_completed: params[:show_completed]), 
@@ -44,9 +44,9 @@
     </div>
   <% end %>
 
-  <div class="bg-white shadow-lg rounded-lg">
+  <div class="surface shadow-lg rounded-lg">
     <% @tasks.each do |task| %>
-      <div class="task-item border-b border-gray-200 p-3 flex items-center justify-between hover:bg-gray-50 <%= task.project&.color_classes %>">
+      <div class="task-item border-b border-gray-200 p-3 flex items-center justify-between hover:bg-gray-50 <%= task.project&.color_classes %>" style="background-color: var(--color-surface-elevated);">
         <div class="flex items-center space-x-3">
           <%= button_to toggle_task_path(task, show_completed: params[:show_completed]), method: :patch, class: "flex-shrink-0" do %>
             <div class="w-5 h-5 border-2 rounded <%= task.completed ? 'bg-green-500 border-green-500' : 'border-gray-400' %>">

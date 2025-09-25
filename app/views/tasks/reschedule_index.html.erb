@@ -4,22 +4,22 @@
     
     <!-- Statistics -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <div class="bg-white p-4 rounded-lg shadow">
+      <div class="surface p-4 rounded-lg shadow">
         <div class="text-sm text-gray-600">Total Tasks</div>
         <div class="text-2xl font-bold"><%= @reschedule_stats[:total_tasks] %></div>
       </div>
-      <div class="bg-white p-4 rounded-lg shadow">
+      <div class="surface p-4 rounded-lg shadow">
         <div class="text-sm text-gray-600">Overdue Tasks</div>
         <div class="text-2xl font-bold text-red-600"><%= @reschedule_stats[:overdue_tasks] %></div>
       </div>
-      <div class="bg-white p-4 rounded-lg shadow">
+      <div class="surface p-4 rounded-lg shadow">
         <div class="text-sm text-gray-600">Upcoming Tasks</div>
         <div class="text-2xl font-bold text-green-600"><%= @reschedule_stats[:upcoming_tasks] %></div>
       </div>
     </div>
 
     <!-- Bulk Reschedule Form -->
-    <%= form_tag bulk_reschedule_path, method: :post, class: "bg-white shadow-lg rounded-lg p-6 mb-6" do %>
+    <%= form_tag bulk_reschedule_path, method: :post, class: "surface shadow-lg rounded-lg p-6 mb-6" do %>
       <div class="mb-6">
         <h2 class="text-xl font-semibold mb-4">Bulk Reschedule Selected Tasks</h2>
         <div class="flex items-end gap-4">
@@ -40,7 +40,7 @@
       <!-- Tasks List -->
       <div class="space-y-4">
         <% @tasks.each do |task| %>
-          <div class="flex items-center p-4 border rounded-lg hover:bg-gray-50">
+          <div class="flex items-center p-4 border rounded-lg hover:bg-gray-50" style="background-color: var(--color-surface);">
             <div class="flex-shrink-0 mr-4">
               <%= check_box_tag "task_ids[]", task.id, false, 
                   class: "h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" %>

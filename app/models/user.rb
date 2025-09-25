@@ -12,6 +12,7 @@ class User < ApplicationRecord
   validates :email, presence: true, 
                    uniqueness: { case_sensitive: false },
                    format: { with: URI::MailTo::EMAIL_REGEXP }
+  validates :theme_preference, inclusion: { in: %w[day night auto], allow_blank: true }
 
   def assigned_tasks
     tasks.where(completed: false).order(due_date: :asc)

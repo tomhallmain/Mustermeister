@@ -53,7 +53,7 @@
       ready_to_test: 'Ready to Test',
       complete: 'Complete'
     }.each do |key, name| %>
-      <div class="kanban-column flex-shrink-0 w-64 bg-gray-100 rounded-lg p-2" 
+      <div class="kanban-column flex-shrink-0 w-64 rounded-lg p-2" 
            data-status="<%= key %>"
            data-status-id="<%= Status.find_by(name: name)&.id %>">
         <h3 class="text-sm font-semibold text-gray-900 mb-2">
@@ -367,7 +367,7 @@
       };
 
       return `
-        <div class="bg-white rounded-lg shadow p-2 cursor-move ${getProjectColorClasses(task.project_color)}" data-task-id="${task.id}">
+        <div class="surface rounded-lg shadow p-2 cursor-move ${getProjectColorClasses(task.project_color)}" data-task-id="${task.id}">
           <div class="flex justify-between items-start mb-1">
             <h4 class="font-medium text-sm text-gray-900">
               <a href="/tasks/${task.id}" class="hover:text-blue-600 hover:underline">${truncateText(task.title, 20, 20, 4)}</a>

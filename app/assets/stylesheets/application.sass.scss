@@ -1,3 +1,242 @@
 // Entry point for your Sass build
 @use "rails_admin";
 @use "markdown";
+
+// Theme tokens: day (default) and night
+:root {
+  --color-bg: #f7fafc; // gray-100
+  --color-surface: #ffffff;
+  --color-surface-elevated: #f1f5f9; // more contrast - slate-100
+  --color-text: #1f2937; // gray-800
+  --color-muted: #6b7280; // gray-500
+  --color-border: #e5e7eb; // gray-200
+}
+
+.theme-night {
+  --color-bg: #0b1220;
+  --color-surface: #101827;
+  --color-surface-elevated: #1e293b; // more contrast - slate-800
+  --color-text: #e5e7eb;
+  --color-muted: #9ca3af;
+  --color-border: #1f2937;
+}
+
+// Generic helpers that align with existing tailwind utility usage
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+// Ensure Tailwind bg utilities on body don't override theme background
+body.bg-gray-100,
+body.bg-white {
+  background-color: var(--color-bg) !important;
+}
+
+// Cards, navs, surfaces that used white bg
+.surface {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+// Common Tailwind utility overrides under night theme for better contrast
+.theme-night {
+  nav.bg-white {
+    background-color: var(--color-surface) !important;
+  }
+  .text-gray-500 {
+    color: var(--color-muted) !important;
+  }
+  .text-gray-900 {
+    color: var(--color-text) !important;
+  }
+  .text-gray-600 {
+    color: var(--color-muted) !important;
+  }
+  .text-gray-700 {
+    color: var(--color-text) !important;
+  }
+  .text-gray-800 {
+    color: var(--color-text) !important;
+  }
+  .text-gray-400 {
+    color: var(--color-muted) !important;
+  }
+  .bg-gray-100 {
+    background-color: var(--color-surface) !important;
+    border-color: var(--color-border) !important;
+  }
+  .border-gray-300 {
+    border-color: var(--color-border) !important;
+  }
+  .border-gray-200 {
+    border-color: var(--color-border) !important;
+  }
+  input[type="text"], 
+  input[type="email"], 
+  input[type="password"], 
+  select, 
+  textarea {
+    background-color: var(--color-surface) !important;
+    color: var(--color-text) !important;
+    border-color: var(--color-border) !important;
+  }
+  input[type="text"]:focus, 
+  input[type="email"]:focus, 
+  input[type="password"]:focus, 
+  select:focus, 
+  textarea:focus {
+    background-color: var(--color-surface) !important;
+    color: var(--color-text) !important;
+    border-color: #3b82f6 !important; // blue-500
+  }
+  .hover\:bg-gray-50:hover {
+    background-color: var(--color-surface-elevated) !important;
+  }
+  .divide-y > * + * {
+    border-color: var(--color-border) !important;
+  }
+  .border-b {
+    border-color: var(--color-border) !important;
+  }
+  .border-gray-200 {
+    border-color: var(--color-border) !important;
+  }
+  .bg-gray-100 {
+    background-color: var(--color-surface-elevated) !important;
+  }
+  .bg-blue-100 {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+  }
+  .text-blue-700 {
+    color: #1d4ed8 !important;
+  }
+  a {
+    color: #60a5fa !important; // blue-400 for better visibility in dark theme
+  }
+  a:hover {
+    color: #93c5fd !important; // blue-300 for hover state
+  }
+  .hover\:text-blue-600:hover {
+    color: #60a5fa !important; // blue-400
+  }
+  .hover\:text-blue-800:hover {
+    color: #93c5fd !important; // blue-300
+  }
+}
+
+// Muted text utility when not using tailwind classes directly
+.text-muted {
+  color: var(--color-muted);
+}
+
+// Kanban-specific theme styling
+.kanban-column {
+  background-color: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+}
+
+// Project color classes for both themes
+.bg-red-50 { 
+  background-color: rgba(254, 242, 242, 0.8) !important; 
+  border-left: 4px solid #ef4444 !important; // red-500
+}
+.bg-orange-50 { 
+  background-color: rgba(255, 247, 237, 0.8) !important; 
+  border-left: 4px solid #f97316 !important; // orange-500
+}
+.bg-yellow-50 { 
+  background-color: rgba(254, 249, 195, 0.8) !important; 
+  border-left: 4px solid #f59e0b !important; // yellow-500
+}
+.bg-green-50 { 
+  background-color: rgba(240, 253, 244, 0.8) !important; 
+  border-left: 4px solid #22c55e !important; // green-500
+}
+.bg-blue-50 { 
+  background-color: rgba(239, 246, 255, 0.8) !important; 
+  border-left: 4px solid #3b82f6 !important; // blue-500
+}
+.bg-purple-50 { 
+  background-color: rgba(250, 245, 255, 0.8) !important; 
+  border-left: 4px solid #9333ea !important; // purple-500
+}
+.bg-pink-50 { 
+  background-color: rgba(253, 242, 248, 0.8) !important; 
+  border-left: 4px solid #ec4899 !important; // pink-500
+}
+.bg-gray-50 { 
+  background-color: var(--color-surface-elevated) !important; 
+  border-left: 4px solid #6b7280 !important; // gray-500
+}
+
+// Project color classes for night theme
+.theme-night {
+  .bg-red-50 { 
+    background-color: rgba(239, 68, 68, 0.1) !important; 
+    border-left: 4px solid #ef4444 !important; // red-500
+  }
+  .bg-orange-50 { 
+    background-color: rgba(249, 115, 22, 0.1) !important; 
+    border-left: 4px solid #f97316 !important; // orange-500
+  }
+  .bg-yellow-50 { 
+    background-color: rgba(245, 158, 11, 0.1) !important; 
+    border-left: 4px solid #f59e0b !important; // yellow-500
+  }
+  .bg-green-50 { 
+    background-color: rgba(34, 197, 94, 0.1) !important; 
+    border-left: 4px solid #22c55e !important; // green-500
+  }
+  .bg-blue-50 { 
+    background-color: rgba(59, 130, 246, 0.1) !important; 
+    border-left: 4px solid #3b82f6 !important; // blue-500
+  }
+  .bg-purple-50 { 
+    background-color: rgba(147, 51, 234, 0.1) !important; 
+    border-left: 4px solid #9333ea !important; // purple-500
+  }
+  .bg-pink-50 { 
+    background-color: rgba(236, 72, 153, 0.1) !important; 
+    border-left: 4px solid #ec4899 !important; // pink-500
+  }
+  .bg-gray-50 { 
+    background-color: var(--color-surface-elevated) !important; 
+    border-left: 4px solid #6b7280 !important; // gray-500
+  }
+  
+  // Ensure project color classes work with theme-aware backgrounds while preserving borders
+  .surface.bg-red-50 { 
+    background-color: rgba(239, 68, 68, 0.1) !important; 
+    border-left: 4px solid #ef4444 !important; // red-500
+  }
+  .surface.bg-orange-50 { 
+    background-color: rgba(249, 115, 22, 0.1) !important; 
+    border-left: 4px solid #f97316 !important; // orange-500
+  }
+  .surface.bg-yellow-50 { 
+    background-color: rgba(245, 158, 11, 0.1) !important; 
+    border-left: 4px solid #f59e0b !important; // yellow-500
+  }
+  .surface.bg-green-50 { 
+    background-color: rgba(34, 197, 94, 0.1) !important; 
+    border-left: 4px solid #22c55e !important; // green-500
+  }
+  .surface.bg-blue-50 { 
+    background-color: rgba(59, 130, 246, 0.1) !important; 
+    border-left: 4px solid #3b82f6 !important; // blue-500
+  }
+  .surface.bg-purple-50 { 
+    background-color: rgba(147, 51, 234, 0.1) !important; 
+    border-left: 4px solid #9333ea !important; // purple-500
+  }
+  .surface.bg-pink-50 { 
+    background-color: rgba(236, 72, 153, 0.1) !important; 
+    border-left: 4px solid #ec4899 !important; // pink-500
+  }
+  .surface.bg-gray-50 { 
+    background-color: var(--color-surface-elevated) !important; 
+    border-left: 4px solid #6b7280 !important; // gray-500
+  }
+}

@@ -91,9 +91,9 @@
     </div>
   </div>
 
-  <div class="bg-white shadow-lg rounded-lg">
+  <div class="surface shadow-lg rounded-lg">
     <% @tasks.each do |task| %>
-      <div class="task-item border-b border-gray-200 p-4 flex items-center justify-between hover:bg-gray-50">
+      <div class="task-item border-b border-gray-200 p-4 flex items-center justify-between hover:bg-gray-50" style="background-color: var(--color-surface-elevated);">
         <div class="flex items-center space-x-4">
           <%= button_to toggle_task_path(task, show_completed: show_completed), 
               method: :patch, 

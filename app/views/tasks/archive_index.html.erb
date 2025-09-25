@@ -1,16 +1,16 @@
 # Archive Statistics
-<div class="bg-white shadow rounded-lg p-6 mb-6">
+<div class="surface shadow rounded-lg p-6 mb-6">
   <h2 class="text-xl font-semibold mb-4">Archive Statistics</h2>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div class="p-4 bg-gray-50 rounded-lg">
+    <div class="p-4 rounded-lg" style="background-color: var(--color-surface-elevated);">
       <div class="text-sm text-gray-600">Total Archived Tasks</div>
       <div class="text-2xl font-bold"><%= @archive_stats[:total_archived] %></div>
     </div>
-    <div class="p-4 bg-gray-50 rounded-lg">
+    <div class="p-4 rounded-lg" style="background-color: var(--color-surface-elevated);">
       <div class="text-sm text-gray-600">Archived This Month</div>
       <div class="text-2xl font-bold"><%= @archive_stats[:archived_this_month] %></div>
     </div>
-    <div class="p-4 bg-gray-50 rounded-lg">
+    <div class="p-4 rounded-lg" style="background-color: var(--color-surface-elevated);">
       <div class="text-sm text-gray-600">Total Completed Tasks</div>
       <div class="text-2xl font-bold"><%= @archive_stats[:total_completed] %></div>
     </div>
@@ -18,7 +18,7 @@
 </div>
 
 # Bulk Archive Form
-<div class="bg-white shadow rounded-lg p-6 mb-6">
+<div class="surface shadow rounded-lg p-6 mb-6">
   <h3 class="text-lg font-semibold mb-4">Bulk Archive Tasks</h3>
   <%= form_tag bulk_archive_path, method: :post, class: "flex items-end gap-4" do %>
     <div class="flex-grow">
@@ -35,14 +35,14 @@
 </div>
 
 # Archived Tasks List
-<div class="bg-white shadow rounded-lg">
+<div class="surface shadow rounded-lg">
   <div class="px-6 py-4 border-b border-gray-200">
     <h2 class="text-xl font-semibold">Archived Tasks</h2>
   </div>
   
   <div class="divide-y divide-gray-200">
     <% @archived_tasks.each do |task| %>
-      <div class="p-6 hover:bg-gray-50">
+      <div class="p-6 hover:bg-gray-50" style="background-color: var(--color-surface);">
         <div class="flex items-center justify-between">
           <div>
             <h3 class="text-lg font-medium text-gray-900">

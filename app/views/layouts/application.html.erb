@@ -8,6 +8,70 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
+    <script>
+      (function() {
+        try {
+          var htmlEl = document.documentElement;
+          var params = new URLSearchParams(location.search);
+          var override = params.get('theme'); // 'day' | 'night' | 'auto'
+          if (override) {
+            localStorage.setItem('themePreference', override);
+          }
+          // Use user's database preference, fallback to localStorage, then 'auto'
+          var userPref = '<%= current_user&.theme_preference || "" %>';
+          var pref = userPref || localStorage.getItem('themePreference') || 'auto';
+
+          function isNightNow() {
+            var now = new Date();
+            var hour = now.getHours();
+            // Night: 19:00-07:00 local time
+            return hour >= 19 || hour < 7;
+          }
+
+          function applyTheme(theme) {
+            if (theme === 'night') {
+              htmlEl.classList.add('theme-night');
+            } else {
+              htmlEl.classList.remove('theme-night');
+            }
+          }
+
+          function scheduleNextSwitch() {
+            // Compute ms until next boundary (07:00 or 19:00)
+            var now = new Date();
+            var next = new Date(now);
+            var hour = now.getHours();
+            var targetHour = hour < 7 ? 7 : (hour < 19 ? 19 : 31); // 31 -> 7 of next day
+            if (targetHour === 31) {
+              // set to next day 07:00
+              next.setDate(now.getDate() + 1);
+              next.setHours(7, 0, 0, 0);
+            } else {
+              next.setHours(targetHour, 0, 0, 0);
+            }
+            var delay = Math.max(1000, next.getTime() - now.getTime());
+            window.__themeTimer && clearTimeout(window.__themeTimer);
+            window.__themeTimer = setTimeout(function() {
+              var currentPref = userPref || localStorage.getItem('themePreference') || 'auto';
+              if (currentPref === 'auto') {
+                applyTheme(isNightNow() ? 'night' : 'day');
+                scheduleNextSwitch();
+              }
+            }, delay);
+          }
+
+          if (pref === 'day' || pref === 'night') {
+            applyTheme(pref);
+          } else {
+            applyTheme(isNightNow() ? 'night' : 'day');
+            scheduleNextSwitch();
+          }
+        } catch (e) {
+          // fail safe: do nothing
+        }
+      })();
+    </script>
+
     <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
     <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
 
