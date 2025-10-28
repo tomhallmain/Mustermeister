@@ -21,11 +21,47 @@
           var userPref = '<%= current_user&.theme_preference || "" %>';
           var pref = userPref || localStorage.getItem('themePreference') || 'auto';
 
-          function isNightNow() {
-            var now = new Date();
-            var hour = now.getHours();
-            // Night: 19:00-07:00 local time
-            return hour >= 19 || hour < 7;
+          // Calculate day of year (1-365)
+          function getDayOfYear(date) {
+              var start = new Date(date.getFullYear(), 0, 0);
+              var diff = date - start;
+              return Math.floor(diff / (1000 * 60 * 60 * 24));
+          }
+
+          // Calculate approximate sunrise/sunset hours based on day of year
+          // This uses a simplified solar model that accounts for seasonal variation
+          function getSunsetHour(dayOfYear) {
+            // Approximate sunset times throughout the year
+            // Summer solstice (June 21 / day 172) = latest sunset ~21:00
+            // Equinox (March 21, Sept 23): ~19:00  
+            // Winter solstice (Dec 21 / day 356) = earliest sunset ~17:00
+            // This creates a smooth seasonal curve
+            // Fix the calculation - use cosine for proper seasonal variation
+            var angle = (dayOfYear - 172) / 365.25 * 2 * Math.PI;
+            
+            // Use cosine to get proper peaks at solstices
+            // Amplitude of 2 hours from base of 19:00
+            var offset = 2 * Math.cos(angle);
+            return Math.round(19 + offset);
+          }
+          
+          function getSunriseHour(dayOfYear) {
+            // Sunrise is roughly opposite of sunset
+            // Use the same phase but with different amplitude
+            var angle = (dayOfYear - 172) / 365.25 * 2 * Math.PI;
+            var offset = 2 * Math.sin(angle); // Different function for opposite phase
+            return Math.round(7 + offset);
+          }
+
+          function isNightNow(date) {
+            var date = new Date();
+            var dayOfYear = getDayOfYear(date);
+            var sunsetHour = getSunsetHour(dayOfYear);
+            var sunriseHour = getSunriseHour(dayOfYear);
+            var hour = date.getHours();
+            
+            // Simple logic: night is after sunset OR before sunrise
+            return hour >= sunsetHour || hour < sunriseHour;
           }
 
           function applyTheme(theme) {
@@ -37,19 +73,43 @@
           }
 
           function scheduleNextSwitch() {
-            // Compute ms until next boundary (07:00 or 19:00)
+            // Compute ms until next boundary (sunrise or sunset based on season)
             var now = new Date();
             var next = new Date(now);
+            var dayOfYear = getDayOfYear(now);
+            var sunsetHour = getSunsetHour(dayOfYear);
+            var sunriseHour = getSunriseHour(dayOfYear);
             var hour = now.getHours();
-            var targetHour = hour < 7 ? 7 : (hour < 19 ? 19 : 31); // 31 -> 7 of next day
-            if (targetHour === 31) {
-              // set to next day 07:00
+            var minutes = now.getMinutes();
+            
+            // Determine if it's currently night or day
+            var isNight = isNightNow();
+            
+            // Calculate next switch time
+            var nextSwitch;
+            if (isNight) {
+              // Currently night, next switch is sunrise tomorrow
               next.setDate(now.getDate() + 1);
-              next.setHours(7, 0, 0, 0);
+              // Recalculate sunrise for next day
+              dayOfYear = getDayOfYear(next);
+              sunriseHour = getSunriseHour(dayOfYear);
+              next.setHours(sunriseHour, 0, 0, 0);
+              nextSwitch = next;
             } else {
-              next.setHours(targetHour, 0, 0, 0);
+              // Currently day, next switch is sunset today
+              next.setHours(sunsetHour, 0, 0, 0);
+              // If sunset has already passed today, set it for tomorrow's sunset
+              if (next <= now) {
+                next.setDate(now.getDate() + 1);
+                // Recalculate sunrise for next day
+                dayOfYear = getDayOfYear(next);
+                sunsetHour = getSunsetHour(dayOfYear);
+                next.setHours(sunsetHour, 0, 0, 0);
+              }
+              nextSwitch = next;
             }
-            var delay = Math.max(1000, next.getTime() - now.getTime());
+            
+            var delay = Math.max(1000, nextSwitch.getTime() - now.getTime());
             window.__themeTimer && clearTimeout(window.__themeTimer);
             window.__themeTimer = setTimeout(function() {
               var currentPref = userPref || localStorage.getItem('themePreference') || 'auto';
