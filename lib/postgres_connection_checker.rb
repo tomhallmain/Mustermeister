@@ -262,15 +262,15 @@ module PostgresConnectionChecker
             end
 
             # Start service
-            if system("brew services start #{best_service}")
-                log "Successfully started #{best_service}".green
+            if system("brew services start #{service_name}")
+                log "Successfully started #{service_name}".green
                 sleep 2 # Allow time for service startup
                 return if verify_database_connection(db_config, true)
             end
         
             log <<~ERROR.red
                 Failed to start PostgreSQL service. You might need to run:
-                brew services start #{best_service}
+                brew services start #{service_name}
             ERROR
             exit 1
         rescue => e

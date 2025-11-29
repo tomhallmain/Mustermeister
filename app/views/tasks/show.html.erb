@@ -30,7 +30,7 @@
     </div>
 
     <div class="mt-6 space-y-4">
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="surface rounded-lg shadow p-6">
         <h2 class="text-xl font-semibold text-gray-900 mb-4"><%= t('views.tasks.show.details') %></h2>
         <div class="space-y-4">
           <div class="flex space-x-6">
@@ -74,7 +74,7 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="surface rounded-lg shadow p-6">
         <h2 class="text-xl font-semibold text-gray-900 mb-4">Comments</h2>
         
         <%= form_with(model: [@task, @comment], class: "mb-6", data: { turbo: false }) do |f| %>
@@ -93,7 +93,7 @@
 
         <div class="space-y-4">
           <% @comments.each do |comment| %>
-            <div class="flex space-x-3 p-4 bg-gray-50 rounded-lg">
+            <div class="flex space-x-3 p-4 surface rounded-lg" style="background-color: var(--color-surface-elevated);">
               <div class="flex-1">
                 <div class="flex items-center justify-between">
                   <h3 class="text-sm font-medium text-gray-900">
