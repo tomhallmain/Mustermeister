@@ -124,6 +124,108 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "kanban_tasks should filter by updated_within_days (positive values)" do
+    # Create tasks with different updated_at timestamps
+    base_time = Time.current
+    
+    recent_task = @project.tasks.create!(
+      title: "Recent Task",
+      description: "Updated recently",
+      user: @user,
+      updated_at: base_time - 2.days,
+      status: @project.status_by_key(:not_started)
+    )
+    
+    old_task = @project.tasks.create!(
+      title: "Old Task",
+      description: "Updated long ago",
+      user: @user,
+      updated_at: base_time - 10.days,
+      status: @project.status_by_key(:not_started)
+    )
+    
+    # Test filter for tasks updated within 7 days (should include recent_task, exclude old_task)
+    get kanban_tasks_path(updated_within_days: 7), as: :json
+    assert_response :success
+    
+    json_response = JSON.parse(response.body)
+    all_tasks = json_response['tasks'].values.flatten
+    
+    recent_task_found = all_tasks.any? { |t| t['id'] == recent_task.id }
+    old_task_found = all_tasks.any? { |t| t['id'] == old_task.id }
+    
+    assert recent_task_found, "Recent task should be included when filtering for last 7 days"
+    assert_not old_task_found, "Old task should be excluded when filtering for last 7 days"
+  end
+
+  test "kanban_tasks should filter by updated_within_days (negative values)" do
+    # Create tasks with different updated_at timestamps
+    base_time = Time.current
+    
+    recent_task = @project.tasks.create!(
+      title: "Recent Task",
+      description: "Updated recently",
+      user: @user,
+      updated_at: base_time - 2.days,
+      status: @project.status_by_key(:not_started)
+    )
+    
+    old_task = @project.tasks.create!(
+      title: "Old Task",
+      description: "Updated long ago",
+      user: @user,
+      updated_at: base_time - 10.days,
+      status: @project.status_by_key(:not_started)
+    )
+    
+    # Test filter for tasks NOT updated within 7 days (should exclude recent_task, include old_task)
+    get kanban_tasks_path(updated_within_days: -7), as: :json
+    assert_response :success
+    
+    json_response = JSON.parse(response.body)
+    all_tasks = json_response['tasks'].values.flatten
+    
+    recent_task_found = all_tasks.any? { |t| t['id'] == recent_task.id }
+    old_task_found = all_tasks.any? { |t| t['id'] == old_task.id }
+    
+    assert_not recent_task_found, "Recent task should be excluded when filtering for not updated in 7 days"
+    assert old_task_found, "Old task should be included when filtering for not updated in 7 days"
+  end
+
+  test "kanban_tasks should not filter when updated_within_days is not provided" do
+    # Create tasks with different updated_at timestamps
+    base_time = Time.current
+    
+    recent_task = @project.tasks.create!(
+      title: "Recent Task",
+      description: "Updated recently",
+      user: @user,
+      updated_at: base_time - 2.days,
+      status: @project.status_by_key(:not_started)
+    )
+    
+    old_task = @project.tasks.create!(
+      title: "Old Task",
+      description: "Updated long ago",
+      user: @user,
+      updated_at: base_time - 10.days,
+      status: @project.status_by_key(:not_started)
+    )
+    
+    # Test without filter (should include both tasks)
+    get kanban_tasks_path, as: :json
+    assert_response :success
+    
+    json_response = JSON.parse(response.body)
+    all_tasks = json_response['tasks'].values.flatten
+    
+    recent_task_found = all_tasks.any? { |t| t['id'] == recent_task.id }
+    old_task_found = all_tasks.any? { |t| t['id'] == old_task.id }
+    
+    assert recent_task_found, "Recent task should be included when no filter is applied"
+    assert old_task_found, "Old task should be included when no filter is applied"
+  end
+
   test "kanban task update should redirect to login when session expired" do
     # Simulate an expired session by manipulating the session cookie expiration
     # The session store is configured with expire_after: 1.hours

@@ -24,6 +24,20 @@
         <option value="priority" <%= 'selected' if @sort_by == 'priority' %>>Priority</option>
       </select>
 
+      <select id="updated-within-days" class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+        <option value="">All Time</option>
+        <option value="1">Last 1 day</option>
+        <option value="3">Last 3 days</option>
+        <option value="7">Last 7 days</option>
+        <option value="14">Last 14 days</option>
+        <option value="30">Last 30 days</option>
+        <option value="60">Last 60 days</option>
+        <option value="90">Last 90 days</option>
+        <option value="-7">Not updated in 7 days</option>
+        <option value="-14">Not updated in 14 days</option>
+        <option value="-30">Not updated in 30 days</option>
+      </select>
+
       <div class="relative">
         <input type="text" id="search-input" 
                class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 pl-8"
@@ -77,6 +91,7 @@
     const projectFilter = document.getElementById('project-filter');
     const priorityFilter = document.getElementById('priority-filter');
     const sortBy = document.getElementById('sort-by');
+    const updatedWithinDays = document.getElementById('updated-within-days');
     const showAllCompleted = document.getElementById('show-all-completed');
     const searchInput = document.getElementById('search-input');
     let currentPage = 1;
@@ -169,6 +184,10 @@
 
       if (priorityFilter.value) {
         params.append('priority', priorityFilter.value);
+      }
+
+      if (updatedWithinDays.value) {
+        params.append('updated_within_days', updatedWithinDays.value);
       }
 
       fetch(`/kanban/tasks?${params}`)
@@ -449,6 +468,7 @@
       loadTasks();
     });
     sortBy.addEventListener('change', loadTasks);
+    updatedWithinDays.addEventListener('change', loadTasks);
     showAllCompleted.addEventListener('change', loadTasks);
     searchInput.addEventListener('input', filterAndDisplayTasks);
 

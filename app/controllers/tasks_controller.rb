@@ -259,11 +259,12 @@ class TasksController < ApplicationController
     @current_project = params[:project_id].present? ? current_user.projects.find(params[:project_id]) : nil
     @sort_by = params[:sort_by] || 'updated_at'
     @priority_filter = params[:priority]
+    @updated_within_days = params[:updated_within_days]&.to_i
     @page = (params[:page] || 1).to_i
     @per_page = 100
     @show_all_completed = params[:show_all_completed] == 'true'
 
-    Rails.logger.debug "Kanban tasks request - Project: #{@current_project&.id}, Sort: #{@sort_by}, Page: #{@page}, Show All Completed: #{@show_all_completed}, Priority: #{@priority_filter}"
+    Rails.logger.debug "Kanban tasks request - Project: #{@current_project&.id}, Sort: #{@sort_by}, Page: #{@page}, Show All Completed: #{@show_all_completed}, Priority: #{@priority_filter}, Updated Within Days: #{@updated_within_days}"
 
     tasks = current_user.tasks
       .includes(:project, :status, :user)
@@ -276,6 +277,17 @@ class TasksController < ApplicationController
 
     if @priority_filter.present?
       tasks = tasks.where(priority: @priority_filter)
+    end
+
+    if @updated_within_days.present? && @updated_within_days != 0
+      if @updated_within_days > 0
+        # Updated within X days
+        tasks = tasks.where('tasks.updated_at >= ?', @updated_within_days.days.ago)
+      else
+        # Not updated within X days (negative value)
+        days_ago = @updated_within_days.abs.days.ago
+        tasks = tasks.where('tasks.updated_at < ?', days_ago)
+      end
     end
 
     # Group tasks by status
