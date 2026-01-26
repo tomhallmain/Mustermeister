@@ -1,0 +1,9 @@
+fr:
+  statuses:
+    not_started: ""
+    to_investigate: ""
+    investigated: ""
+    in_progress: ""
+    ready_to_test: ""
+    complete: ""
+    closed: ""

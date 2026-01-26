@@ -1,0 +1,24 @@
+de:
+  activerecord:
+    attributes:
+      project:
+        title: ""
+        description: ""
+        default_priority: ""
+        due_date: ""
+        created_at: ""
+        updated_at: ""
+        last_activity_at: ""
+        user_id: ""
+      task:
+        title: ""
+        description: ""
+        priority: ""
+        status: ""
+        due_date: ""
+        created_at: ""
+        updated_at: ""
+        completed_at: ""
+        archived_at: ""
+        project_id: ""
+        user_id: ""

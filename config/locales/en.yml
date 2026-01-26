@@ -29,51 +29,51 @@
 
 en:
   hello: "Hello world"
-  
+
   # Load structured locale files
   # Models
   activerecord:
     models:
       task:
-        one: Task
-        other: Tasks
+        one: "Task"
+        other: "Tasks"
       project:
-        one: Project
-        other: Projects
+        one: "Project"
+        other: "Projects"
     attributes:
       task:
-        title: Title
-        description: Description
-        priority: Priority
-        status: Status
-        due_date: Due Date
+        title: "Title"
+        description: "Description"
+        priority: "Priority"
+        status: "Status"
+        due_date: "Due Date"
       project:
-        title: Title
-        description: Description
-        default_priority: Default Priority
-        due_date: Due Date
-  
+        title: "Title"
+        description: "Description"
+        default_priority: "Default Priority"
+        due_date: "Due Date"
+
   # Priorities and Statuses
   priorities:
-    leisure: Leisure
-    low: Low
-    medium: Medium
-    high: High
-  
+    leisure: "Leisure"
+    low: "Low"
+    medium: "Medium"
+    high: "High"
+
   statuses:
-    not_started: Not Started
-    to_investigate: To Investigate
-    investigated: Investigated
-    in_progress: In Progress
-    ready_to_test: Ready to Test
-    complete: Complete
-    closed: Closed
-  
+    not_started: "Not Started"
+    to_investigate: "To Investigate"
+    investigated: "Investigated"
+    in_progress: "In Progress"
+    ready_to_test: "Ready to Test"
+    complete: "Complete"
+    closed: "Closed"
+
   # Error messages
   errors:
     messages:
       not_saved: "There was an error saving the %{resource}."
-  
+
   # Application-wide translations
   application:
     title: "Mustermeister"

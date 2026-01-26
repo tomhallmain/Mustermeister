@@ -2,21 +2,21 @@ en:
   activerecord:
     models:
       task:
-        one: Task
-        other: Tasks
+        one: "Task"
+        other: "Tasks"
     attributes:
       task:
-        title: Title
-        description: Description
-        priority: Priority
-        status: Status
-        due_date: Due Date
-        created_at: Created At
-        updated_at: Updated At
-        completed_at: Completed At
-        archived_at: Archived At
-        project_id: Project
-        user_id: User
+        title: "Title"
+        description: "Description"
+        priority: "Priority"
+        status: "Status"
+        due_date: "Due Date"
+        created_at: "Created At"
+        updated_at: "Updated At"
+        completed_at: "Completed At"
+        archived_at: "Archived At"
+        project_id: "Project"
+        user_id: "User"
     errors:
       models:
         task:
@@ -31,18 +31,17 @@ en:
             due_date:
               invalid: "must be a valid date"
               in_past: "cannot be in the past"
-  
   priorities:
-    leisure: Leisure
-    low: Low
-    medium: Medium
-    high: High
-  
+    leisure: "Leisure"
+    low: "Low"
+    medium: "Medium"
+    high: "High"
+
   statuses:
-    not_started: Not Started
-    to_investigate: To Investigate
-    investigated: Investigated
-    in_progress: In Progress
-    ready_to_test: Ready to Test
-    complete: Complete
-    closed: Closed
+    not_started: "Not Started"
+    to_investigate: "To Investigate"
+    investigated: "Investigated"
+    in_progress: "In Progress"
+    ready_to_test: "Ready to Test"
+    complete: "Complete"
+    closed: "Closed"

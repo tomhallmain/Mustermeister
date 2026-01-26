@@ -10,7 +10,6 @@ en:
         search_placeholder: "Search tasks..."
         search: "Search"
         clear: "Clear"
-        select_project: "Select a project:"
         project_label: "Project:"
         due_label: "Due:"
         created_label: "Created:"

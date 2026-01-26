@@ -42,6 +42,10 @@ en:
       yes: "Yes"
       no: "No"
       ok: "OK"
+      true: "Yes"
+      false: "No"
+      'True': "application.actions.True"
+      'False': "application.actions.False"
     messages:
       created: "%{resource} was successfully created."
       updated: "%{resource} was successfully updated."

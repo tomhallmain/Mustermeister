@@ -1,0 +1,26 @@
+es:
+  activerecord:
+    errors:
+      models:
+        project:
+          attributes:
+            title:
+              blank: ""
+              too_short: ""
+            default_priority:
+              inclusion: ""
+            due_date:
+              invalid: ""
+              in_past: ""
+        task:
+          attributes:
+            title:
+              blank: ""
+              too_short: ""
+            priority:
+              inclusion: ""
+            status:
+              inclusion: ""
+            due_date:
+              invalid: ""
+              in_past: ""

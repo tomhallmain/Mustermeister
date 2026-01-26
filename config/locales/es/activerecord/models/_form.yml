@@ -1,0 +1,9 @@
+es:
+  activerecord:
+    models:
+      project:
+        one: ""
+        other: ""
+      task:
+        one: ""
+        other: ""

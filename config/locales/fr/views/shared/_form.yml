@@ -1,0 +1,10 @@
+fr:
+  views:
+    shared:
+      priority_badge:
+        leisure: ""
+        low: ""
+        medium: ""
+        high: ""
+        priority: ""
+        priority_level: ""
