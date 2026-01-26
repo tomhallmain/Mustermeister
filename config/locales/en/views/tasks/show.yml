@@ -20,6 +20,7 @@ en:
         completed_at: "Completed"
         archived_at: "Archived"
         edit_task: "Edit Task"
+        refresh: "Refresh"
         delete_task: "Delete Task"
         back_to_tasks: "Back to Tasks"
         back_to_project: "Back to Project"

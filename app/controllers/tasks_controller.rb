@@ -2,7 +2,7 @@ class TasksController < ApplicationController
   TASKS_PER_PAGE = 15
 
   before_action :initialize_show_completed_prefs
-  before_action :set_task, only: [:show, :edit, :update, :destroy, :toggle, :archive]
+  before_action :set_task, only: [:show, :edit, :update, :destroy, :toggle, :archive, :refresh]
   before_action :load_projects_and_tags, only: [:new, :edit, :create, :update]
 
   def index
@@ -191,6 +191,15 @@ class TasksController < ApplicationController
     else
       redirect_to @task, alert: @task.errors.full_messages.join(", ")
     end
+  end
+
+  def refresh
+    # TODO: Consider using a separate timestamp column for manual "refresh"
+    #       instead of overwriting the standard updated_at value.
+    @task.touch
+    
+    redirect_to task_path(@task), 
+                notice: 'Task refreshed successfully.'
   end
 
   def bulk_archive

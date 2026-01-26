@@ -327,6 +327,25 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert @task.archived
   end
 
+  test "should refresh task and update updated_at timestamp" do
+    # Set an old updated_at timestamp
+    old_updated_at = 1.day.ago
+    @task.update_column(:updated_at, old_updated_at)
+    @task.reload
+    assert_equal old_updated_at.to_i, @task.updated_at.to_i
+    
+    # Call refresh action
+    patch refresh_task_path(@task)
+    
+    # Verify redirect
+    assert_redirected_to task_path(@task)
+    
+    # Verify updated_at is now more recent than the old timestamp
+    @task.reload
+    assert @task.updated_at > old_updated_at
+    assert @task.updated_at <= Time.current
+  end
+
   test "should search tasks by title and description" do
     # Search for "zeb" which should match our search test fixtures
     get tasks_path(search: "zeb", show_completed: false)

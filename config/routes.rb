@@ -48,6 +48,7 @@ Rails.application.routes.draw do
     member do
       patch :toggle
       post :archive
+      patch :refresh
     end
     resources :comments, only: [:create, :update, :destroy], shallow: true
   end
