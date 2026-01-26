@@ -2,9 +2,9 @@ fr:
   views:
     shared:
       priority_badge:
-        leisure: ""
-        low: ""
-        medium: ""
-        high: ""
-        priority: ""
-        priority_level: ""
+        leisure: "Loisirs"
+        low: "Faible"
+        medium: "Moyen"
+        high: "Élevé"
+        priority: "Priorité"
+        priority_level: "Niveau de priorité"

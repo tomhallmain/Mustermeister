@@ -5,22 +5,22 @@ de:
         project:
           attributes:
             title:
-              blank: ""
-              too_short: ""
+              blank: "Der Titel darf nicht leer sein"
+              too_short: "Der Titel ist zu kurz (Mindestanzahl: %{count} Zeichen)"
             default_priority:
-              inclusion: ""
+              inclusion: "muss eine gültige Prioritätsstufe sein"
             due_date:
-              invalid: ""
-              in_past: ""
+              invalid: "muss ein gültiges Datum sein"
+              in_past: "kann nicht in der Vergangenheit liegen"
         task:
           attributes:
             title:
-              blank: ""
-              too_short: ""
+              blank: "Der Titel darf nicht leer sein"
+              too_short: "Der Titel ist zu kurz (Mindestanzahl: %{count} Zeichen)"
             priority:
-              inclusion: ""
+              inclusion: "muss eine gültige Prioritätsstufe sein"
             status:
-              inclusion: ""
+              inclusion: "muss ein gültiger Status sein"
             due_date:
-              invalid: ""
-              in_past: ""
+              invalid: "muss ein gültiges Datum sein"
+              in_past: "kann nicht in der Vergangenheit liegen"

@@ -28,77 +28,81 @@
 #       enabled: "ON"
 
 fr:
-  hello: ""
+  hello: "Bonjour le monde"
 
   # Load structured locale files
   # Models
   activerecord:
     models:
       task:
-        one: ""
-        other: ""
+        one: "Tâche"
+        other: "Tâches"
       project:
-        one: ""
-        other: ""
+        one: "Projet"
+        other: "Projets"
     attributes:
       task:
-        title: ""
-        description: ""
-        priority: ""
-        status: ""
-        due_date: ""
+        title: "Titre"
+        description: "Description"
+        priority: "Priorité"
+        status: "Statut"
+        due_date: "Date d'échéance"
       project:
-        title: ""
-        description: ""
-        default_priority: ""
-        due_date: ""
+        title: "Titre"
+        description: "Description"
+        default_priority: "Priorité par défaut"
+        due_date: "Date d'échéance"
 
   # Priorities and Statuses
   priorities:
-    leisure: ""
-    low: ""
-    medium: ""
-    high: ""
+    leisure: "Loisirs"
+    low: "Faible"
+    medium: "Moyen"
+    high: "Élevé"
 
   statuses:
-    not_started: ""
-    to_investigate: ""
-    investigated: ""
-    in_progress: ""
-    ready_to_test: ""
-    complete: ""
-    closed: ""
+    not_started: "Non commencé"
+    to_investigate: "Enquêter"
+    investigated: "Enquête"
+    in_progress: "En cours"
+    ready_to_test: "Prêt à tester"
+    complete: "Compléter"
+    closed: "Fermé"
 
   # Error messages
   errors:
     messages:
-      not_saved: ""
+      not_saved: "Une erreur s'est produite lors de l'enregistrement de %{resource}."
 
   # Application-wide translations
   application:
-    title: ""
-    tagline: ""
+    title: "Mustermeister"
+    tagline: "Gestion des tâches et des projets"
     navigation:
-      tasks: ""
-      projects: ""
-      profile: ""
-      sign_out: ""
-      sign_in: ""
-      sign_up: ""
+      tasks: "Tâches"
+      projects: "Projets"
+      profile: "Profil"
+      sign_out: "Se déconnecter"
+      sign_in: "Se connecter"
+      sign_up: "S'inscrire"
     messages:
-      created: ""
-      updated: ""
-      destroyed: ""
-      archived: ""
-      unarchived: ""
+      created: "%{resource} a été créé avec succès."
+      updated: "%{resource} a été mis à jour avec succès."
+      destroyed: "%{resource} a été supprimé avec succès."
+      archived: "%{resource} a été archivé avec succès."
+      unarchived: "%{resource} a été désarchivé avec succès."
     time:
       formats:
-        default: ""
-        short: ""
-        long: ""
+        default: "%B %d, %Y"
+        short: "%b %d"
+        long: "%B %d, %Y à %I:%M %p"
     pagination:
-      first: ""
-      last: ""
-      previous: ""
-      next: ""
-      truncate: ""
+      first: "&laquo; Premier"
+      last: "Dernier &raquo;"
+      previous: "&lsaquo; Précédent"
+      next: "Suivant &rsaquo;"
+      truncate: "&hellip;"
+  views:
+    tasks:
+      show:
+        refresh: "Actualiser"

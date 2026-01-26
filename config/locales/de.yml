@@ -28,77 +28,81 @@
 #       enabled: "ON"
 
 de:
-  hello: ""
+  hello: "Hallo Welt"
 
   # Load structured locale files
   # Models
   activerecord:
     models:
       task:
-        one: ""
-        other: ""
+        one: "Aufgabe"
+        other: "Aufgaben"
       project:
-        one: ""
-        other: ""
+        one: "Projekt"
+        other: "Projekte"
     attributes:
       task:
-        title: ""
-        description: ""
-        priority: ""
-        status: ""
-        due_date: ""
+        title: "Titel"
+        description: "Beschreibung"
+        priority: "Priorität"
+        status: "Status"
+        due_date: "Fälligkeitsdatum"
       project:
-        title: ""
-        description: ""
-        default_priority: ""
-        due_date: ""
+        title: "Titel"
+        description: "Beschreibung"
+        default_priority: "Standardpriorität"
+        due_date: "Fälligkeitsdatum"
 
   # Priorities and Statuses
   priorities:
-    leisure: ""
-    low: ""
-    medium: ""
-    high: ""
+    leisure: "Freizeit"
+    low: "Niedrig"
+    medium: "Mittel"
+    high: "Hoch"
 
   statuses:
-    not_started: ""
-    to_investigate: ""
-    investigated: ""
-    in_progress: ""
-    ready_to_test: ""
-    complete: ""
-    closed: ""
+    not_started: "Nicht begonnen"
+    to_investigate: "Untersuchen"
+    investigated: "Untersucht"
+    in_progress: "In Bearbeitung"
+    ready_to_test: "Bereit zum Testen"
+    complete: "Vollständig"
+    closed: "Geschlossen"
 
   # Error messages
   errors:
     messages:
-      not_saved: ""
+      not_saved: "Beim Speichern der Ressource %{resource} ist ein Fehler aufgetreten."
 
   # Application-wide translations
   application:
-    title: ""
-    tagline: ""
+    title: "Mustermeister"
+    tagline: "Aufgaben- und Projektmanagement"
     navigation:
-      tasks: ""
-      projects: ""
-      profile: ""
-      sign_out: ""
-      sign_in: ""
-      sign_up: ""
+      tasks: "Aufgaben"
+      projects: "Projekte"
+      profile: "Profil"
+      sign_out: "Abmelden"
+      sign_in: "Anmelden"
+      sign_up: "Registrieren"
     messages:
-      created: ""
-      updated: ""
-      destroyed: ""
-      archived: ""
-      unarchived: ""
+      created: "%{resource} wurde erfolgreich erstellt."
+      updated: "%{resource} wurde erfolgreich aktualisiert."
+      destroyed: "%{resource} wurde erfolgreich gelöscht."
+      archived: "%{resource} wurde erfolgreich archiviert."
+      unarchived: "%{resource} wurde erfolgreich entpackt."
     time:
       formats:
-        default: ""
-        short: ""
-        long: ""
+        default: "%B %d, %Y"
+        short: "%b %d"
+        long: "%B %d, %Y um %I:%M %p"
     pagination:
-      first: ""
-      last: ""
-      previous: ""
-      next: ""
-      truncate: ""
+      first: "&laquo; Zuerst"
+      last: "Letzte &raquo;"
+      previous: "&lsaquo; Zurück"
+      next: "Weiter &rsaquo;"
+      truncate: "&hellip;"
+  views:
+    tasks:
+      show:
+        refresh: "Aktualisieren"
