@@ -1,9 +1,0 @@
-fr:
-  errors:
-    messages:
-      already_confirmed: ""
-      confirmation_period_expired: ""
-      expired: ""
-      not_found: ""
-      not_locked: ""
-      not_saved: ""
