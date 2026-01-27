@@ -31,3 +31,6 @@ en:
         completed: "Completed"
         archived: "Archived"
         details: "Details"
+        comments: "Comments"
+        add_comment_placeholder: "Add a comment..."
+        post_comment: "Post Comment"

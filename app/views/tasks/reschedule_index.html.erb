@@ -1,19 +1,19 @@
 <div class="container mx-auto px-4 py-8">
   <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-4">Reschedule Tasks</h1>
+    <h1 class="text-3xl font-bold text-gray-900 mb-4"><%= t('views.tasks.reschedule_index.title') %></h1>
     
     <!-- Statistics -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       <div class="surface p-4 rounded-lg shadow">
-        <div class="text-sm text-gray-600">Total Tasks</div>
+        <div class="text-sm text-gray-600"><%= t('views.tasks.reschedule_index.total_tasks') %></div>
         <div class="text-2xl font-bold"><%= @reschedule_stats[:total_tasks] %></div>
       </div>
       <div class="surface p-4 rounded-lg shadow">
-        <div class="text-sm text-gray-600">Overdue Tasks</div>
+        <div class="text-sm text-gray-600"><%= t('views.tasks.reschedule_index.overdue_tasks') %></div>
         <div class="text-2xl font-bold text-red-600"><%= @reschedule_stats[:overdue_tasks] %></div>
       </div>
       <div class="surface p-4 rounded-lg shadow">
-        <div class="text-sm text-gray-600">Upcoming Tasks</div>
+        <div class="text-sm text-gray-600"><%= t('views.tasks.reschedule_index.upcoming_tasks') %></div>
         <div class="text-2xl font-bold text-green-600"><%= @reschedule_stats[:upcoming_tasks] %></div>
       </div>
     </div>
@@ -21,19 +21,19 @@
     <!-- Bulk Reschedule Form -->
     <%= form_tag bulk_reschedule_path, method: :post, class: "surface shadow-lg rounded-lg p-6 mb-6" do %>
       <div class="mb-6">
-        <h2 class="text-xl font-semibold mb-4">Bulk Reschedule Selected Tasks</h2>
+        <h2 class="text-xl font-semibold mb-4"><%= t('views.tasks.reschedule_index.bulk_reschedule_title') %></h2>
         <div class="flex items-end gap-4">
           <div class="flex-grow">
             <label class="block text-sm font-medium text-gray-700 mb-1">
-              New Due Date
+              <%= t('views.tasks.reschedule_index.new_due_date') %>
             </label>
             <%= date_field_tag :new_due_date, nil, 
                 class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
                 required: true %>
           </div>
-          <%= submit_tag "Reschedule Selected Tasks", 
+          <%= submit_tag t('views.tasks.reschedule_index.reschedule_selected'), 
               class: "px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2",
-              data: { confirm: "Are you sure you want to reschedule the selected tasks?" } %>
+              data: { confirm: t('views.tasks.reschedule_index.reschedule_confirm') } %>
         </div>
       </div>
 
@@ -50,12 +50,12 @@
                 <%= task.title %>
               </h3>
               <div class="mt-1 text-sm text-gray-500">
-                Project: <%= task.project.title %>
+                <%= t('views.tasks.reschedule_index.project_label') %>: <%= task.project.title %>
               </div>
               <div class="mt-1 flex items-center space-x-4 text-sm">
                 <% if task.due_date %>
                   <span class="<%= task.due_date < Time.current ? 'text-red-600' : 'text-gray-500' %>">
-                    Due: <%= task.due_date.strftime("%b %d, %Y") %>
+                    <%= t('views.tasks.reschedule_index.due_label') %>: <%= task.due_date.strftime("%b %d, %Y") %>
                   </span>
                 <% end %>
                 <%= render 'shared/priority_badge', priority: task.priority %>

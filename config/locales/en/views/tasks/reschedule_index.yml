@@ -1,0 +1,14 @@
+en:
+  views:
+    tasks:
+      reschedule_index:
+        title: "Reschedule Tasks"
+        total_tasks: "Total Tasks"
+        overdue_tasks: "Overdue Tasks"
+        upcoming_tasks: "Upcoming Tasks"
+        bulk_reschedule_title: "Bulk Reschedule Selected Tasks"
+        new_due_date: "New Due Date"
+        reschedule_selected: "Reschedule Selected Tasks"
+        reschedule_confirm: "Are you sure you want to reschedule the selected tasks?"
+        project_label: "Project"
+        due_label: "Due"

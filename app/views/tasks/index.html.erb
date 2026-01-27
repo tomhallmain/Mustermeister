@@ -66,12 +66,12 @@
             <div class="flex flex-wrap gap-2 mt-1">
               <% if task.project %>
                 <span class="text-xs text-gray-500">
-                  Project: <%= link_to task.project.title, project_path(task.project), class: "text-blue-600 hover:text-blue-800" %>
+                  <%= t('views.tasks.index.project_label') %> <%= link_to task.project.title, project_path(task.project), class: "text-blue-600 hover:text-blue-800" %>
                 </span>
               <% end %>
               <% if task.due_date %>
                 <span class="text-xs text-gray-500">
-                  Due: <%= task.due_date.strftime("%b %d, %Y") %>
+                  <%= t('views.tasks.index.due_label') %>: <%= task.due_date.strftime("%b %d, %Y") %>
                 </span>
               <% end %>
               <%= render 'shared/priority_badge', priority: task.priority %>
@@ -84,12 +84,12 @@
                     when 'To Investigate', 'Investigated / Not Started', 'Investigated' then 'bg-orange-100 text-orange-800'
                     else 'bg-gray-100 text-gray-800'
                     end %>">
-                <%= task.status.name %>
+                <%= t("statuses.#{task.status.name.parameterize.underscore}", default: task.status.name) %>
               </span>
               <div class="text-xs text-gray-500">
-                Created: <%= task.created_at.strftime("%b %d, %Y") %>
+                <%= t('views.tasks.index.created_label') %>: <%= task.created_at.strftime("%b %d, %Y") %>
                 <% if task.updated_at != task.created_at %>
-                  <br>Updated: <%= task.updated_at.strftime("%b %d, %Y") %>
+                  <br><%= t('views.tasks.index.updated_label') %>: <%= task.updated_at.strftime("%b %d, %Y") %>
                 <% end %>
               </div>
             </div>
@@ -104,14 +104,14 @@
           <% end %>
           
           <%= button_to archive_task_path(task, show_completed: params[:show_completed]), method: :post, class: "text-gray-600 hover:text-gray-800", 
-              data: { confirm: "Are you sure you want to archive this task?" } do %>
+              data: { confirm: t('views.tasks.index.archive_confirm') } do %>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
             </svg>
           <% end %>
           
           <%= button_to task_path(task, show_completed: params[:show_completed]), method: :delete, class: "text-red-600 hover:text-red-800", 
-              data: { confirm: "Are you sure?" } do %>
+              data: { confirm: t('views.tasks.index.delete_confirm') } do %>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
             </svg>

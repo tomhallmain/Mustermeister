@@ -1,47 +1,47 @@
-<div class="container mx-auto px-2 py-4">
+<div class="container mx-auto px-2 py-4" data-kanban-i18n="<%= { previous_page: t('views.tasks.kanban.previous_page'), reset_to_first_page: t('views.tasks.kanban.reset_to_first_page'), load_more: t('views.tasks.kanban.load_more') }.to_json %>">
   <div class="flex justify-between items-center mb-4">
-    <h1 class="text-xl font-bold text-gray-900">My Tasks Board</h1>
+    <h1 class="text-xl font-bold text-gray-900"><%= t('views.tasks.kanban.title') %></h1>
     
     <div class="flex items-center space-x-4">
       <select id="project-filter" class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-        <option value="">All Projects</option>
+        <option value=""><%= t('views.tasks.kanban.all_projects') %></option>
         <% @projects.each do |project| %>
           <option value="<%= project.id %>" <%= 'selected' if @current_project&.id == project.id %>><%= project.title %></option>
         <% end %>
       </select>
 
       <select id="priority-filter" class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-        <option value="">All Priorities</option>
-        <option value="high" <%= 'selected' if @priority_filter == 'high' %>>High</option>
-        <option value="medium" <%= 'selected' if @priority_filter == 'medium' %>>Medium</option>
-        <option value="low" <%= 'selected' if @priority_filter == 'low' %>>Low</option>
-        <option value="leisure" <%= 'selected' if @priority_filter == 'leisure' %>>Leisure</option>
+        <option value=""><%= t('views.tasks.kanban.all_priorities') %></option>
+        <option value="high" <%= 'selected' if @priority_filter == 'high' %>><%= t('priorities.high') %></option>
+        <option value="medium" <%= 'selected' if @priority_filter == 'medium' %>><%= t('priorities.medium') %></option>
+        <option value="low" <%= 'selected' if @priority_filter == 'low' %>><%= t('priorities.low') %></option>
+        <option value="leisure" <%= 'selected' if @priority_filter == 'leisure' %>><%= t('priorities.leisure') %></option>
       </select>
 
       <select id="sort-by" class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-        <option value="updated_at" <%= 'selected' if @sort_by == 'updated_at' %>>Last Updated</option>
-        <option value="created_at" <%= 'selected' if @sort_by == 'created_at' %>>Created Date</option>
-        <option value="priority" <%= 'selected' if @sort_by == 'priority' %>>Priority</option>
+        <option value="updated_at" <%= 'selected' if @sort_by == 'updated_at' %>><%= t('views.tasks.kanban.sort.last_updated') %></option>
+        <option value="created_at" <%= 'selected' if @sort_by == 'created_at' %>><%= t('views.tasks.kanban.sort.created_at') %></option>
+        <option value="priority" <%= 'selected' if @sort_by == 'priority' %>><%= t('views.tasks.kanban.sort.priority') %></option>
       </select>
 
       <select id="updated-within-days" class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-        <option value="">All Time</option>
-        <option value="1">Last 1 day</option>
-        <option value="3">Last 3 days</option>
-        <option value="7">Last 7 days</option>
-        <option value="14">Last 14 days</option>
-        <option value="30">Last 30 days</option>
-        <option value="60">Last 60 days</option>
-        <option value="90">Last 90 days</option>
-        <option value="-7">Not updated in 7 days</option>
-        <option value="-14">Not updated in 14 days</option>
-        <option value="-30">Not updated in 30 days</option>
+        <option value=""><%= t('views.tasks.kanban.all_time') %></option>
+        <option value="1"><%= t('views.tasks.kanban.updated_within.last_1_day') %></option>
+        <option value="3"><%= t('views.tasks.kanban.updated_within.last_3_days') %></option>
+        <option value="7"><%= t('views.tasks.kanban.updated_within.last_7_days') %></option>
+        <option value="14"><%= t('views.tasks.kanban.updated_within.last_14_days') %></option>
+        <option value="30"><%= t('views.tasks.kanban.updated_within.last_30_days') %></option>
+        <option value="60"><%= t('views.tasks.kanban.updated_within.last_60_days') %></option>
+        <option value="90"><%= t('views.tasks.kanban.updated_within.last_90_days') %></option>
+        <option value="-7"><%= t('views.tasks.kanban.updated_within.not_7_days') %></option>
+        <option value="-14"><%= t('views.tasks.kanban.updated_within.not_14_days') %></option>
+        <option value="-30"><%= t('views.tasks.kanban.updated_within.not_30_days') %></option>
       </select>
 
       <div class="relative">
         <input type="text" id="search-input" 
                class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 pl-8"
-               placeholder="Search tasks...">
+               placeholder="<%= t('views.tasks.kanban.search_placeholder') %>">
         <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
           <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -51,7 +51,7 @@
     </div>
 
     <div class="flex items-center space-x-2">
-      <label for="show-all-completed" class="text-sm text-gray-700">Show all completed tasks</label>
+      <label for="show-all-completed" class="text-sm text-gray-700"><%= t('views.tasks.kanban.show_all_completed') %></label>
       <div class="relative inline-block w-10 mr-2 align-middle select-none">
         <input type="checkbox" id="show-all-completed" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
         <label for="show-all-completed" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
@@ -60,22 +60,12 @@
   </div>
 
   <div id="kanban-board" class="flex space-x-2 overflow-x-auto pb-4">
-    <% {
-      not_started: 'Not Started',
-      investigations: 'To Investigate',
-      in_progress: 'In Progress',
-      ready_to_test: 'Ready to Test',
-      complete: 'Complete'
-    }.each do |key, name| %>
+    <% { not_started: 'Not Started', investigations: 'To Investigate', in_progress: 'In Progress', ready_to_test: 'Ready to Test', complete: 'Complete' }.each do |key, db_name| %>
       <div class="kanban-column flex-shrink-0 w-64 rounded-lg p-2" 
            data-status="<%= key %>"
-           data-status-id="<%= Status.find_by(name: name)&.id %>">
+           data-status-id="<%= Status.find_by(name: db_name)&.id %>">
         <h3 class="text-sm font-semibold text-gray-900 mb-2">
-          <%= case key
-              when 'investigations' then 'Investigations'
-              when 'complete' then 'Complete'
-              else name
-              end %>
+          <%= t("views.tasks.kanban.columns.#{key}") %>
         </h3>
         <div class="kanban-tasks space-y-2 min-h-[200px]" data-status="<%= key %>">
           <!-- Tasks will be loaded here via JavaScript -->
@@ -87,6 +77,7 @@
 
 <%= javascript_tag do %>
   document.addEventListener('DOMContentLoaded', function() {
+    const kanbanI18n = JSON.parse(document.querySelector('[data-kanban-i18n]')?.dataset?.kanbanI18n || '{}');
     const board = document.getElementById('kanban-board');
     const projectFilter = document.getElementById('project-filter');
     const priorityFilter = document.getElementById('priority-filter');
@@ -272,7 +263,7 @@
             <svg class="h-4 w-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
-            Previous Page
+            ${kanbanI18n.previous_page || 'Previous Page'}
           `;
           prevBtn.onclick = () => {
             currentPage--;
@@ -287,7 +278,7 @@
             <svg class="h-4 w-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            Reset to First Page
+            ${kanbanI18n.reset_to_first_page || 'Reset to First Page'}
           `;
           resetBtn.onclick = () => {
             currentPage = 1;
@@ -301,7 +292,7 @@
           const loadMoreBtn = document.createElement('button');
           loadMoreBtn.className = 'pagination-btn w-full px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-indigo-600 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500';
           loadMoreBtn.innerHTML = `
-            Load More
+            ${kanbanI18n.load_more || 'Load More'}
             <svg class="h-4 w-4 inline-block ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>

@@ -5,7 +5,7 @@
         <h1 class="text-2xl font-bold text-gray-900"><%= @project.title %></h1>
       </div>
       <div class="flex space-x-4">
-        <%= link_to 'Edit Project', edit_project_path(@project), 
+        <%= link_to t('projects.show.edit_project'), edit_project_path(@project), 
             class: 'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' %>
         <% 
           # Get the current preference from params or session
@@ -18,22 +18,22 @@
           # Debug with more details
           Rails.logger.debug "*** Current show_completed value: #{show_completed.inspect} (type: #{show_completed.class})"
         %>
-        <%= link_to 'New Task', new_project_task_path(@project, show_completed: show_completed), 
+        <%= link_to t('projects.show.new_task'), new_project_task_path(@project, show_completed: show_completed), 
             class: 'bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded' %>
-        <%= link_to 'View Report', report_project_path(@project), 
+        <%= link_to t('projects.show.view_report'), report_project_path(@project), 
             class: 'bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded shadow-md' %>
 
         <%= button_to reprioritize_project_path(@project), 
             method: :post,
             class: 'bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded shadow-md',
             data: { 
-              confirm: "Are you sure you want to update all task priorities to match the project's default priority (#{@project.default_priority&.capitalize || 'Medium'})? This action cannot be undone."
+              confirm: t('projects.show.reprioritize_confirm', default_priority: t("priorities.#{@project.default_priority || 'medium'}"))
             } do %>
           <div class="flex items-center">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
             </svg>
-            <span>Reprioritize Tasks</span>
+            <span><%= t('projects.show.reprioritize_tasks') %></span>
           </div>
         <% end %>
 
@@ -44,7 +44,7 @@
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
           </svg>
-          <span><%= show_completed ? 'Hide Completed' : 'Show Completed' %></span>
+          <span><%= show_completed ? t('projects.show.hide_completed') : t('projects.show.show_completed') %></span>
         <% end %>
       </div>
     </div>
@@ -53,13 +53,13 @@
       <div class="flex items-center gap-4">
         <p class="text-gray-600 text-sm whitespace-pre-line"><%= @project.description %></p>
         <div class="text-xs text-gray-500">
-          Created: <%= @project.created_at.strftime("%B %d, %Y at %I:%M %p") %>
+          <%= t('projects.show.created_at') %>: <%= @project.created_at.strftime("%B %d, %Y at %I:%M %p") %>
           <% if @project.updated_at != @project.created_at %>
-            <br>Last Updated: <%= @project.updated_at.strftime("%B %d, %Y at %I:%M %p") %>
+            <br><%= t('projects.show.updated_at') %>: <%= @project.updated_at.strftime("%B %d, %Y at %I:%M %p") %>
           <% end %>
         </div>
         <div>
-          <span class="text-sm">Default Priority: </span>
+          <span class="text-sm"><%= t('projects.show.default_priority') %>: </span>
           <%= render 'shared/priority_badge', priority: @project.default_priority, size: 'text-sm' %>
         </div>
       </div>
@@ -67,14 +67,14 @@
         <%= form_with url: project_path(@project), method: :get, class: "flex gap-2 w-full", data: { turbo: false } do |f| %>
           <div class="flex-1">
             <%= f.text_field :search, 
-                placeholder: "Search tasks...", 
+                placeholder: t('views.tasks.index.search_placeholder'), 
                 value: params[:search],
                 class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
           </div>
           <%= f.hidden_field :show_completed, value: show_completed %>
-          <%= f.submit "Search", class: "bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-1.5 px-3 rounded" %>
+          <%= f.submit t('views.projects.index.search'), class: "bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-1.5 px-3 rounded" %>
           <% if params[:search].present? %>
-            <%= link_to "Clear", project_path(@project, show_completed: show_completed), class: "bg-gray-500 hover:bg-gray-700 text-white text-sm font-bold py-1.5 px-3 rounded" %>
+            <%= link_to t('views.projects.index.clear'), project_path(@project, show_completed: show_completed), class: "bg-gray-500 hover:bg-gray-700 text-white text-sm font-bold py-1.5 px-3 rounded" %>
           <% end %>
         <% end %>
       </div>
@@ -85,8 +85,8 @@
         <div class="bg-blue-600 h-2 rounded-full" style="width: <%= @project.completion_percentage %>%"></div>
       </div>
       <div class="mt-2 flex justify-between text-sm text-gray-600">
-        <span><%= @project.completion_percentage %>% Complete</span>
-        <span><%= pluralize(@project.tasks.count, 'task') %></span>
+        <span><%= @project.completion_percentage %>% <%= t('projects.show.completion') %></span>
+        <span><%= pluralize(@project.tasks.count, t('activerecord.models.task.one'), t('activerecord.models.task.other')) %></span>
       </div>
     </div>
   </div>
@@ -121,7 +121,7 @@
               <% end %>
               <% if task.due_date %>
                 <span class="text-sm text-gray-500">
-                  Due: <%= task.due_date.strftime("%b %d, %Y") %>
+                  <%= t('views.tasks.show.due_date') %>: <%= task.due_date.strftime("%b %d, %Y") %>
                 </span>
               <% end %>
               <%= render 'shared/priority_badge', 
@@ -137,12 +137,12 @@
                     when 'To Investigate', 'Investigated / Not Started', 'Investigated' then 'bg-orange-100 text-orange-800'
                     else 'bg-gray-100 text-gray-800'
                     end %>">
-                <%= task.status.name %>
+                <%= t("statuses.#{task.status.name.parameterize.underscore}", default: task.status.name) %>
               </span>
               <div class="text-xs text-gray-500">
-                Created: <%= task.created_at.strftime("%b %d, %Y") %>
+                <%= t('projects.show.created_at') %>: <%= task.created_at.strftime("%b %d, %Y") %>
                 <% if task.updated_at != task.created_at %>
-                  <br>Updated: <%= task.updated_at.strftime("%b %d, %Y") %>
+                  <br><%= t('projects.show.updated_at') %>: <%= task.updated_at.strftime("%b %d, %Y") %>
                 <% end %>
               </div>
             </div>
@@ -162,7 +162,7 @@
               method: :delete, 
               class: "text-red-600 hover:text-red-800", 
               form: { data: { turbo: false } },
-              data: { confirm: "Are you sure?" } do %>
+              data: { confirm: t('views.tasks.index.delete_confirm') } do %>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
             </svg>

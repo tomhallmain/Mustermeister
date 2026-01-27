@@ -1,0 +1,19 @@
+en:
+  views:
+    tasks:
+      archive_index:
+        archive_statistics: "Archive Statistics"
+        total_archived_tasks: "Total Archived Tasks"
+        archived_this_month: "Archived This Month"
+        total_completed_tasks: "Total Completed Tasks"
+        bulk_archive_title: "Bulk Archive Tasks"
+        archive_completed_before: "Archive tasks completed before"
+        archive_tasks: "Archive Tasks"
+        archive_confirm: "Are you sure you want to archive completed tasks? This action cannot be undone."
+        archived_tasks_list: "Archived Tasks"
+        project_label: "Project"
+        archived_by: "Archived by"
+        archived_on: "Archived on"
+        unknown: "Unknown"
+        last_comment: "Last comment"
+        no_archived_tasks: "No archived tasks found."

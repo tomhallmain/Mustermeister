@@ -4,6 +4,7 @@ en:
       index:
         title: "Projects"
         new_project: "New Project"
+        view_all_reports: "View All Reports"
         search_placeholder: "Search projects..."
         search: "Search"
         clear: "Clear"
@@ -12,5 +13,10 @@ en:
         created: "Created"
         updated: "Updated"
         last_activity: "Last Activity"
+        complete: "Complete"
         delete_confirm: "Are you sure?"
         no_projects: "No projects found"
+        status:
+          not_started: "Not Started"
+          completed: "Completed"
+          in_progress: "In Progress"

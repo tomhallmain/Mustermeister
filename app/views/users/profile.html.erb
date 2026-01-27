@@ -14,7 +14,7 @@
       </div>
 
       <div class="border-t border-gray-200 pt-6 mb-6">
-        <h2 class="text-xl font-semibold text-gray-900 mb-4">Update Profile</h2>
+        <h2 class="text-xl font-semibold text-gray-900 mb-4"><%= t('views.users.profile.update_profile') %></h2>
         <%= form_with(model: current_user, url: profile_path, method: :patch, class: "space-y-4") do |f| %>
           <div>
             <%= f.label :name, class: "block text-sm font-medium text-gray-700" %>
@@ -27,54 +27,54 @@
           </div>
 
           <div>
-            <%= f.label :theme_preference, "Theme Preference", class: "block text-sm font-medium text-gray-700" %>
+            <%= f.label :theme_preference, t('views.users.profile.theme_preference'), class: "block text-sm font-medium text-gray-700" %>
             <%= f.select :theme_preference, 
                 options_for_select([
-                  ['Auto (Day/Night based on time)', 'auto'],
-                  ['Always Day Theme', 'day'],
-                  ['Always Night Theme', 'night']
+                  [t('views.users.profile.theme_options.auto'), 'auto'],
+                  [t('views.users.profile.theme_options.day'), 'day'],
+                  [t('views.users.profile.theme_options.night'), 'night']
                 ], current_user.theme_preference || 'auto'),
                 { include_blank: false },
                 { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" } %>
             <p class="mt-1 text-sm text-gray-500">
-              Auto mode switches between day and night themes based on your local time (night: 7 PM - 7 AM)
+              <%= t('views.users.profile.theme_auto_help') %>
             </p>
           </div>
 
           <div>
-            <%= f.submit "Update Profile", class: "inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>
+            <%= f.submit t('views.users.profile.update_profile'), class: "inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>
           </div>
         <% end %>
       </div>
 
       <div class="border-t border-gray-200 pt-6 mb-6">
-        <h2 class="text-xl font-semibold text-gray-900 mb-4">Data Export & Import</h2>
+        <h2 class="text-xl font-semibold text-gray-900 mb-4"><%= t('views.users.profile.data_export_import') %></h2>
         <div class="space-y-6">
           <!-- Export Section -->
           <div class="surface p-4 rounded-lg" style="background-color: var(--color-surface-elevated);">
-            <h3 class="text-lg font-medium text-gray-900 mb-3">Export Your Data</h3>
-            <p class="text-gray-600 mb-4">Download your data in JSON format or as an encrypted ZIP file for security.</p>
+            <h3 class="text-lg font-medium text-gray-900 mb-3"><%= t('views.users.profile.export_your_data') %></h3>
+            <p class="text-gray-600 mb-4"><%= t('views.users.profile.export_intro') %></p>
             
             <div class="space-y-3">
               <!-- JSON Export -->
               <div class="flex items-center justify-between">
                 <div>
-                  <h4 class="font-medium text-gray-900">JSON Export</h4>
-                  <p class="text-sm text-gray-600">Human-readable format, good for data portability</p>
+                  <h4 class="font-medium text-gray-900"><%= t('views.users.profile.json_export') %></h4>
+                  <p class="text-sm text-gray-600"><%= t('views.users.profile.json_export_help') %></p>
                 </div>
-                <%= link_to "Download JSON", export_data_path(format: 'json'), 
+                <%= link_to t('views.users.profile.download_json'), export_data_path(format: 'json'), 
                     class: "inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>
               </div>
               
               <!-- Encrypted ZIP Export -->
               <div class="flex items-center justify-between">
                 <div>
-                  <h4 class="font-medium text-gray-900">Encrypted ZIP Export</h4>
-                  <p class="text-sm text-gray-600">Compressed and encrypted, smaller file size</p>
+                  <h4 class="font-medium text-gray-900"><%= t('views.users.profile.encrypted_zip_export') %></h4>
+                  <p class="text-sm text-gray-600"><%= t('views.users.profile.encrypted_zip_help') %></p>
                 </div>
                 <a href="#" onclick="showEncryptedExport(); return false;" 
                    class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                  Download Encrypted
+                  <%= t('views.users.profile.download_encrypted') %>
                 </a>
               </div>
             </div>
@@ -82,26 +82,26 @@
 
           <!-- Import Section -->
           <div class="surface p-4 rounded-lg" style="background-color: var(--color-surface-elevated);">
-            <h3 class="text-lg font-medium text-gray-900 mb-3">Import Data</h3>
-            <p class="text-gray-600 mb-4">Import previously exported data. Supports JSON and encrypted ZIP files.</p>
+            <h3 class="text-lg font-medium text-gray-900 mb-3"><%= t('views.users.profile.import_data') %></h3>
+            <p class="text-gray-600 mb-4"><%= t('views.users.profile.import_intro') %></p>
             
             <%= form_with(url: import_data_path, method: :post, multipart: true, class: "space-y-4") do |f| %>
               <div>
-                <%= f.label :file, "Select File", class: "block text-sm font-medium text-gray-700" %>
+                <%= f.label :file, t('views.users.profile.select_file'), class: "block text-sm font-medium text-gray-700" %>
                 <%= f.file_field :file, accept: '.json,.zip', 
                     class: "mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" %>
-                <p class="mt-1 text-sm text-gray-500">Maximum file size: 50MB</p>
+                <p class="mt-1 text-sm text-gray-500"><%= t('views.users.profile.max_file_size') %></p>
               </div>
               
               <div id="password-field" class="hidden">
-                <%= f.label :password, "Encryption Password", class: "block text-sm font-medium text-gray-700" %>
+                <%= f.label :password, t('views.users.profile.encryption_password'), class: "block text-sm font-medium text-gray-700" %>
                 <%= f.password_field :password, 
                     class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
-                <p class="mt-1 text-sm text-gray-500">Required for encrypted ZIP files</p>
+                <p class="mt-1 text-sm text-gray-500"><%= t('views.users.profile.encryption_password_help') %></p>
               </div>
               
               <div>
-                <%= f.submit "Import Data", 
+                <%= f.submit t('views.users.profile.import_data_submit'), 
                     class: "inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500" %>
               </div>
             <% end %>
@@ -110,22 +110,20 @@
       </div>
 
       <div class="border-t border-gray-200 pt-6">
-        <h2 class="text-xl font-semibold text-gray-900 mb-4">About Mustermeister</h2>
+        <h2 class="text-xl font-semibold text-gray-900 mb-4"><%= t('views.users.profile.about_title') %></h2>
         <div class="prose max-w-none">
           <p class="text-gray-700">
-            Mustermeister is a task management application designed to help you take control of your personal and work deliverables. 
-            With its clean interface, you can easily manage your tasks, projects, and deadlines to stay organized and productive.
-            Generate reports and track your progress, while staying focused on your overall goals.
+            <%= t('views.users.profile.about_intro') %>
           </p>
           
-          <h3 class="text-lg font-medium text-gray-900 mt-6 mb-3">Key Features</h3>
+          <h3 class="text-lg font-medium text-gray-900 mt-6 mb-3"><%= t('views.users.profile.key_features') %></h3>
           <ul class="list-disc pl-5 space-y-2 text-gray-700">
-            <li>Organize tasks into projects for better structure</li>
-            <li>Track progress and completion with visual indicators</li>
-            <li>Archive completed tasks for future reference</li>
-            <li>Reschedule and prioritize work efficiently</li>
-            <li>Monitor project timelines and deadlines</li>
-            <li>Export and import your data for backup and portability</li>
+            <li><%= t('views.users.profile.feature_organize') %></li>
+            <li><%= t('views.users.profile.feature_track') %></li>
+            <li><%= t('views.users.profile.feature_archive') %></li>
+            <li><%= t('views.users.profile.feature_reschedule') %></li>
+            <li><%= t('views.users.profile.feature_monitor') %></li>
+            <li><%= t('views.users.profile.feature_export') %></li>
           </ul>
         </div>
       </div>
@@ -134,21 +132,23 @@
 </div>
 
 <!-- Encrypted Export Modal -->
-<div id="encrypted-export-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+<div id="encrypted-export-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50"
+     data-i18n-passwords-no-match="<%= t('views.users.profile.passwords_no_match') %>"
+     data-i18n-password-too-short="<%= t('views.users.profile.password_too_short') %>">
   <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md surface">
     <div class="mt-3">
-      <h3 class="text-lg font-medium text-gray-900 mb-4">Encrypted Export</h3>
-      <p class="text-sm text-gray-600 mb-4">Enter a password to encrypt your data. You'll need this password to import the file later.</p>
+      <h3 class="text-lg font-medium text-gray-900 mb-4"><%= t('views.users.profile.encrypted_export_modal_title') %></h3>
+      <p class="text-sm text-gray-600 mb-4"><%= t('views.users.profile.encrypted_export_modal_intro') %></p>
       
       <form id="encrypted-export-form" class="space-y-4">
         <div>
-          <label for="export-password" class="block text-sm font-medium text-gray-700">Password</label>
+          <label for="export-password" class="block text-sm font-medium text-gray-700"><%= t('views.users.profile.password_label') %></label>
           <input type="password" id="export-password" name="password" required
                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
         </div>
         
         <div>
-          <label for="export-password-confirm" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+          <label for="export-password-confirm" class="block text-sm font-medium text-gray-700"><%= t('views.users.profile.confirm_password_label') %></label>
           <input type="password" id="export-password-confirm" name="password_confirm" required
                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
         </div>
@@ -156,11 +156,11 @@
         <div class="flex justify-end space-x-3">
           <button type="button" onclick="hideEncryptedExport()"
                   class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-            Cancel
+            <%= t('views.users.profile.cancel') %>
           </button>
           <button type="submit"
                   class="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-            Download
+            <%= t('views.users.profile.download') %>
           </button>
         </div>
       </form>
@@ -184,13 +184,14 @@ document.getElementById('encrypted-export-form').addEventListener('submit', func
   const password = document.getElementById('export-password').value;
   const passwordConfirm = document.getElementById('export-password-confirm').value;
   
+  const modal = document.getElementById('encrypted-export-modal');
   if (password !== passwordConfirm) {
-    alert('Passwords do not match!');
+    alert(modal.dataset.i18nPasswordsNoMatch || 'Passwords do not match!');
     return;
   }
   
   if (password.length < 6) {
-    alert('Password must be at least 6 characters long!');
+    alert(modal.dataset.i18nPasswordTooShort || 'Password must be at least 6 characters long!');
     return;
   }
   

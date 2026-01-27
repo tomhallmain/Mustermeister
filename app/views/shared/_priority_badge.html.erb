@@ -18,5 +18,5 @@
 %>
 
 <span class="<%= all_classes.join(' ') %>">
-  <%= priority&.capitalize %>
+  <%= priority.present? ? t("priorities.#{priority}") : '' %>
 </span> 
