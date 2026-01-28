@@ -2,10 +2,10 @@
   <div class="mb-8">
     <div class="flex justify-between items-start">
       <div>
-        <h1 class="text-3xl font-bold text-gray-900">New Task</h1>
+        <h1 class="text-3xl font-bold text-gray-900"><%= t('views.tasks.form.new_task') %></h1>
         <% if @task.project %>
           <p class="mt-2 text-gray-600">
-            Project: <%= link_to @task.project.title, project_path(@task.project), class: "text-blue-600 hover:text-blue-800" %>
+            <%= t('views.tasks.form.project') %>: <%= link_to @task.project.title, project_path(@task.project), class: "text-blue-600 hover:text-blue-800" %>
           </p>
         <% end %>
       </div>

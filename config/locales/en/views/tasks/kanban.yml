@@ -22,7 +22,6 @@ en:
           not_14_days: "Not updated in 14 days"
           not_30_days: "Not updated in 30 days"
         search_placeholder: "Search tasks..."
-        show_all_completed: "Show all completed tasks"
         columns:
           not_started: "Not Started"
           investigations: "Investigations"
