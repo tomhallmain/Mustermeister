@@ -47,6 +47,12 @@ es:
         priority: "Prioridad"
         status: "Estado"
         due_date: "Fecha de vencimiento"
+        created_at: ""
+        updated_at: ""
+        completed_at: "Completado en"
+        archived_at: "Archivado en"
+        project_id: "Proyecto"
+        user_id: ""
       project:
         title: "Título"
         description: "Descripción"
@@ -54,6 +60,34 @@ es:
         due_date: "Fecha de vencimiento"
 
   # Priorities and Statuses
+        created_at: "Creado en"
+        updated_at: "Actualizado el"
+        last_activity_at: "Última actividad"
+        user_id: "Usuario"
+    errors:
+      models:
+        project:
+          attributes:
+            title:
+              blank: "El título no puede estar en blanco"
+              too_short: "El título es demasiado corto (el mínimo es %{count} caracteres)."
+            default_priority:
+              inclusion: "debe ser un nivel de prioridad válido"
+            due_date:
+              invalid: "debe ser una fecha válida"
+              in_past: "no puede estar en el pasado"
+        task:
+          attributes:
+            title:
+              blank: ""
+              too_short: ""
+            priority:
+              inclusion: ""
+            status:
+              inclusion: "debe ser un estado válido"
+            due_date:
+              invalid: ""
+              in_past: ""
   priorities:
     leisure: "Ocio"
     low: "Bajo"
@@ -106,3 +140,120 @@ es:
     tasks:
       show:
         refresh: "Actualizar"
+        comments: "Comentarios"
+        add_comment_placeholder: "Añadir un comentario..."
+        post_comment: "Publicar comentario"
+      archive_index:
+        archive_statistics: "Estadísticas del archivo"
+        total_archived_tasks: "Total de tareas archivadas"
+        archived_this_month: "Archivado este mes"
+        total_completed_tasks: "Total de tareas completadas"
+        bulk_archive_title: "Archivar tareas en bloque"
+        archive_completed_before: "Archivar las tareas completadas anteriormente"
+        archive_tasks: "Archivar tareas"
+        archive_confirm: "¿Está seguro de que desea archivar las tareas completadas? Esta acción no se puede deshacer."
+        archived_tasks_list: "Tareas archivadas"
+        project_label: "Proyecto"
+        archived_by: "Archivado por"
+        archived_on: "Archivado el"
+        unknown: "Desconocido"
+        last_comment: "Último comentario"
+        no_archived_tasks: "No se han encontrado tareas archivadas."
+      kanban:
+        title: "Mi tablero de tareas"
+        all_projects: "Todos los proyectos"
+        all_priorities: "Todas las prioridades"
+        sort:
+          last_updated: "Actualizado el"
+          created_at: "Fecha de creación"
+          priority: "Prioridad"
+        all_time: "Todo el tiempo"
+        updated_within:
+          last_1_day: "Último día"
+          last_3_days: "Últimos 3 días"
+          last_7_days: "Últimos 7 días"
+          last_14_days: "Últimos 14 días"
+          last_30_days: "Últimos 30 días"
+          last_60_days: "Últimos 60 días"
+          last_90_days: "Últimos 90 días"
+          not_7_days: "Sin actualizar en 7 días"
+          not_14_days: "Sin actualizar en 14 días"
+          not_30_days: "Sin actualizar en 30 días"
+        search_placeholder: "Buscar las tareas..."
+        show_all_completed: "Mostrar todas las tareas completadas"
+        columns:
+          not_started: "No iniciado"
+          investigations: "Investigaciones"
+          to_investigate: "Investigar"
+          in_progress: "En curso"
+          ready_to_test: "Listo para probar"
+          complete: "Completo"
+        previous_page: "Página anterior"
+        reset_to_first_page: "Volver a la primera página"
+        load_more: "Cargar más"
+      reschedule_index:
+        title: "Reprogramar tareas"
+        total_tasks: "Total de tareas"
+        overdue_tasks: "Tareas vencidas"
+        upcoming_tasks: "Tareas pendientes"
+        bulk_reschedule_title: "Reorganizar tareas seleccionadas de forma masiva"
+        new_due_date: "Nueva fecha de vencimiento"
+        reschedule_selected: "Reprogramar tareas seleccionadas"
+        reschedule_confirm: "Êtes-vous sûr de vouloir reprogrammer les tâches sélectionnées ?"
+        project_label: "Proyecto"
+        due_label: "Vencido"
+    projects:
+      index:
+        view_all_reports: "Ver todos los informes"
+        complete: "Completo"
+        status:
+          not_started: "No iniciado"
+          completed: "Completado"
+          in_progress: "En curso"
+    users:
+      profile:
+        update_profile: "Actualizar perfil"
+        theme_preference: "Preferencia temática"
+        theme_options:
+          auto: "Automático (día/noche según la hora)"
+          day: "Tema «Siempre día»"
+          night: "Tema Siempre Noche"
+        theme_auto_help: "El modo automático cambia entre los temas diurno y nocturno según la hora local (noche: 7 p. m. - 7 a. m.)."
+        data_export_import: "Exportación e importación de datos"
+        export_your_data: "Exportar tus datos"
+        export_intro: "Descarga tus datos en formato JSON o como un archivo ZIP cifrado por motivos de seguridad."
+        json_export: "Exportación JSON"
+        json_export_help: "Formato legible por humanos, adecuado para la portabilidad de datos"
+        download_json: "Descargar JSON"
+        encrypted_zip_export: "Exportación ZIP cifrada"
+        encrypted_zip_help: "Comprimido y cifrado, tamaño de archivo más pequeño"
+        download_encrypted: "Descargar cifrado"
+        import_data: "Importar datos"
+        import_intro: "Importar datos exportados anteriormente. Compatible con archivos JSON y ZIP cifrados."
+        select_file: "Seleccionar archivo"
+        max_file_size: "Tamaño máximo del archivo: 50 MB"
+        encryption_password: "Contraseña de cifrado"
+        encryption_password_help: "Requerido para archivos ZIP cifrados"
+        import_data_submit: ""
+        about_title: "Acerca de Mustermeister"
+        about_intro: "Mustermeister es una aplicación de gestión de tareas diseñada para ayudarte a controlar tus compromisos personales y laborales. Gracias a su interfaz intuitiva, podrás gestionar fácilmente tus tareas, proyectos y plazos para mantenerte organizado y ser productivo. Genera informes y realiza un seguimiento de tu progreso, sin perder de vista tus objetivos generales."
+        key_features: "Características principales"
+        feature_organize: "Organiza las tareas en proyectos para mejorar la estructura"
+        feature_track: "Siga el progreso y la finalización con indicadores visuales"
+        feature_archive: "Archivar tareas completadas para futuras consultas"
+        feature_reschedule: "Reprogramar y priorizar el trabajo de manera eficiente"
+        feature_monitor: "Supervisar los plazos y fechas límite del proyecto"
+        feature_export: "Exporta e importa tus datos para realizar copias de seguridad y facilitar su transferencia"
+        encrypted_export_modal_title: "Exportación cifrada"
+        encrypted_export_modal_intro: "Introduzca una contraseña para cifrar sus datos. Necesitará esta contraseña para importar el archivo más adelante."
+        password_label: "Contraseña"
+        confirm_password_label: "Confirmar contraseña"
+        cancel: "Cancelar"
+        download: "Descargar"
+        passwords_no_match: "¡Las contraseñas no coinciden!"
+        password_too_short: "¡La contraseña debe tener al menos 6 caracteres!"
+  projects:
+    show:
+      view_report: "Ver informe"
+      reprioritize_tasks: "Reordenar las tareas por prioridad"
+      reprioritize_confirm: "¿Está seguro de que desea actualizar todas las prioridades de las tareas para que coincidan con la prioridad predeterminada del proyecto (%{default_priority})? Esta acción no se puede deshacer."

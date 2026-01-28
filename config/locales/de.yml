@@ -47,6 +47,12 @@ de:
         priority: "Priorität"
         status: "Status"
         due_date: "Fälligkeitsdatum"
+        created_at: ""
+        updated_at: ""
+        completed_at: "Abgeschlossen am"
+        archived_at: "Archiviert unter"
+        project_id: "Projekt"
+        user_id: ""
       project:
         title: "Titel"
         description: "Beschreibung"
@@ -54,6 +60,34 @@ de:
         due_date: "Fälligkeitsdatum"
 
   # Priorities and Statuses
+        created_at: "Erstellt am"
+        updated_at: "Aktualisiert am"
+        last_activity_at: "Letzte Aktivität"
+        user_id: "Benutzer"
+    errors:
+      models:
+        project:
+          attributes:
+            title:
+              blank: "Der Titel darf nicht leer sein"
+              too_short: "Der Titel ist zu kurz (Mindestanzahl: %{count} Zeichen)"
+            default_priority:
+              inclusion: "muss eine gültige Prioritätsstufe sein"
+            due_date:
+              invalid: "muss ein gültiges Datum sein"
+              in_past: "kann nicht in der Vergangenheit liegen"
+        task:
+          attributes:
+            title:
+              blank: ""
+              too_short: ""
+            priority:
+              inclusion: ""
+            status:
+              inclusion: "muss ein gültiger Status sein"
+            due_date:
+              invalid: ""
+              in_past: ""
   priorities:
     leisure: "Freizeit"
     low: "Niedrig"
@@ -106,3 +140,120 @@ de:
     tasks:
       show:
         refresh: "Aktualisieren"
+        comments: "Kommentare"
+        add_comment_placeholder: "Kommentar hinzufügen..."
+        post_comment: "Kommentar posten"
+      archive_index:
+        archive_statistics: "Archivstatistik"
+        total_archived_tasks: "Gesamtzahl archivierter Aufgaben"
+        archived_this_month: "In diesem Monat archiviert"
+        total_completed_tasks: "Gesamtzahl der abgeschlossenen Aufgaben"
+        bulk_archive_title: "Aufgaben in großen Mengen archivieren"
+        archive_completed_before: "Archivieren Sie die zuvor erledigten Aufgaben"
+        archive_tasks: "Aufgaben archivieren"
+        archive_confirm: "Möchten Sie abgeschlossene Aufgaben wirklich archivieren? Diese Aktion kann nicht rückgängig gemacht werden."
+        archived_tasks_list: "Archivierte Aufgaben"
+        project_label: "Projekt"
+        archived_by: "Archiviert von"
+        archived_on: "Archiviert am"
+        unknown: "Unbekannt"
+        last_comment: "Letzter Kommentar"
+        no_archived_tasks: "Es wurden keine archivierten Aufgaben gefunden."
+      kanban:
+        title: "Meine Aufgabenübersicht"
+        all_projects: "Alle Projekte"
+        all_priorities: "Alle Prioritäten"
+        sort:
+          last_updated: "Aktualisiert am"
+          created_at: "Erstellungsdatum"
+          priority: "Prioridad"
+        all_time: "Alle Zeiten"
+        updated_within:
+          last_1_day: "Letzter Tag"
+          last_3_days: "Letzten 3 Tage"
+          last_7_days: "Letzte 7 Tage"
+          last_14_days: "Letzte 14 Tage"
+          last_30_days: "Letzte 30 Tage"
+          last_60_days: "Letzte 60 Tage"
+          last_90_days: "Letzte 90 Tage"
+          not_7_days: "Seit 7 Tagen nicht aktualisiert"
+          not_14_days: "Seit 14 Tagen nicht aktualisiert"
+          not_30_days: "Seit 30 Tagen nicht aktualisiert"
+        search_placeholder: "Aufgaben suchen..."
+        show_all_completed: "Alle abgeschlossenen Aufgaben anzeigen"
+        columns:
+          not_started: "Nicht begonnen"
+          investigations: "Untersuchungen"
+          to_investigate: "Untersuchen"
+          in_progress: "In Bearbeitung"
+          ready_to_test: "Bereit zum Testen"
+          complete: "Vollständig"
+        previous_page: "Vorherige Seite"
+        reset_to_first_page: "Zurück zur ersten Seite"
+        load_more: "Mehr laden"
+      reschedule_index:
+        title: "Aufgaben neu planen"
+        total_tasks: "Gesamtanzahl Aufgaben"
+        overdue_tasks: "Überfällige Aufgaben"
+        upcoming_tasks: "Anstehende Aufgaben"
+        bulk_reschedule_title: "Ausgewählte Aufgaben in großen Mengen neu planen"
+        new_due_date: "Neues Fälligkeitsdatum"
+        reschedule_selected: "Ausgewählte Aufgaben verschieben"
+        reschedule_confirm: "Möchten Sie die ausgewählten Aufgaben wirklich verschieben?"
+        project_label: "Projekt"
+        due_label: "Fällig"
+    projects:
+      index:
+        view_all_reports: "Alle Berichte anzeigen"
+        complete: "Vollständig"
+        status:
+          not_started: "Nicht begonnen"
+          completed: "Abgeschlossen"
+          in_progress: "In Bearbeitung"
+    users:
+      profile:
+        update_profile: "Mettre à jour le profil"
+        theme_preference: "Themenpräferenz"
+        theme_options:
+          auto: "Auto (Tag/Nacht basierend auf der Uhrzeit)"
+          day: "Immer Tag-Thema"
+          night: "Immer Nacht-Thema"
+        theme_auto_help: "Der Auto-Modus wechselt je nach Ortszeit zwischen Tag- und Nachtdesign (Nacht: 19:00 bis 7:00 Uhr)."
+        data_export_import: "Datenexport und -import"
+        export_your_data: "Exportieren Sie Ihre Daten"
+        export_intro: "Laden Sie Ihre Daten im JSON-Format oder als verschlüsselte ZIP-Datei aus Sicherheitsgründen herunter."
+        json_export: "JSON-Export"
+        json_export_help: "Für Menschen lesbares Format, gut für die Datenportabilität"
+        download_json: "JSON herunterladen"
+        encrypted_zip_export: "Verschlüsselter ZIP-Export"
+        encrypted_zip_help: "Komprimiert und verschlüsselt, kleinere Dateigröße"
+        download_encrypted: "Verschlüsselt herunterladen"
+        import_data: "Daten importieren"
+        import_intro: "Zuvor exportierte Daten importieren. Unterstützt JSON- und verschlüsselte ZIP-Dateien."
+        select_file: "Datei auswählen"
+        max_file_size: "Maximale Dateigröße: 50 MB"
+        encryption_password: "Verschlüsselungskennwort"
+        encryption_password_help: "Erforderlich für verschlüsselte ZIP-Dateien"
+        import_data_submit: ""
+        about_title: "Über Mustermeister"
+        about_intro: "Mustermeister ist eine Aufgabenverwaltungsanwendung, die Ihnen dabei hilft, Ihre privaten und beruflichen Aufgaben im Griff zu behalten. Dank der übersichtlichen Benutzeroberfläche können Sie Ihre Aufgaben, Projekte und Termine ganz einfach verwalten, um organisiert und produktiv zu bleiben. Erstellen Sie Berichte und verfolgen Sie Ihre Fortschritte, während Sie sich weiterhin auf Ihre übergeordneten Ziele konzentrieren."
+        key_features: "Wichtigste Merkmale"
+        feature_organize: "Organisieren Sie Aufgaben in Projekten, um eine bessere Struktur zu schaffen"
+        feature_track: "Verfolgen Sie den Fortschritt und die Fertigstellung mit visuellen Indikatoren"
+        feature_archive: "Archivieren Sie abgeschlossene Aufgaben für spätere Referenzzwecke"
+        feature_reschedule: "Arbeiten effizient umplanen und priorisieren"
+        feature_monitor: "Projektzeitpläne und Fristen überwachen"
+        feature_export: "Exportieren und importieren Sie Ihre Daten zur Sicherung und Portabilität"
+        encrypted_export_modal_title: "Verschlüsselter Export"
+        encrypted_export_modal_intro: "Geben Sie ein Kennwort ein, um Ihre Daten zu verschlüsseln. Sie benötigen dieses Kennwort, um die Datei später zu importieren."
+        password_label: "Kennwort"
+        confirm_password_label: "Kennwort bestätigen"
+        cancel: "Abbrechen"
+        download: "Herunterladen"
+        passwords_no_match: "Die Kennwörter stimmen nicht überein!"
+        password_too_short: "Das Kennwort muss mindestens 6 Zeichen lang sein!"
+  projects:
+    show:
+      view_report: "Bericht anzeigen"
+      reprioritize_tasks: "Aufgaben neu priorisieren"
+      reprioritize_confirm: "Möchten Sie wirklich alle Aufgabenprioritäten auf die Standardpriorität des Projekts (%{default_priority}) aktualisieren? Diese Aktion kann nicht rückgängig gemacht werden."

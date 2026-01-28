@@ -47,6 +47,12 @@ fr:
         priority: "Priorité"
         status: "Statut"
         due_date: "Date d'échéance"
+        created_at: ""
+        updated_at: ""
+        completed_at: "Terminé à"
+        archived_at: "Archivé à"
+        project_id: "Projet"
+        user_id: ""
       project:
         title: "Titre"
         description: "Description"
@@ -54,6 +60,34 @@ fr:
         due_date: "Date d'échéance"
 
   # Priorities and Statuses
+        created_at: "Créé le"
+        updated_at: "Mis à jour le"
+        last_activity_at: "Dernière activité"
+        user_id: "Utilisateur"
+    errors:
+      models:
+        project:
+          attributes:
+            title:
+              blank: "Le titre ne peut pas être vide"
+              too_short: "Le titre est trop court (minimum %{count} caractères)"
+            default_priority:
+              inclusion: "doit être un niveau de priorité valide"
+            due_date:
+              invalid: "doit être une date valide"
+              in_past: "ne peut pas être dans le passé"
+        task:
+          attributes:
+            title:
+              blank: ""
+              too_short: ""
+            priority:
+              inclusion: ""
+            status:
+              inclusion: "doit être un statut valide"
+            due_date:
+              invalid: ""
+              in_past: ""
   priorities:
     leisure: "Loisirs"
     low: "Faible"
@@ -106,3 +140,120 @@ fr:
     tasks:
       show:
         refresh: "Actualiser"
+        comments: "Commentaires"
+        add_comment_placeholder: "Ajouter un commentaire..."
+        post_comment: "Publier un commentaire"
+      archive_index:
+        archive_statistics: "Statistiques d'archives"
+        total_archived_tasks: "Total des tâches archivées"
+        archived_this_month: "Archivé ce mois-ci"
+        total_completed_tasks: "Total des tâches terminées"
+        bulk_archive_title: "Archiver en masse les tâches"
+        archive_completed_before: "Archiver les tâches terminées avant"
+        archive_tasks: "Archiver les tâches"
+        archive_confirm: "Êtes-vous sûr de vouloir archiver les tâches terminées ? Cette action ne peut pas être annulée."
+        archived_tasks_list: "Tâches archivées"
+        project_label: "Projet"
+        archived_by: "Archivé par"
+        archived_on: "Archivé le"
+        unknown: "Inconnu"
+        last_comment: "Dernier commentaire"
+        no_archived_tasks: "Aucune tâche archivée trouvée."
+      kanban:
+        title: "Mon tableau des tâches"
+        all_projects: "Tous les projets"
+        all_priorities: "Toutes les priorités"
+        sort:
+          last_updated: "Mis à jour le"
+          created_at: "Date de création"
+          priority: "Priorité"
+        all_time: "Tout le temps"
+        updated_within:
+          last_1_day: "Il y a 1 jour"
+          last_3_days: "Les 3 derniers jours"
+          last_7_days: "Les 7 derniers jours"
+          last_14_days: "Les 14 derniers jours"
+          last_30_days: "Les 30 derniers jours"
+          last_60_days: "Les 60 derniers jours"
+          last_90_days: "Les 90 derniers jours"
+          not_7_days: "Pas mis à jour depuis 7 jours"
+          not_14_days: "Pas mis à jour depuis 14 jours"
+          not_30_days: "Non mis à jour depuis 30 jours"
+        search_placeholder: "Rechercher des tâches..."
+        show_all_completed: "Afficher toutes les tâches terminées"
+        columns:
+          not_started: "Non commencé"
+          investigations: "Enquêtes"
+          to_investigate: "Enquêter"
+          in_progress: "En cours"
+          ready_to_test: "Prêt à tester"
+          complete: "Complète"
+        previous_page: "Page précédente"
+        reset_to_first_page: "Revenir à la première page"
+        load_more: "Charger plus"
+      reschedule_index:
+        title: "Reprogrammer les tâches"
+        total_tasks: "Total des tâches"
+        overdue_tasks: "Tâches en retard"
+        upcoming_tasks: "Tâches à venir"
+        bulk_reschedule_title: "Reprogrammer en bloc les tâches sélectionnées"
+        new_due_date: "Nouvelle date d'échéance"
+        reschedule_selected: "Reprogrammer les tâches sélectionnées"
+        reschedule_confirm: "¿Está seguro de que desea reprogramar las tareas seleccionadas?"
+        project_label: "Projet"
+        due_label: "Échéance"
+    projects:
+      index:
+        view_all_reports: "Afficher tous les rapports"
+        complete: "Complète"
+        status:
+          not_started: "Non commencé"
+          completed: "Terminé"
+          in_progress: "En cours"
+    users:
+      profile:
+        update_profile: "Mettre à jour le profil"
+        theme_preference: "Préférence thématique"
+        theme_options:
+          auto: "Auto (jour/nuit en fonction de l'heure)"
+          day: "Thème « Toujours le jour »"
+          night: "Thème « Toujours la nuit »"
+        theme_auto_help: "Le mode automatique bascule entre les thèmes jour et nuit en fonction de votre heure locale (nuit : 19 h - 7 h)."
+        data_export_import: "Exportation et importation de données"
+        export_your_data: "Exporter vos données"
+        export_intro: "Téléchargez vos données au format JSON ou sous forme de fichier ZIP crypté pour plus de sécurité."
+        json_export: "Exportation JSON"
+        json_export_help: "Format lisible par l'homme, idéal pour la portabilité des données"
+        download_json: "Télécharger JSON"
+        encrypted_zip_export: "Exportation ZIP cryptée"
+        encrypted_zip_help: "Compressé et crypté, taille de fichier réduite"
+        download_encrypted: "Télécharger crypté"
+        import_data: "Importer des données"
+        import_intro: "Importez les données précédemment exportées. Prend en charge les fichiers JSON et ZIP cryptés."
+        select_file: "Sélectionner un fichier"
+        max_file_size: "Taille maximale du fichier : 50 Mo"
+        encryption_password: "Mot de passe de cryptage"
+        encryption_password_help: "Requis pour les fichiers ZIP cryptés"
+        import_data_submit: ""
+        about_title: "À propos de Mustermeister"
+        about_intro: "Mustermeister est une application de gestion des tâches conçue pour vous aider à prendre le contrôle de vos livrables personnels et professionnels. Grâce à son interface épurée, vous pouvez facilement gérer vos tâches, vos projets et vos échéances afin de rester organisé et productif. Générez des rapports et suivez vos progrès tout en restant concentré sur vos objectifs généraux."
+        key_features: "Caractéristiques principales"
+        feature_organize: "Organisez les tâches en projets pour une meilleure structure"
+        feature_track: "Suivez la progression et l'achèvement à l'aide d'indicateurs visuels"
+        feature_archive: "Archiver les tâches terminées pour référence future"
+        feature_reschedule: "Reprogrammez et hiérarchisez efficacement votre travail"
+        feature_monitor: "Surveiller les échéances et les délais du projet"
+        feature_export: "Exportez et importez vos données à des fins de sauvegarde et de portabilité"
+        encrypted_export_modal_title: "Exportation cryptée"
+        encrypted_export_modal_intro: "Entrez un mot de passe pour crypter vos données. Vous aurez besoin de ce mot de passe pour importer le fichier ultérieurement."
+        password_label: "Mot de passe"
+        confirm_password_label: "Confirmer le mot de passe"
+        cancel: "Annuler"
+        download: "Télécharger"
+        passwords_no_match: "Les mots de passe ne correspondent pas !"
+        password_too_short: "Le mot de passe doit comporter au moins 6 caractères !"
+  projects:
+    show:
+      view_report: "Voir le rapport"
+      reprioritize_tasks: "Redéfinir les priorités des tâches"
+      reprioritize_confirm: "Êtes-vous sûr de vouloir mettre à jour toutes les priorités des tâches afin qu'elles correspondent à la priorité par défaut du projet (%{default_priority}) ? Cette action ne peut pas être annulée."
