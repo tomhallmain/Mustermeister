@@ -1,0 +1,28 @@
+en:
+  views:
+    devise:
+      registrations:
+        new:
+          title: "Create your account"
+          or: "Or"
+          sign_in_link: "sign in to your account"
+          name_placeholder: "Full name"
+          email_placeholder: "Email address"
+          password_placeholder: "Password (%{minimum} characters minimum)"
+          password_confirmation_placeholder: "Confirm password"
+          sign_up: "Sign up"
+        edit:
+          title: "Edit %{resource_name}"
+          currently_waiting: "Currently waiting confirmation for: %{email}"
+          password_label: "Password"
+          password_help: "(leave blank if you don't want to change it)"
+          password_minimum: "%{minimum} characters minimum"
+          password_confirmation: "Password confirmation"
+          current_password: "Current password"
+          current_password_help: "(we need your current password to confirm your changes)"
+          update: "Update"
+          cancel_account: "Cancel my account"
+          cancel_account_help: "Unhappy?"
+          cancel_account_button: "Cancel my account"
+          cancel_account_confirm: "Are you sure?"
+          back: "Back"

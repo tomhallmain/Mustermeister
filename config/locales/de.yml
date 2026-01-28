@@ -252,6 +252,41 @@ de:
         download: "Herunterladen"
         passwords_no_match: "Die Kennwörter stimmen nicht überein!"
         password_too_short: "Das Kennwort muss mindestens 6 Zeichen lang sein!"
+    devise:
+      registrations:
+        new:
+          title: "Erstellen Sie Ihr Konto"
+          or: "Oder"
+          sign_in_link: "melden Sie sich bei Ihrem Konto an"
+          name_placeholder: "Vollständiger Name"
+          email_placeholder: "E-Mail-Adresse"
+          password_placeholder: "Kennwort (mindestens %{minimum} Zeichen)"
+          password_confirmation_placeholder: "Kennwort bestätigen"
+          sign_up: "Registrieren"
+        edit:
+          title: "Bearbeiten Sie %{resource_name}"
+          currently_waiting: "Derzeit wird auf die Bestätigung für %{email} gewartet"
+          password_label: "Kennwort"
+          password_help: "(leer lassen, wenn Sie keine Änderung vornehmen möchten)"
+          password_minimum: "Mindestens %{minimum} Zeichen"
+          password_confirmation: "Kennwortbestätigung"
+          current_password: "Aktuelles Kennwort"
+          current_password_help: "(Wir benötigen Ihr aktuelles Kennwort, um Ihre Änderungen zu bestätigen.)"
+          update: "Aktualisierung"
+          cancel_account: "Mein Konto kündigen"
+          cancel_account_help: "Unzufrieden?"
+          cancel_account_button: "Mein Konto kündigen"
+          cancel_account_confirm: "Sind Sie sicher?"
+          back: "Zurück"
+      sessions:
+        title: "Melden Sie sich bei Ihrem Konto an"
+        or: "Oder"
+        create_account: "ein neues Konto erstellen"
+        email_placeholder: "E-Mail-Adresse"
+        password_placeholder: "Kennwort"
+        remember_me: "An mich erinnern"
+        forgot_password: "Kennwort vergessen?"
+        sign_in: "Anmelden"
   projects:
     show:
       view_report: "Bericht anzeigen"

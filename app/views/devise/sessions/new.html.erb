@@ -2,11 +2,11 @@
   <div class="max-w-md w-full space-y-8 mx-auto">
     <div>
       <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-        Sign in to your account
+        <%= t('views.devise.sessions.title') %>
       </h2>
       <p class="mt-2 text-center text-sm text-gray-600">
-        Or
-        <%= link_to "create a new account", new_registration_path(resource_name), class: "font-medium text-blue-600 hover:text-blue-500" %>
+        <%= t('views.devise.sessions.or') %>
+        <%= link_to t('views.devise.sessions.create_account'), new_registration_path(resource_name), class: "font-medium text-blue-600 hover:text-blue-500" %>
       </p>
     </div>
 
@@ -16,13 +16,13 @@
           <%= f.label :email, class: "sr-only" %>
           <%= f.email_field :email, autofocus: true, autocomplete: "email", 
               class: "appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm",
-              placeholder: "Email address" %>
+              placeholder: t('views.devise.sessions.email_placeholder') %>
         </div>
         <div>
           <%= f.label :password, class: "sr-only" %>
           <%= f.password_field :password, autocomplete: "current-password",
               class: "appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm",
-              placeholder: "Password" %>
+              placeholder: t('views.devise.sessions.password_placeholder') %>
         </div>
       </div>
 
@@ -30,16 +30,16 @@
         <% if devise_mapping.rememberable? %>
           <div class="flex items-center">
             <%= f.check_box :remember_me, class: "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" %>
-            <%= f.label :remember_me, class: "ml-2 block text-sm text-gray-900" %>
+            <%= f.label :remember_me, t('views.devise.sessions.remember_me'), class: "ml-2 block text-sm text-gray-900" %>
           </div>
         <% end %>
 
-        <%= link_to "Forgot your password?", new_password_path(resource_name), 
+        <%= link_to t('views.devise.sessions.forgot_password'), new_password_path(resource_name), 
             class: "text-sm font-medium text-blue-600 hover:text-blue-500" %>
       </div>
 
       <div>
-        <%= f.submit "Sign in", 
+        <%= f.submit t('views.devise.sessions.sign_in'), 
             class: "group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>
       </div>
     <% end %>

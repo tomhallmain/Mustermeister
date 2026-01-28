@@ -252,6 +252,41 @@ es:
         download: "Descargar"
         passwords_no_match: "¡Las contraseñas no coinciden!"
         password_too_short: "¡La contraseña debe tener al menos 6 caracteres!"
+    devise:
+      registrations:
+        new:
+          title: "Crea tu cuenta"
+          or: "O"
+          sign_in_link: "iniciar sesión en tu cuenta"
+          name_placeholder: "Nombre completo"
+          email_placeholder: "Dirección de correo electrónico"
+          password_placeholder: "Contraseña (mínimo %{minimum} caracteres)"
+          password_confirmation_placeholder: "Confirmar contraseña"
+          sign_up: "Registrarse"
+        edit:
+          title: "Editar %{resource_name}"
+          currently_waiting: "Actualmente esperando confirmación para: %{email}"
+          password_label: "Contraseña"
+          password_help: "(déjelo en blanco si no desea cambiarlo)"
+          password_minimum: "%{minimum} caracteres como mínimo"
+          password_confirmation: "Confirmación de contraseña"
+          current_password: "Contraseña actual"
+          current_password_help: "(necesitamos tu contraseña actual para confirmar los cambios)"
+          update: "Actualización"
+          cancel_account: "Cancelar mi cuenta"
+          cancel_account_help: "¿Descontento?"
+          cancel_account_button: "Cancelar mi cuenta"
+          cancel_account_confirm: "¿Estás seguro?"
+          back: "Atrás"
+      sessions:
+        title: "Inicie sesión en su cuenta"
+        or: "O"
+        create_account: "crear una nueva cuenta"
+        email_placeholder: "Dirección de correo electrónico"
+        password_placeholder: "Contraseña"
+        remember_me: "Recordarme"
+        forgot_password: "¿Olvidó su contraseña?"
+        sign_in: "Iniciar sesión"
   projects:
     show:
       view_report: "Ver informe"

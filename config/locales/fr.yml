@@ -252,6 +252,41 @@ fr:
         download: "Télécharger"
         passwords_no_match: "Les mots de passe ne correspondent pas !"
         password_too_short: "Le mot de passe doit comporter au moins 6 caractères !"
+    devise:
+      registrations:
+        new:
+          title: "Créez votre compte"
+          or: "Ou"
+          sign_in_link: "connectez-vous à votre compte"
+          name_placeholder: "Nom complet"
+          email_placeholder: "Adresse électronique"
+          password_placeholder: "Mot de passe (minimum %{minimum} caractères)"
+          password_confirmation_placeholder: "Confirmer le mot de passe"
+          sign_up: "Inscrivez-vous"
+        edit:
+          title: "Modifier %{resource_name}"
+          currently_waiting: "En attente de confirmation pour : %{email}"
+          password_label: "Mot de passe"
+          password_help: "(laissez vide si vous ne souhaitez pas le modifier)"
+          password_minimum: "%{minimum} caractères minimum"
+          password_confirmation: "Confirmation du mot de passe"
+          current_password: "Mot de passe actuel"
+          current_password_help: "(nous avons besoin de votre mot de passe actuel pour confirmer vos modifications)"
+          update: "Mise à jour"
+          cancel_account: "Supprimer mon compte"
+          cancel_account_help: "Mécontent ?"
+          cancel_account_button: "Supprimer mon compte"
+          cancel_account_confirm: "Tu es sûr ?"
+          back: "Retour"
+      sessions:
+        title: "Connectez-vous à votre compte"
+        or: "Ou"
+        create_account: "créer un nouveau compte"
+        email_placeholder: "Adresse électronique"
+        password_placeholder: "Mot de passe"
+        remember_me: "Se souvenir de moi"
+        forgot_password: "Mot de passe oublié ?"
+        sign_in: "Se connecter"
   projects:
     show:
       view_report: "Voir le rapport"

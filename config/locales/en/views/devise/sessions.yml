@@ -1,0 +1,12 @@
+en:
+  views:
+    devise:
+      sessions:
+        title: "Sign in to your account"
+        or: "Or"
+        create_account: "create a new account"
+        email_placeholder: "Email address"
+        password_placeholder: "Password"
+        remember_me: "Remember me"
+        forgot_password: "Forgot your password?"
+        sign_in: "Sign in"
