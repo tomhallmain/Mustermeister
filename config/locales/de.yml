@@ -47,12 +47,12 @@ de:
         priority: "Priorität"
         status: "Status"
         due_date: "Fälligkeitsdatum"
-        created_at: ""
-        updated_at: ""
+        created_at: "Erstellt am"
+        updated_at: "Aktualisiert am"
         completed_at: "Abgeschlossen am"
         archived_at: "Archiviert unter"
         project_id: "Projekt"
-        user_id: ""
+        user_id: "Benutzer"
       project:
         title: "Titel"
         description: "Beschreibung"
@@ -79,15 +79,15 @@ de:
         task:
           attributes:
             title:
-              blank: ""
-              too_short: ""
+              blank: "Der Titel darf nicht leer sein"
+              too_short: "Der Titel ist zu kurz (Mindestanzahl: %{count} Zeichen)"
             priority:
-              inclusion: ""
+              inclusion: "muss eine gültige Prioritätsstufe sein"
             status:
               inclusion: "muss ein gültiger Status sein"
             due_date:
-              invalid: ""
-              in_past: ""
+              invalid: "muss ein gültiges Datum sein"
+              in_past: "kann nicht in der Vergangenheit liegen"
   priorities:
     leisure: "Freizeit"
     low: "Niedrig"
@@ -234,7 +234,7 @@ de:
         max_file_size: "Maximale Dateigröße: 50 MB"
         encryption_password: "Verschlüsselungskennwort"
         encryption_password_help: "Erforderlich für verschlüsselte ZIP-Dateien"
-        import_data_submit: ""
+        import_data_submit: "Daten importieren"
         about_title: "Über Mustermeister"
         about_intro: "Mustermeister ist eine Aufgabenverwaltungsanwendung, die Ihnen dabei hilft, Ihre privaten und beruflichen Aufgaben im Griff zu behalten. Dank der übersichtlichen Benutzeroberfläche können Sie Ihre Aufgaben, Projekte und Termine ganz einfach verwalten, um organisiert und produktiv zu bleiben. Erstellen Sie Berichte und verfolgen Sie Ihre Fortschritte, während Sie sich weiterhin auf Ihre übergeordneten Ziele konzentrieren."
         key_features: "Wichtigste Merkmale"

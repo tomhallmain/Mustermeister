@@ -47,12 +47,12 @@ es:
         priority: "Prioridad"
         status: "Estado"
         due_date: "Fecha de vencimiento"
-        created_at: ""
-        updated_at: ""
+        created_at: "Creado en"
+        updated_at: "Actualizado el"
         completed_at: "Completado en"
         archived_at: "Archivado en"
         project_id: "Proyecto"
-        user_id: ""
+        user_id: "Usuario"
       project:
         title: "Título"
         description: "Descripción"
@@ -79,15 +79,15 @@ es:
         task:
           attributes:
             title:
-              blank: ""
-              too_short: ""
+              blank: "El título no puede estar en blanco"
+              too_short: "El título es demasiado corto (el mínimo es %{count} caracteres)."
             priority:
-              inclusion: ""
+              inclusion: "debe ser un nivel de prioridad válido"
             status:
               inclusion: "debe ser un estado válido"
             due_date:
-              invalid: ""
-              in_past: ""
+              invalid: "debe ser una fecha válida"
+              in_past: "no puede estar en el pasado"
   priorities:
     leisure: "Ocio"
     low: "Bajo"
@@ -234,7 +234,7 @@ es:
         max_file_size: "Tamaño máximo del archivo: 50 MB"
         encryption_password: "Contraseña de cifrado"
         encryption_password_help: "Requerido para archivos ZIP cifrados"
-        import_data_submit: ""
+        import_data_submit: "Importar datos"
         about_title: "Acerca de Mustermeister"
         about_intro: "Mustermeister es una aplicación de gestión de tareas diseñada para ayudarte a controlar tus compromisos personales y laborales. Gracias a su interfaz intuitiva, podrás gestionar fácilmente tus tareas, proyectos y plazos para mantenerte organizado y ser productivo. Genera informes y realiza un seguimiento de tu progreso, sin perder de vista tus objetivos generales."
         key_features: "Características principales"
