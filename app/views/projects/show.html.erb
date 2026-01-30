@@ -22,20 +22,9 @@
             class: 'bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded' %>
         <%= link_to t('projects.show.view_report'), report_project_path(@project), 
             class: 'bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded shadow-md' %>
-
-        <%= button_to reprioritize_project_path(@project), 
-            method: :post,
-            class: 'bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded shadow-md',
-            data: { 
-              confirm: t('projects.show.reprioritize_confirm', default_priority: t("priorities.#{@project.default_priority || 'medium'}"))
-            } do %>
-          <div class="flex items-center">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-            </svg>
-            <span><%= t('projects.show.reprioritize_tasks') %></span>
-          </div>
-        <% end %>
+        <%= link_to t('projects.show.view_on_kanban'), kanban_path(project_id: @project.id), 
+            class: 'bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded shadow-md',
+            data: { turbo: false } %>
 
         <%# Completely disable Turbo for this link to prevent double requests %>
         <%= link_to project_path(@project, show_completed: !show_completed),
@@ -49,8 +38,8 @@
       </div>
     </div>
 
-    <div class="flex justify-between items-start mt-4">
-      <div class="flex items-center gap-4">
+    <div class="flex justify-between items-start mt-4 gap-4">
+      <div class="flex items-center gap-4 flex-shrink-0">
         <p class="text-gray-600 text-sm whitespace-pre-line"><%= @project.description %></p>
         <div class="text-xs text-gray-500">
           <%= t('projects.show.created_at') %>: <%= @project.created_at.strftime("%B %d, %Y at %I:%M %p") %>
@@ -63,9 +52,24 @@
           <%= render 'shared/priority_badge', priority: @project.default_priority, size: 'text-sm' %>
         </div>
       </div>
-      <div class="flex items-center gap-2 ml-8 flex-1">
-        <%= form_with url: project_path(@project), method: :get, class: "flex gap-2 w-full", data: { turbo: false } do |f| %>
-          <div class="flex-1">
+      <div class="flex items-center flex-shrink-0">
+        <%= button_to reprioritize_project_path(@project), 
+            method: :post,
+            class: 'bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded shadow-md',
+            data: { 
+              confirm: t('projects.show.reprioritize_confirm', default_priority: t("priorities.#{@project.default_priority || 'medium'}"))
+            } do %>
+          <div class="flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+            <span><%= t('projects.show.reprioritize_tasks') %></span>
+          </div>
+        <% end %>
+      </div>
+      <div class="flex items-center gap-2 flex-1 min-w-0">
+        <%= form_with url: project_path(@project), method: :get, class: "flex gap-2 w-full min-w-0", data: { turbo: false } do |f| %>
+          <div class="flex-1 min-w-0">
             <%= f.text_field :search, 
                 placeholder: t('views.tasks.index.search_placeholder'), 
                 value: params[:search],

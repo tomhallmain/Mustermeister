@@ -2,7 +2,8 @@ import {
   getFilterState,
   saveFilterState as persistFilterState,
   restoreFilterState as loadPersistedState,
-  applyFilterState as applyPersistedState
+  applyFilterState as applyPersistedState,
+  applyProjectIdFromUrl
 } from "kanban_filter_persistence";
 import Sortable from "sortablejs";
 
@@ -409,6 +410,10 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   restoreFilterState();
+  // URL project_id wins over sessionStorage (e.g. "View on Kanban Board" from project page)
+  if (applyProjectIdFromUrl(elements, window.location.search)) {
+    saveFilterState();
+  }
   updateShowCompletedButton();
   loadTasks();
 });

@@ -7,6 +7,7 @@ const {
   saveFilterState,
   restoreFilterState,
   applyFilterState,
+  applyProjectIdFromUrl,
 } = require("../../app/javascript/kanban_filter_persistence.js");
 const { mockStorage, mockKanbanFilterElements: mockElements } = require("./test_helper.js");
 
@@ -91,5 +92,35 @@ describe("kanban_filter_persistence", () => {
     saveFilterState({ project_id: "1", priority: "", sort_by: "updated_at", updated_within_days: "", show_all_completed: false, search: "" }, storage);
     expect(storage.getItem(KANBAN_STORAGE_KEY)).toBeTruthy();
     expect(JSON.parse(storage.getItem(KANBAN_STORAGE_KEY)).project_id).toBe("1");
+  });
+
+  describe("applyProjectIdFromUrl (URL project_id overrides sessionStorage)", () => {
+    test("sets project filter when project_id is in query string and returns true", () => {
+      const elements = mockElements({ projectFilter: { value: "1" } });
+      const applied = applyProjectIdFromUrl(elements, "?project_id=42");
+      expect(applied).toBe(true);
+      expect(elements.projectFilter.value).toBe("42");
+    });
+
+    test("returns false and does not change elements when project_id is absent", () => {
+      const elements = mockElements({ projectFilter: { value: "1" } });
+      const applied = applyProjectIdFromUrl(elements, "?sort_by=priority");
+      expect(applied).toBe(false);
+      expect(elements.projectFilter.value).toBe("1");
+    });
+
+    test("returns false for empty search string", () => {
+      const elements = mockElements({ projectFilter: { value: "1" } });
+      expect(applyProjectIdFromUrl(elements, "")).toBe(false);
+      expect(applyProjectIdFromUrl(elements, "?")).toBe(false);
+      expect(elements.projectFilter.value).toBe("1");
+    });
+
+    test("allows project_id with other params (e.g. from View on Kanban Board link)", () => {
+      const elements = mockElements({ projectFilter: { value: "99" } });
+      const applied = applyProjectIdFromUrl(elements, "?project_id=7&foo=bar");
+      expect(applied).toBe(true);
+      expect(elements.projectFilter.value).toBe("7");
+    });
   });
 });

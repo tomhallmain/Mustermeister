@@ -60,3 +60,18 @@ export function applyFilterState(state, elements) {
   if (state.search !== undefined) elements.searchInput.value = state.search;
   return true;
 }
+
+/**
+ * Apply project_id from URL search string so link-from-project-page overrides sessionStorage.
+ * @param {{ projectFilter: { value: string } }} elements
+ * @param {string} searchString - e.g. window.location.search
+ * @returns {boolean} true if project_id was present and applied
+ */
+export function applyProjectIdFromUrl(elements, searchString) {
+  if (!searchString) return false;
+  const params = new URLSearchParams(searchString);
+  const id = params.get("project_id");
+  if (id == null) return false;
+  elements.projectFilter.value = id;
+  return true;
+}
