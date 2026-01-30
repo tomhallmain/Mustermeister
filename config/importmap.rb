@@ -7,6 +7,8 @@ pin "sortablejs", to: "https://ga.jspm.io/npm:sortablejs@1.15.0/Sortable.js"
 # Pin npm packages by running ./bin/importmap
 
 pin "application", preload: true
+pin "kanban_filter_persistence", to: "kanban_filter_persistence.js"
+pin "kanban", to: "kanban.js"
 # pin "@hotwired/turbo-rails", to: "turbo.min.js", preload: true
 pin "@hotwired/stimulus", to: "stimulus.min.js", preload: true
 pin "@hotwired/stimulus-loading", to: "stimulus-loading.js", preload: true

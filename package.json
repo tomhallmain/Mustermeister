@@ -6,7 +6,23 @@
     "rails_admin": "3.3.0",
     "sass": "^1.85.1"
   },
+  "devDependencies": {
+    "@babel/core": "^7.27.0",
+    "@babel/preset-env": "^7.27.0",
+    "babel-jest": "^30.2.0",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0"
+  },
   "scripts": {
     "build": "yarn build:css",
-    "build:css": "sass app/assets/stylesheets/application.sass.scss:app/assets/builds/application.css app/assets/stylesheets/rails_admin.scss:app/assets/builds/rails_admin.css --no-source-map --load-path=node_modules --quiet-deps"  }
+    "build:css": "sass app/assets/stylesheets/application.sass.scss:app/assets/builds/application.css app/assets/stylesheets/rails_admin.scss:app/assets/builds/rails_admin.css --no-source-map --load-path=node_modules --quiet-deps",
+    "test": "jest",
+    "test:js": "jest test/javascript"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "testMatch": ["**/test/javascript/**/*.test.js"],
+    "transform": { "^.+\\.js$": "babel-jest" },
+    "transformIgnorePatterns": ["/node_modules/"]
+  }
 }
