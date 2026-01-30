@@ -87,6 +87,8 @@ class Project < ApplicationRecord
   def status
     return 'not_started' if tasks.empty?
     return 'completed' if completion_percentage == 100
+    not_started_name = Status.default_statuses[:not_started]
+    return 'in_progress' if tasks.not_completed.joins(:status).where.not(statuses: { name: not_started_name }).exists?
     return 'in_progress' if completion_percentage > 0
     'not_started'
   end

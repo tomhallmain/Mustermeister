@@ -29,9 +29,9 @@
     <div>
       <%= f.label :status_id, t('views.tasks.form.status'), class: "block text-sm font-medium text-gray-700" %>
       <% 
-        # Get statuses only from the current project
+        # Get statuses only from the current project; default status names are translated
         current_project = task.project || @project
-        statuses = current_project.statuses.map { |s| [s.name, s.id] }
+        statuses = current_project.statuses.map { |s| [t("statuses.#{s.name.parameterize.underscore}", default: s.name), s.id] }
         current_status = task.status_id
       %>
       <%= f.select :status_id, 

@@ -40,7 +40,7 @@
 
 /node_modules
 
-/coverage/*
+/coverage/
 
 *.pem
 *.crt

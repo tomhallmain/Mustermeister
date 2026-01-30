@@ -199,6 +199,23 @@ class ProjectTest < ActiveSupport::TestCase
     assert_equal "completed", project.reload.status
   end
 
+  test "status should be in_progress when project has incomplete tasks with status other than Not Started" do
+    project = Project.create!(title: "Test Project", user: @user)
+    in_progress_status = project.status_by_key(:in_progress)
+    assert in_progress_status, "Project should have In Progress status from default_statuses"
+
+    project.tasks.create!(title: "Task in progress", completed: false, user: @user, status: in_progress_status)
+    assert_equal "in_progress", project.reload.status,
+      "Project with an incomplete task in 'In Progress' status should show in_progress, not not_started"
+  end
+
+  test "status should be not_started when all incomplete tasks are Not Started and none completed" do
+    project = Project.create!(title: "Test Project", user: @user)
+    project.create_task!(title: "Task 1", completed: false, user: @user)
+    project.create_task!(title: "Task 2", completed: false, user: @user)
+    assert_equal "not_started", project.reload.status
+  end
+
   test "should update last_activity_at when task is created" do
     project = Project.create!(title: "Test Project", user: @user)
     initial_activity = project.last_activity_at
