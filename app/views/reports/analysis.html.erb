@@ -1,0 +1,163 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="mb-8 flex justify-between items-start flex-wrap gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900"><%= t('views.reports.analysis.title') %></h1>
+    </div>
+    <div class="flex flex-wrap gap-4">
+      <%= link_to t('views.reports.analysis.back_to_setup'), reports_path, class: 'text-blue-600 hover:text-blue-800' %>
+      <%= link_to t('views.reports.index.download_pdf'), reports_analysis_path(sort_by: @sort_by, sort_direction: @sort_direction, format: :pdf), class: 'bg-gray-600 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded' %>
+    </div>
+  </div>
+
+  <% if @result.projects_breakdown.empty? %>
+    <div class="bg-white shadow-lg rounded-lg p-6">
+      <p class="text-gray-500 italic"><%= t('views.reports.analysis.no_projects') %></p>
+    </div>
+  <% else %>
+    <% summary = @result.summary %>
+    <% projects_summary = @result.projects_summary %>
+    <div class="bg-white shadow-lg rounded-lg p-6 mb-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-4"><%= t('views.reports.analysis.projects_summary') %></h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="border border-gray-200 rounded-lg p-4">
+          <div class="text-sm text-gray-500"><%= t('views.reports.analysis.total_projects') %></div>
+          <div class="text-2xl font-bold text-gray-900"><%= projects_summary.total_projects %></div>
+        </div>
+        <div class="border border-gray-200 rounded-lg p-4">
+          <div class="text-sm text-gray-500"><%= t('views.reports.analysis.complete_projects') %></div>
+          <div class="text-2xl font-bold text-green-700"><%= projects_summary.complete_projects_count %></div>
+        </div>
+        <div class="border border-gray-200 rounded-lg p-4">
+          <div class="text-sm text-gray-500"><%= t('views.reports.analysis.incomplete_projects') %></div>
+          <div class="text-2xl font-bold text-amber-700"><%= projects_summary.incomplete_projects_count %></div>
+        </div>
+        <div class="border border-gray-200 rounded-lg p-4">
+          <div class="text-sm text-gray-500"><%= t('views.reports.analysis.project_completion_ratio') %></div>
+          <div class="text-2xl font-bold text-blue-700"><%= projects_summary.project_completion_ratio %>%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white shadow-lg rounded-lg p-6 mb-8">
+      <h2 class="text-lg font-semibold text-gray-900 mb-4"><%= t('views.reports.analysis.summary') %></h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <% if @stats_to_show.include?('total_tasks') %>
+          <div class="border border-gray-200 rounded-lg p-4">
+            <div class="text-sm text-gray-500"><%= t('views.reports.analysis.total_tasks') %></div>
+            <div class="text-2xl font-bold text-gray-900"><%= summary.total_tasks %></div>
+          </div>
+        <% end %>
+        <% if @stats_to_show.include?('complete_incomplete') %>
+          <div class="border border-gray-200 rounded-lg p-4">
+            <div class="text-sm text-gray-500"><%= t('views.reports.analysis.completed') %></div>
+            <div class="text-2xl font-bold text-green-700"><%= summary.completed_count %></div>
+          </div>
+          <div class="border border-gray-200 rounded-lg p-4">
+            <div class="text-sm text-gray-500"><%= t('views.reports.analysis.incomplete') %></div>
+            <div class="text-2xl font-bold text-amber-700"><%= summary.incomplete_count %></div>
+          </div>
+          <div class="border border-gray-200 rounded-lg p-4">
+            <div class="text-sm text-gray-500"><%= t('views.reports.analysis.completion_ratio') %></div>
+            <div class="text-2xl font-bold text-blue-700"><%= summary.completion_ratio %>%</div>
+          </div>
+        <% end %>
+      </div>
+      <% if @stats_to_show.include?('status_breakdown') && summary.status_breakdown.any? %>
+        <div class="mt-4 pt-4 border-t border-gray-200">
+          <h3 class="text-sm font-semibold text-gray-700 mb-2"><%= t('views.reports.analysis.by_status') %></h3>
+          <div class="flex flex-wrap gap-3">
+            <% ReportStatsService.sorted_status_breakdown(summary.status_breakdown).each do |status_name, count| %>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-800">
+                <%= status_name %>: <strong class="ml-1"><%= count %></strong>
+              </span>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+      <div class="p-6 pb-2 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900"><%= t('views.reports.analysis.by_project') %></h2>
+          <p class="text-sm text-gray-500 mt-1"><%= t('views.reports.analysis.expand_project') %>.</p>
+        </div>
+        <%= form_with url: reports_analysis_path, method: :get, id: 'analysis-sort-form', class: 'flex flex-wrap items-center gap-3', data: { turbo: false } do %>
+          <span class="text-sm text-gray-600"><%= t('views.reports.analysis.sort_projects') %>:</span>
+          <label class="sr-only"><%= t('views.reports.analysis.sort_by') %></label>
+          <select name="sort_by" id="analysis-sort-by" class="rounded-md border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500" data-submit-on-change>
+            <option value="total_tasks" <%= 'selected' if @sort_by == 'total_tasks' %>><%= t('views.reports.analysis.sort_total_tasks') %></option>
+            <option value="completion_ratio" <%= 'selected' if @sort_by == 'completion_ratio' %>><%= t('views.reports.analysis.sort_completion_ratio') %></option>
+            <option value="name" <%= 'selected' if @sort_by == 'name' %>><%= t('views.reports.analysis.sort_name') %></option>
+          </select>
+          <label class="sr-only"><%= t('views.reports.analysis.sort_direction') %></label>
+          <select name="sort_direction" id="analysis-sort-direction" class="rounded-md border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500" data-submit-on-change>
+            <option value="asc" <%= 'selected' if @sort_direction == 'asc' %>><%= t('views.reports.analysis.direction_asc') %></option>
+            <option value="desc" <%= 'selected' if @sort_direction == 'desc' %>><%= t('views.reports.analysis.direction_desc') %></option>
+          </select>
+        <% end %>
+      </div>
+      <div class="divide-y divide-gray-200">
+        <% @result.projects_breakdown.each do |pb| %>
+          <details class="group">
+            <summary class="flex justify-between items-center p-4 cursor-pointer list-none hover:bg-gray-50">
+              <span class="font-medium text-gray-900"><%= pb.project.title %></span>
+              <span class="text-sm text-gray-500">
+                <%= pb.total_tasks %> <%= t('views.reports.analysis.total_tasks').downcase %> —
+                <%= pb.completion_ratio %>%
+              </span>
+              <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <div class="px-4 pb-4 pt-0 bg-gray-50">
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span class="text-gray-500"><%= t('views.reports.analysis.total_tasks') %>:</span>
+                  <span class="font-medium"><%= pb.total_tasks %></span>
+                </div>
+                <div>
+                  <span class="text-gray-500"><%= t('views.reports.analysis.completed') %>:</span>
+                  <span class="font-medium text-green-700"><%= pb.completed_count %></span>
+                </div>
+                <div>
+                  <span class="text-gray-500"><%= t('views.reports.analysis.incomplete') %>:</span>
+                  <span class="font-medium text-amber-700"><%= pb.incomplete_count %></span>
+                </div>
+                <div>
+                  <span class="text-gray-500"><%= t('views.reports.analysis.completion_ratio') %>:</span>
+                  <span class="font-medium"><%= pb.completion_ratio %>%</span>
+                </div>
+              </div>
+              <% if @stats_to_show.include?('status_breakdown') && pb.status_breakdown.any? %>
+                <div class="mt-3">
+                  <span class="text-gray-500 text-sm"><%= t('views.reports.analysis.by_status') %>:</span>
+                  <div class="flex flex-wrap gap-2 mt-1">
+                    <% ReportStatsService.sorted_status_breakdown(pb.status_breakdown).each do |status_name, count| %>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-200 text-gray-800">
+                        <%= status_name %>: <%= count %>
+                      </span>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </details>
+        <% end %>
+      </div>
+    </div>
+
+    <p class="mt-6 text-sm text-gray-500 italic"><%= t('views.reports.analysis.historical_note') %></p>
+  <% end %>
+</div>
+
+<script>
+  (function() {
+    var form = document.getElementById('analysis-sort-form');
+    if (form) {
+      form.querySelectorAll('[data-submit-on-change]').forEach(function(el) {
+        el.addEventListener('change', function() { form.submit(); });
+      });
+    }
+  })();
+</script>

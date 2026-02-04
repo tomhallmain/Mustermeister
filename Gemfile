@@ -81,6 +81,9 @@ gem "jsbundling-rails"
 # Data export/import functionality
 gem "rubyzip", "~> 2.3"
 
+# PDF generation for reports
+gem "prawn", "~> 2.4"
+
 # Add logging with rotation support
 gem "logging"
 

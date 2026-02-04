@@ -66,4 +66,10 @@ Rails.application.routes.draw do
 
   get 'kanban', to: 'tasks#kanban', as: :kanban
   get 'kanban/tasks', to: 'tasks#kanban_tasks', as: :kanban_tasks
+
+  # Reports: setup (filter projects, select stats) and analysis (summary + breakdowns, optional PDF)
+  # Report config (project_ids, stats) is stored in session to keep analysis URL short.
+  get 'reports', to: 'reports#index', as: :reports
+  post 'reports/set_config', to: 'reports#set_config', as: :set_report_config
+  get 'reports/analysis', to: 'reports#analysis', as: :reports_analysis
 end

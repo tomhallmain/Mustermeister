@@ -14,6 +14,7 @@ en:
       kanban: "Kanban"
       archived_tasks: "Archived Tasks"
       reschedule_tasks: "Reschedule Tasks"
+      reports: "Reports"
       sign_out: "Sign Out"
       sign_in: "Sign In"
       sign_up: "Sign Up"

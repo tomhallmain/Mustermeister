@@ -1,0 +1,298 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="mb-8">
+    <div class="flex justify-between items-start">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900"><%= t('views.reports.index.title') %></h1>
+        <p class="mt-1 text-gray-600"><%= t('views.reports.index.subtitle') %></p>
+      </div>
+      <%= link_to t('views.reports.index.back_to_projects'), projects_path, class: 'text-blue-600 hover:text-blue-800' %>
+    </div>
+  </div>
+
+  <%= form_with url: set_report_config_path, method: :post, id: 'report-setup-form', class: 'space-y-8', data: { turbo: false } do |f| %>
+    <%= hidden_field_tag :redirect_format, '', id: 'report-redirect-format' %>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+      <div class="bg-white shadow-lg rounded-lg p-6 min-w-0">
+        <h2 class="text-lg font-semibold text-gray-900 mb-1"><%= t('views.reports.index.projects_label') %></h2>
+        <p class="text-sm text-gray-500 mb-2"><%= t('views.reports.index.projects_hint') %></p>
+        <div class="mb-2">
+          <input type="text" id="project-search" placeholder="<%= t('views.reports.index.project_search_placeholder') %>" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" autocomplete="off">
+        </div>
+        <div class="mb-2">
+          <button type="button" id="select-all-projects" class="text-sm text-blue-600 hover:text-blue-800">
+            <%= t('views.reports.index.select_all') %>
+          </button>
+        </div>
+        <ul id="projects-list" class="max-h-96 min-h-[10rem] border border-gray-200 rounded-md bg-white overflow-y-auto list-none p-0 m-0 divide-y divide-gray-200">
+          <% if @projects.empty? %>
+            <li class="px-3 py-3 text-gray-500 italic" data-project-title=""><%= t('views.projects.index.no_projects') %></li>
+          <% else %>
+            <% @projects.each do |project| %>
+              <li class="project-row" data-project-title="<%= project.title %>">
+                <label class="flex items-center gap-3 w-full cursor-pointer py-2.5 px-3 hover:bg-gray-50 text-left">
+                  <%= f.check_box :project_ids, { multiple: true, checked: @selected_project_ids.include?(project.id), name: 'project_ids[]', id: "project_#{project.id}", class: 'rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0' }, project.id, nil %>
+                  <span class="text-sm text-gray-700 min-w-0"><%= project.title %></span>
+                </label>
+              </li>
+            <% end %>
+          <% end %>
+        </ul>
+        <p id="project-search-no-results" class="hidden mt-2 text-sm text-gray-500 italic"><%= t('views.reports.index.project_search_no_results') %></p>
+      </div>
+
+      <div class="bg-white shadow-lg rounded-lg p-6 min-w-0">
+        <h2 class="text-lg font-semibold text-gray-900 mb-2"><%= t('views.reports.index.stats_label') %></h2>
+        <ul class="max-h-96 min-h-[10rem] border border-gray-200 rounded-md bg-white overflow-y-auto list-none p-0 m-0 divide-y divide-gray-200">
+          <li>
+            <label class="flex items-center gap-3 w-full cursor-pointer py-2.5 px-3 hover:bg-gray-50 text-left">
+              <%= check_box_tag 'stats[]', 'total_tasks', @selected_stats.include?('total_tasks'), id: 'stat_total_tasks', class: 'rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0' %>
+              <span class="text-sm text-gray-700"><%= t('views.reports.index.stat_total_tasks') %></span>
+            </label>
+          </li>
+          <li>
+            <label class="flex items-center gap-3 w-full cursor-pointer py-2.5 px-3 hover:bg-gray-50 text-left">
+              <%= check_box_tag 'stats[]', 'complete_incomplete', @selected_stats.include?('complete_incomplete'), id: 'stat_complete_incomplete', class: 'rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0' %>
+              <span class="text-sm text-gray-700"><%= t('views.reports.index.stat_complete_incomplete') %></span>
+            </label>
+          </li>
+          <li>
+            <label class="flex items-center gap-3 w-full cursor-pointer py-2.5 px-3 hover:bg-gray-50 text-left">
+              <%= check_box_tag 'stats[]', 'status_breakdown', @selected_stats.include?('status_breakdown'), id: 'stat_status_breakdown', class: 'rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0' %>
+              <span class="text-sm text-gray-700"><%= t('views.reports.index.stat_status_breakdown') %></span>
+            </label>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-4 max-w-5xl mx-auto">
+      <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        <%= t('views.reports.index.view_analysis') %>
+      </button>
+      <button type="button" id="download-pdf-btn" class="bg-gray-600 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded">
+        <%= t('views.reports.index.download_pdf') %>
+      </button>
+    </div>
+  <% end %>
+
+  <div class="mt-10 max-w-5xl mx-auto" id="saved-reports-section" data-no-saved="<%= t('views.reports.index.no_saved_reports') %>" data-load="<%= t('views.reports.index.load_button') %>" data-delete="<%= t('views.reports.index.delete_button') %>" data-confirm-delete="<%= t('views.reports.index.confirm_delete') %>" data-saved-toast="<%= t('views.reports.index.saved_success') %>" data-loaded-toast="<%= t('views.reports.index.loaded_success', name: '%{name}') %>" data-deleted-toast="<%= t('views.reports.index.deleted_success', name: '%{name}') %>">
+    <div class="bg-white shadow-lg rounded-lg p-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-1"><%= t('views.reports.index.saved_section_title') %></h2>
+      <p class="text-sm text-gray-500 mb-4"><%= t('views.reports.index.saved_section_hint') %></p>
+      <div class="flex flex-wrap items-end gap-3 mb-4">
+        <label class="sr-only" for="saved-report-name"><%= t('views.reports.index.save_current_as') %></label>
+        <input type="text" id="saved-report-name" placeholder="<%= t('views.reports.index.save_name_placeholder') %>" class="rounded-md border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500 w-56" maxlength="255">
+        <button type="button" id="save-report-btn" class="bg-green-600 hover:bg-green-800 text-white font-bold py-2 px-4 rounded text-sm">
+          <%= t('views.reports.index.save_button') %>
+        </button>
+      </div>
+      <div id="saved-reports-list-container">
+        <p id="saved-reports-empty" class="text-sm text-gray-500 italic"><%= t('views.reports.index.no_saved_reports') %></p>
+        <ul id="saved-reports-list" class="list-none p-0 m-0 divide-y divide-gray-200 border border-gray-200 rounded-md hidden"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    var form = document.getElementById('report-setup-form');
+    var pdfBtn = document.getElementById('download-pdf-btn');
+    var redirectFormat = document.getElementById('report-redirect-format');
+    if (pdfBtn && form && redirectFormat) {
+      pdfBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        redirectFormat.value = 'pdf';
+        form.submit();
+        redirectFormat.value = '';
+      });
+    }
+    var selectAll = document.getElementById('select-all-projects');
+    if (selectAll) {
+      selectAll.addEventListener('click', function() {
+        var boxes = form.querySelectorAll('input[name="project_ids[]"]');
+        var anyUnchecked = Array.from(boxes).some(function(b) { return !b.checked; });
+        boxes.forEach(function(b) { b.checked = anyUnchecked; });
+        selectAll.textContent = anyUnchecked ? '<%= j t('views.reports.index.select_all') %>' : '<%= j t('views.reports.index.deselect_all') %>';
+      });
+    }
+
+    var projectSearch = document.getElementById('project-search');
+    var projectsList = document.getElementById('projects-list');
+    var noResultsEl = document.getElementById('project-search-no-results');
+    if (projectSearch && projectsList) {
+      var projectRows = Array.from(projectsList.querySelectorAll('li.project-row'));
+      var emptyRow = projectsList.querySelector('li[data-project-title=""]');
+
+      function matchPriority(title, query) {
+        if (!query) return 0;
+        var lower = title.toLowerCase();
+        var q = query.toLowerCase();
+        if (lower.indexOf(q) === -1) return 0;
+        if (lower.indexOf(q) === 0) return 1;
+        var words = lower.split(/\W+/);
+        for (var i = 0; i < words.length; i++) {
+          if (words[i].indexOf(q) === 0) return 2;
+        }
+        return 3;
+      }
+
+      function applyFilter() {
+        var query = projectSearch.value.trim();
+        if (noResultsEl) noResultsEl.classList.add('hidden');
+        if (emptyRow) emptyRow.style.display = 'none';
+
+        if (projectRows.length === 0) return;
+
+        if (!query) {
+          projectRows.forEach(function(li) { li.style.display = ''; });
+          projectRows.forEach(function(li) { projectsList.appendChild(li); });
+          return;
+        }
+
+        var withPriority = projectRows.map(function(li) {
+          var title = li.getAttribute('data-project-title') || '';
+          return { li: li, priority: matchPriority(title, query) };
+        });
+        var matching = withPriority.filter(function(x) { return x.priority > 0; });
+        matching.sort(function(a, b) {
+          if (a.priority !== b.priority) return a.priority - b.priority;
+          return 0;
+        });
+
+        projectRows.forEach(function(li) { li.style.display = 'none'; });
+        matching.forEach(function(x) {
+          x.li.style.display = '';
+          projectsList.appendChild(x.li);
+        });
+
+        if (matching.length === 0 && noResultsEl) {
+          noResultsEl.classList.remove('hidden');
+        }
+      }
+
+      projectSearch.addEventListener('input', applyFilter);
+      projectSearch.addEventListener('change', applyFilter);
+    }
+
+    var SAVED_REPORTS_KEY = 'mustermeister_saved_report_params';
+    var section = document.getElementById('saved-reports-section');
+    var listEl = document.getElementById('saved-reports-list');
+    var emptyEl = document.getElementById('saved-reports-empty');
+    var nameInput = document.getElementById('saved-report-name');
+    var saveBtn = document.getElementById('save-report-btn');
+    var mainForm = document.getElementById('report-setup-form');
+
+    function getSavedReports() {
+      try {
+        var raw = localStorage.getItem(SAVED_REPORTS_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function setSavedReports(arr) {
+      localStorage.setItem(SAVED_REPORTS_KEY, JSON.stringify(arr));
+    }
+
+    function renderSavedList() {
+      var list = getSavedReports();
+      var loadLabel = section.getAttribute('data-load') || 'Load';
+      var deleteLabel = section.getAttribute('data-delete') || 'Delete';
+      var confirmMsg = section.getAttribute('data-confirm-delete') || 'Delete?';
+      var deletedToast = section.getAttribute('data-deleted-toast') || 'Deleted.';
+      listEl.innerHTML = '';
+      if (list.length === 0) {
+        emptyEl.classList.remove('hidden');
+        listEl.classList.add('hidden');
+        return;
+      }
+      emptyEl.classList.add('hidden');
+      listEl.classList.remove('hidden');
+      list.forEach(function(item) {
+        var li = document.createElement('li');
+        li.className = 'flex items-center justify-between gap-4 py-2.5 px-3 hover:bg-gray-50';
+        var nameSpan = document.createElement('span');
+        nameSpan.className = 'text-sm font-medium text-gray-900 truncate';
+        nameSpan.textContent = item.name;
+        var actions = document.createElement('div');
+        actions.className = 'flex items-center gap-2 shrink-0';
+        var loadBtn = document.createElement('button');
+        loadBtn.type = 'button';
+        loadBtn.className = 'text-sm text-blue-600 hover:text-blue-800';
+        loadBtn.textContent = loadLabel;
+        loadBtn.addEventListener('click', function() {
+          mainForm.querySelectorAll('input[name="project_ids[]"]').forEach(function(cb) {
+            cb.checked = (item.project_ids || []).indexOf(parseInt(cb.value, 10)) !== -1;
+          });
+          mainForm.querySelectorAll('input[name="stats[]"]').forEach(function(cb) {
+            cb.checked = (item.stats || []).indexOf(cb.value) !== -1;
+          });
+          var msg = section.getAttribute('data-loaded-toast');
+          if (msg && msg.length) {
+            var toast = document.createElement('p');
+            toast.className = 'text-sm text-green-600 mt-2';
+            toast.textContent = msg.replace('%{name}', item.name) || 'Loaded.';
+            section.querySelector('.bg-white').appendChild(toast);
+            setTimeout(function() { toast.remove(); }, 3000);
+          }
+        });
+        var delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'text-sm text-red-600 hover:text-red-800';
+        delBtn.textContent = deleteLabel;
+        delBtn.addEventListener('click', function() {
+          if (!confirm(confirmMsg)) return;
+          var arr = getSavedReports().filter(function(x) { return x.id !== item.id; });
+          setSavedReports(arr);
+          renderSavedList();
+          var msg = (section.getAttribute('data-deleted-toast') || 'Deleted.').replace('%{name}', item.name);
+          var toast = document.createElement('p');
+          toast.className = 'text-sm text-green-600 mt-2';
+          toast.textContent = msg;
+          section.querySelector('.bg-white').appendChild(toast);
+          setTimeout(function() { toast.remove(); }, 3000);
+        });
+        actions.appendChild(loadBtn);
+        actions.appendChild(delBtn);
+        li.appendChild(nameSpan);
+        li.appendChild(actions);
+        listEl.appendChild(li);
+      });
+    }
+
+    if (saveBtn && mainForm && nameInput) {
+      saveBtn.addEventListener('click', function() {
+        var name = nameInput.value.trim();
+        if (!name) return;
+        var projectIds = [];
+        mainForm.querySelectorAll('input[name="project_ids[]"]:checked').forEach(function(cb) {
+          projectIds.push(parseInt(cb.value, 10));
+        });
+        var stats = [];
+        mainForm.querySelectorAll('input[name="stats[]"]:checked').forEach(function(cb) {
+          stats.push(cb.value);
+        });
+        var list = getSavedReports();
+        list.push({
+          id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+          name: name,
+          project_ids: projectIds,
+          stats: stats.length ? stats : ['total_tasks', 'complete_incomplete', 'status_breakdown']
+        });
+        setSavedReports(list);
+        renderSavedList();
+        nameInput.value = '';
+        var msg = section.getAttribute('data-saved-toast') || 'Saved.';
+        var toast = document.createElement('p');
+        toast.className = 'text-sm text-green-600 mt-2';
+        toast.textContent = msg;
+        section.querySelector('.bg-white').appendChild(toast);
+        setTimeout(function() { toast.remove(); }, 3000);
+      });
+    }
+
+    renderSavedList();
+  })();
+</script>
