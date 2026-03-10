@@ -10,13 +10,13 @@
   </div>
 
   <% if @result.projects_breakdown.empty? %>
-    <div class="bg-white shadow-lg rounded-lg p-6">
+    <div class="surface shadow-lg rounded-lg p-6">
       <p class="text-gray-500 italic"><%= t('views.reports.analysis.no_projects') %></p>
     </div>
   <% else %>
     <% summary = @result.summary %>
     <% projects_summary = @result.projects_summary %>
-    <div class="bg-white shadow-lg rounded-lg p-6 mb-8">
+    <div class="surface shadow-lg rounded-lg p-6 mb-8">
       <h2 class="text-lg font-semibold text-gray-900 mb-4"><%= t('views.reports.analysis.summary') %></h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="border border-gray-200 rounded-lg p-4">
@@ -72,7 +72,7 @@
       <% end %>
     </div>
 
-    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+    <div class="surface shadow-lg rounded-lg overflow-hidden">
       <div class="p-6 pb-2 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 class="text-lg font-semibold text-gray-900"><%= t('views.reports.analysis.by_project') %></h2>
@@ -130,7 +130,7 @@
                   <span class="text-gray-500 text-sm"><%= t('views.reports.analysis.by_status') %>:</span>
                   <div class="flex flex-wrap gap-2 mt-1">
                     <% ReportStatsService.sorted_status_breakdown(pb.status_breakdown).each do |status_name, count| %>
-                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-200 text-gray-800">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs surface border border-gray-300 text-gray-800">
                         <%= status_name %>: <%= count %>
                       </span>
                     <% end %>

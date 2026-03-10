@@ -12,7 +12,7 @@
   <%= form_with url: set_report_config_path, method: :post, id: 'report-setup-form', class: 'space-y-8', data: { turbo: false } do |f| %>
     <%= hidden_field_tag :redirect_format, '', id: 'report-redirect-format' %>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-      <div class="bg-white shadow-lg rounded-lg p-6 min-w-0">
+      <div class="surface shadow-lg rounded-lg p-6 min-w-0">
         <h2 class="text-lg font-semibold text-gray-900 mb-1"><%= t('views.reports.index.projects_label') %></h2>
         <p class="text-sm text-gray-500 mb-2"><%= t('views.reports.index.projects_hint') %></p>
         <div class="mb-2">
@@ -23,7 +23,7 @@
             <%= t('views.reports.index.select_all') %>
           </button>
         </div>
-        <ul id="projects-list" class="max-h-96 min-h-[10rem] border border-gray-200 rounded-md bg-white overflow-y-auto list-none p-0 m-0 divide-y divide-gray-200">
+        <ul id="projects-list" class="max-h-96 min-h-[10rem] border border-gray-200 rounded-md surface overflow-y-auto list-none p-0 m-0 divide-y divide-gray-200">
           <% if @projects.empty? %>
             <li class="px-3 py-3 text-gray-500 italic" data-project-title=""><%= t('views.projects.index.no_projects') %></li>
           <% else %>
@@ -40,9 +40,9 @@
         <p id="project-search-no-results" class="hidden mt-2 text-sm text-gray-500 italic"><%= t('views.reports.index.project_search_no_results') %></p>
       </div>
 
-      <div class="bg-white shadow-lg rounded-lg p-6 min-w-0">
+      <div class="surface shadow-lg rounded-lg p-6 min-w-0">
         <h2 class="text-lg font-semibold text-gray-900 mb-2"><%= t('views.reports.index.stats_label') %></h2>
-        <ul class="max-h-96 min-h-[10rem] border border-gray-200 rounded-md bg-white overflow-y-auto list-none p-0 m-0 divide-y divide-gray-200">
+        <ul class="max-h-96 min-h-[10rem] border border-gray-200 rounded-md surface overflow-y-auto list-none p-0 m-0 divide-y divide-gray-200">
           <li>
             <label class="flex items-center gap-3 w-full cursor-pointer py-2.5 px-3 hover:bg-gray-50 text-left">
               <%= check_box_tag 'stats[]', 'total_tasks', @selected_stats.include?('total_tasks'), id: 'stat_total_tasks', class: 'rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0' %>
@@ -76,7 +76,7 @@
   <% end %>
 
   <div class="mt-10 max-w-5xl mx-auto" id="saved-reports-section" data-no-saved="<%= t('views.reports.index.no_saved_reports') %>" data-load="<%= t('views.reports.index.load_button') %>" data-delete="<%= t('views.reports.index.delete_button') %>" data-confirm-delete="<%= t('views.reports.index.confirm_delete') %>" data-saved-toast="<%= t('views.reports.index.saved_success') %>" data-loaded-toast="<%= t('views.reports.index.loaded_success', name: '%{name}') %>" data-deleted-toast="<%= t('views.reports.index.deleted_success', name: '%{name}') %>">
-    <div class="bg-white shadow-lg rounded-lg p-6">
+    <div class="surface shadow-lg rounded-lg p-6">
       <h2 class="text-lg font-semibold text-gray-900 mb-1"><%= t('views.reports.index.saved_section_title') %></h2>
       <p class="text-sm text-gray-500 mb-4"><%= t('views.reports.index.saved_section_hint') %></p>
       <div class="flex flex-wrap items-end gap-3 mb-4">
@@ -234,7 +234,7 @@
             var toast = document.createElement('p');
             toast.className = 'text-sm text-green-600 mt-2';
             toast.textContent = msg.replace('%{name}', item.name) || 'Loaded.';
-            section.querySelector('.bg-white').appendChild(toast);
+            section.querySelector('.surface').appendChild(toast);
             setTimeout(function() { toast.remove(); }, 3000);
           }
         });
@@ -251,7 +251,7 @@
           var toast = document.createElement('p');
           toast.className = 'text-sm text-green-600 mt-2';
           toast.textContent = msg;
-          section.querySelector('.bg-white').appendChild(toast);
+          section.querySelector('.surface').appendChild(toast);
           setTimeout(function() { toast.remove(); }, 3000);
         });
         actions.appendChild(loadBtn);
@@ -288,7 +288,7 @@
         var toast = document.createElement('p');
         toast.className = 'text-sm text-green-600 mt-2';
         toast.textContent = msg;
-        section.querySelector('.bg-white').appendChild(toast);
+        section.querySelector('.surface').appendChild(toast);
         setTimeout(function() { toast.remove(); }, 3000);
       });
     }
