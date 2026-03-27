@@ -1,3 +1,10 @@
-<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="256" cy="256" r="256" fill="red"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="512" height="512" role="img" aria-label="Mustermeister">
+  <!-- Dark red tile; white puzzle pieces + check: patterns, action, mastery -->
+  <rect width="32" height="32" rx="7" fill="#6b0f18"/>
+  <!-- Three interlocking “pieces” (L — fourth incomplete until you place the last piece / finish the task) -->
+  <rect x="6" y="6" width="9" height="9" rx="2" fill="#ffffff"/>
+  <rect x="17" y="6" width="9" height="9" rx="2" fill="#ffffff"/>
+  <rect x="6" y="17" width="9" height="9" rx="2" fill="#ffffff"/>
+  <!-- Check: acting on / completing the pattern -->
+  <path d="M18.5 22.5l3 3.5 7-9" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

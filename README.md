@@ -1,5 +1,7 @@
 # Mustermeister
 
+<img src="https://github.com/tomhallmain/Mustermeister/raw/master/public/icon.png" alt="Mustermeister app icon" width="80" height="80">
+
 A task manager designed to help you control your personal and work deliverables. Mustermeister provides a clean, intuitive interface for managing your tasks, projects, and deadlines, making it easier to stay organized and productive.
 
 Whether you're managing personal to-dos or work projects, Mustermeister helps you:
