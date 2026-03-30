@@ -135,6 +135,8 @@ if ENV["SKIP_JS_TESTS"].blank?
       FileUtils.mkdir_p("tmp")
       out = File::NULL
       err = File::NULL
+      puts "\nRunning JavaScript tests (yarn test)..."
+      $stdout.flush
       success = system("yarn", "test", "--", "--json", "--outputFile=tmp/jest-results.json", out: out, err: err)
       json_path = Rails.root.join("tmp/jest-results.json")
 
