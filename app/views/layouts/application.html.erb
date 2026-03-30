@@ -269,6 +269,7 @@
     <main class="pt-2 pb-4">
       <%= yield %>
     </main>
+    <%= render "tasks/result_modal" if user_signed_in? %>
     <%= javascript_include_tag "application", "data-turbo-track": "reload", defer: true, type: "module" %>
   </body>
 </html>

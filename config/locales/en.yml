@@ -69,6 +69,17 @@ en:
     complete: "Complete"
     closed: "Closed"
 
+  task_results:
+    values:
+      complete: "Complete"
+      incomplete: "Incomplete"
+    reason_suggestions:
+      unneeded: "Unneeded"
+      too_challenging: "Too Challenging"
+      blocked: "Blocked"
+      out_of_scope: "Out of Scope"
+      waiting_on_input: "Waiting on Input"
+
   # Error messages
   errors:
     messages:
@@ -102,3 +113,17 @@ en:
       previous: "&lsaquo; Prev"
       next: "Next &rsaquo;"
       truncate: "&hellip;"
+
+  views:
+    tasks:
+      result_modal:
+        context_task_label: "Task"
+        context_project_label: "Project"
+        title: "Set task result"
+        description: "How did this task end?"
+        result_label: "Result"
+        reason_label: "Reason"
+        reason_placeholder: "Select or type a reason"
+        reason_help: "Reason is only required for incomplete tasks."
+        cancel: "Cancel"
+        confirm: "Save result"

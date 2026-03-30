@@ -124,6 +124,28 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  # Kanban UI: dragging to Complete opens the result modal; cancel skips PATCH. The board then
+  # calls GET /kanban/tasks (loadTasks) to repaint from server state — this response must still
+  # list the task under its prior status column when no update was persisted.
+  test "kanban_tasks lists task in prior status bucket when completion was not saved (e.g. modal cancel)" do
+    task = @project.tasks.create!(
+      title: "Kanban cancel refresh scenario",
+      description: "Server status unchanged if PATCH not sent",
+      user: @user,
+      status: @project.status_by_key(:in_progress)
+    )
+
+    get kanban_tasks_path, as: :json
+    assert_response :success
+
+    json_response = JSON.parse(response.body)
+    in_progress_ids = (json_response["tasks"]["in_progress"] || []).map { |t| t["id"] }
+    complete_ids = (json_response["tasks"]["complete"] || []).map { |t| t["id"] }
+
+    assert_includes in_progress_ids, task.id
+    assert_not_includes complete_ids, task.id
+  end
+
   test "kanban_tasks should filter by updated_within_days (positive values)" do
     # Create tasks with different updated_at timestamps
     base_time = Time.current
@@ -318,6 +340,35 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     @task.reload
     assert @task.completed
     assert_equal "Complete", @task.status.name
+    assert_equal "complete", @task.task_result.result
+  end
+
+  test "should save incomplete result and reason when toggling task completion" do
+    patch toggle_task_path(@task), params: {
+      task_result: {
+        result: "incomplete",
+        result_reason: "Too Challenging"
+      }
+    }
+
+    assert_redirected_to tasks_path(show_completed: false)
+    @task.reload
+    assert @task.completed
+    assert_equal "incomplete", @task.task_result.result
+    assert_equal "Too Challenging", @task.task_result.result_reason
+  end
+
+  test "should reject incomplete result without reason when toggling task completion" do
+    patch toggle_task_path(@task), params: {
+      task_result: {
+        result: "incomplete",
+        result_reason: ""
+      }
+    }
+
+    assert_redirected_to tasks_path(show_completed: false)
+    @task.reload
+    assert_not @task.completed
   end
 
   test "should archive task" do
@@ -390,5 +441,58 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal Status.find_by(name: Status.default_statuses[:complete]), task.status
     assert task.completed?
     assert task.complete?
+  end
+
+  test "task result modal markup includes context hooks and localized heading" do
+    with_tasks_application_layout do
+      get tasks_path(show_completed: false)
+      assert_response :success
+      assert_select "#task-result-modal"
+      assert_select "#task-result-modal #task-result-modal-context.hidden"
+      assert_select "#task-result-modal #task-result-modal-task-title"
+      assert_select "#task-result-modal #task-result-modal-project-name"
+      assert_select "#task-result-modal h2", I18n.t("views.tasks.result_modal.title")
+    end
+  end
+
+  test "tasks index toggle forms include accurate task title and project for result modal context" do
+    with_tasks_application_layout do
+      get tasks_path(show_completed: false)
+      assert_response :success
+      # Index passes params[:show_completed] into toggle_task_path (string "false" from query), so action includes ?show_completed=
+      assert_select "form[action^='/tasks/#{@task.id}/toggle'][data-task-title='#{@task.title}'][data-project-name='#{@project.title}']"
+    end
+  end
+
+  test "task show toggle form includes accurate task title and project for result modal context" do
+    with_tasks_application_layout do
+      get task_path(@task)
+      assert_response :success
+      assert_select "form[action='#{toggle_task_path(@task)}'][data-task-title='#{@task.title}'][data-project-name='#{@project.title}']"
+    end
+  end
+
+  test "kanban_tasks JSON includes title and project for each task (modal context on board)" do
+    get kanban_tasks_path, as: :json
+    assert_response :success
+    json = JSON.parse(response.body)
+    flat = json["tasks"].values.flatten
+    assert flat.any?
+
+    flat.each do |task|
+      assert task.key?("title"), "expected title key"
+      assert task.key?("project"), "expected project key"
+      assert_instance_of String, task["title"]
+      assert_instance_of String, task["project"]
+    end
+  end
+
+  private
+
+  def with_tasks_application_layout
+    TasksController.class_eval { layout "application" }
+    yield
+  ensure
+    TasksController.class_eval { layout "test" }
   end
 end 

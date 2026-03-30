@@ -101,7 +101,18 @@ class TasksController < ApplicationController
   end
 
   def update
-    if @task.update(task_params)
+    updated = false
+
+    Task.transaction do
+      updated = @task.update(task_params)
+      next unless updated
+
+      apply_task_result_for_completion!(@task)
+      raise ActiveRecord::Rollback if @task.errors.any?
+    end
+
+    if updated && @task.errors.empty?
+
       if params[:kanban]
         render json: { success: true }
       else
@@ -145,13 +156,30 @@ class TasksController < ApplicationController
   end
 
   def toggle
-    @task.update(completed: !@task.completed)
-    
-    # Update status based on completion
-    if @task.completed
-      @task.update(status: @task.project.status_by_key(:complete))
-    else
-      @task.update(status: @task.project.status_by_key(:not_started))
+    toggled = false
+
+    Task.transaction do
+      toggled = @task.update(completed: !@task.completed)
+      raise ActiveRecord::Rollback unless toggled
+
+      if @task.completed
+        @task.update!(status: @task.project.status_by_key(:complete))
+        apply_task_result_for_completion!(@task)
+      else
+        @task.update!(status: @task.project.status_by_key(:not_started))
+      end
+
+      raise ActiveRecord::Rollback if @task.errors.any?
+    end
+
+    @task.reload
+
+    if !toggled || @task.errors.any?
+      redirect_back(
+        fallback_location: tasks_path(show_completed: session[:tasks_show_completed] || false),
+        alert: @task.errors.full_messages.join(", ")
+      )
+      return
     end
     
     # If show_completed param is present, use it for the redirect
@@ -371,5 +399,24 @@ class TasksController < ApplicationController
   def task_params
     params.require(:task).permit(:title, :description, :completed, :due_date, 
                                :priority, :project_id, :status_id, :status_name, tag_ids: [])
+  end
+
+  def task_result_params
+    params.fetch(:task_result, {}).permit(:result, :result_reason)
+  end
+
+  def apply_task_result_for_completion!(task)
+    return unless task.completed?
+
+    payload = task_result_params.to_h
+    payload["result"] = "complete" if payload["result"].blank?
+    payload["result_reason"] = nil unless payload["result"] == "incomplete"
+
+    result_record = task.task_result || task.build_task_result
+    result_record.assign_attributes(payload)
+
+    return if result_record.save
+
+    task.errors.add(:base, result_record.errors.full_messages.join(", "))
   end
 end 

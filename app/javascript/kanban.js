@@ -252,6 +252,13 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function createTaskCard(task) {
+    const escapeHtmlAttr = (str) =>
+      String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
     const truncateText = (text, maxWordLength, maxLineLength, maxLines) => {
       if (!text) return "";
       const words = text.split(/\s+/);
@@ -305,7 +312,7 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     return `
-      <div class="surface rounded-lg shadow p-2 cursor-move ${getProjectColorClasses(task.project_color)}" data-task-id="${task.id}">
+      <div class="surface rounded-lg shadow p-2 cursor-move ${getProjectColorClasses(task.project_color)}" data-task-id="${task.id}" data-task-title="${escapeHtmlAttr(task.title)}" data-project-name="${escapeHtmlAttr(task.project)}">
         <div class="flex justify-between items-start mb-1">
           <h4 class="font-medium text-sm text-gray-900">
             <a href="/tasks/${task.id}" class="hover:text-blue-600 hover:underline">${truncateText(task.title, 20, 20, 4)}</a>
@@ -331,7 +338,7 @@ document.addEventListener("DOMContentLoaded", function () {
     `;
   }
 
-  function updateTaskStatus(taskId, newStatus) {
+  async function updateTaskStatus(taskId, newStatus) {
     const statusMapping = {
       not_started: "Not Started",
       investigations: "To Investigate",
@@ -340,6 +347,23 @@ document.addEventListener("DOMContentLoaded", function () {
       complete: "Complete"
     };
 
+    const requestPayload = {
+      task: { status_name: statusMapping[newStatus] }
+    };
+
+    if (newStatus === "complete" && typeof window.promptTaskResult === "function") {
+      const card = document.querySelector(`[data-task-id="${taskId}"]`);
+      const outcome = await window.promptTaskResult({
+        taskTitle: card?.dataset?.taskTitle,
+        projectName: card?.dataset?.projectName
+      });
+      if (!outcome) {
+        loadTasks();
+        return;
+      }
+      requestPayload.task_result = outcome;
+    }
+
     fetch(`/tasks/${taskId}?kanban=true`, {
       method: "PATCH",
       headers: {
@@ -347,9 +371,7 @@ document.addEventListener("DOMContentLoaded", function () {
         "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')
           .content
       },
-      body: JSON.stringify({
-        task: { status_name: statusMapping[newStatus] }
-      })
+      body: JSON.stringify(requestPayload)
     })
       .then((response) => {
         if (!response.ok) {

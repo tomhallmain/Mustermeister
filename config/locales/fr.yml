@@ -103,6 +103,17 @@ fr:
     complete: "Compléter"
     closed: "Fermé"
 
+  task_results:
+    values:
+      complete: "Terminee"
+      incomplete: "Incomplet"
+    reason_suggestions:
+      unneeded: "Inutile"
+      too_challenging: "Trop difficile"
+      blocked: "Bloque"
+      out_of_scope: "Hors perimetre"
+      waiting_on_input: "En attente d'informations"
+
   # Error messages
   errors:
     messages:
@@ -138,6 +149,17 @@ fr:
       truncate: "&hellip;"
   views:
     tasks:
+      result_modal:
+        context_task_label: "Tache"
+        context_project_label: "Projet"
+        title: "Definir le resultat de la tache"
+        description: "Comment cette tache s'est-elle terminee ?"
+        result_label: "Resultat"
+        reason_label: "Raison"
+        reason_placeholder: "Selectionnez ou saisissez une raison"
+        reason_help: "La raison est requise uniquement pour les taches incompletes."
+        cancel: "Annuler"
+        confirm: "Enregistrer le resultat"
       show:
         refresh: "Actualiser"
         comments: "Commentaires"

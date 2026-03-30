@@ -13,6 +13,7 @@ class Task < ApplicationRecord
   belongs_to :user
   belongs_to :archived_by_user, class_name: 'User', foreign_key: 'archived_by', optional: true
   belongs_to :status
+  has_one :task_result, dependent: :destroy
   has_and_belongs_to_many :tags
   has_many :comments, dependent: :destroy
 
@@ -25,6 +26,7 @@ class Task < ApplicationRecord
   before_destroy :ensure_no_active_dependencies
   after_save :update_project_activity
   after_save :handle_status_completion
+  after_save :sync_task_result_with_completion
   
   scope :active, -> { where(completed: false, archived: false) }
   scope :completed, -> { where(completed: true) }
@@ -153,6 +155,12 @@ class Task < ApplicationRecord
     I18n.t("statuses.#{status.name.parameterize}")
   end
 
+  def result_display
+    return nil unless task_result
+
+    I18n.t("task_results.values.#{task_result.result}")
+  end
+
   private
   
   def set_defaults
@@ -172,6 +180,14 @@ class Task < ApplicationRecord
       elsif status.name_was == Status.default_statuses[:complete]
         mark_as_incomplete!
       end
+    end
+  end
+
+  def sync_task_result_with_completion
+    if completed?
+      task_result || create_task_result!(result: :complete)
+    elsif task_result
+      task_result.destroy!
     end
   end
   

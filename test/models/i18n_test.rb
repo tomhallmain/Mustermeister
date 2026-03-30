@@ -18,6 +18,11 @@ class I18nTest < ActiveSupport::TestCase
     assert_equal 'Closed', I18n.t('statuses.closed')
   end
 
+  test "task result translations are available" do
+    assert_equal 'Complete', I18n.t('task_results.values.complete')
+    assert_equal 'Incomplete', I18n.t('task_results.values.incomplete')
+  end
+
   test "task model translations are available" do
     assert_equal 'Task', I18n.t('activerecord.models.task.one')
     assert_equal 'Tasks', I18n.t('activerecord.models.task.other')

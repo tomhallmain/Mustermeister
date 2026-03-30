@@ -48,7 +48,7 @@
     <% @tasks.each do |task| %>
       <div class="task-item border-b border-gray-200 p-3 flex items-center justify-between hover:bg-gray-50 <%= task.project&.color_classes %>" style="background-color: var(--color-surface-elevated);">
         <div class="flex items-center space-x-3">
-          <%= button_to toggle_task_path(task, show_completed: params[:show_completed]), method: :patch, class: "flex-shrink-0" do %>
+          <%= button_to toggle_task_path(task, show_completed: params[:show_completed]), method: :patch, class: "flex-shrink-0", form: { data: { task_completed: task.completed.to_s, task_title: task.title, project_name: task.project&.title } } do %>
             <div class="w-5 h-5 border-2 rounded <%= task.completed ? 'bg-green-500 border-green-500' : 'border-gray-400' %>">
               <% if task.completed %>
                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

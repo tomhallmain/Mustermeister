@@ -187,6 +187,76 @@ html:not(.theme-night) {
   color: var(--color-muted);
 }
 
+// Task result modal theme-aware styling
+.task-result-modal-panel {
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+}
+
+.task-result-modal-context {
+  border-color: var(--color-border) !important;
+}
+
+.task-result-primary-btn {
+  background-color: #2563eb !important; // blue-600
+  color: #ffffff !important;
+  border: 1px solid transparent !important;
+  border-radius: 0.5rem !important;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.task-result-primary-btn:hover {
+  background-color: #1d4ed8 !important; // blue-700
+}
+
+.task-result-secondary-btn {
+  background-color: var(--color-surface-elevated) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-border) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-radius: 0.5rem !important;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.task-result-secondary-btn:hover {
+  background-color: var(--color-surface) !important;
+}
+
+.task-result-suggestion-chip {
+  background-color: var(--color-surface-elevated) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-border) !important;
+}
+
+.task-result-suggestion-chip:hover {
+  background-color: var(--color-surface) !important;
+}
+
+.theme-night {
+  .task-result-primary-btn {
+    background-color: #1d4ed8 !important; // deeper blue in night
+  }
+
+  .task-result-primary-btn:hover {
+    background-color: #2563eb !important;
+  }
+
+  .task-result-secondary-btn {
+    background-color: #1f2937 !important;
+    border-color: #374151 !important;
+    color: #e5e7eb !important;
+  }
+
+  .task-result-secondary-btn:hover {
+    background-color: #111827 !important;
+  }
+}
+
 // Kanban-specific theme styling
 .kanban-column {
   background-color: var(--color-surface-elevated);

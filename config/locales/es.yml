@@ -103,6 +103,17 @@ es:
     complete: "Completo"
     closed: "Cerrado"
 
+  task_results:
+    values:
+      complete: "Completo"
+      incomplete: "Incompleto"
+    reason_suggestions:
+      unneeded: "No necesario"
+      too_challenging: "Demasiado desafiante"
+      blocked: "Bloqueado"
+      out_of_scope: "Fuera de alcance"
+      waiting_on_input: "Esperando información"
+
   # Error messages
   errors:
     messages:
@@ -138,6 +149,17 @@ es:
       truncate: "&hellip;"
   views:
     tasks:
+      result_modal:
+        context_task_label: "Tarea"
+        context_project_label: "Proyecto"
+        title: "Definir resultado de la tarea"
+        description: "¿Cómo terminó esta tarea?"
+        result_label: "Resultado"
+        reason_label: "Motivo"
+        reason_placeholder: "Selecciona o escribe un motivo"
+        reason_help: "El motivo solo es obligatorio para tareas incompletas."
+        cancel: "Cancelar"
+        confirm: "Guardar resultado"
       show:
         refresh: "Actualizar"
         comments: "Comentarios"

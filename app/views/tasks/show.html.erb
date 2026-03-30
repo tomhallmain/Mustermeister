@@ -3,7 +3,7 @@
     <div class="flex justify-between items-start">
       <div>
         <div class="flex items-center space-x-4">
-          <%= button_to toggle_task_path(@task), method: :patch, class: "flex-shrink-0", form: { data: { turbo: false } } do %>
+          <%= button_to toggle_task_path(@task), method: :patch, class: "flex-shrink-0", form: { data: { turbo: false, task_completed: @task.completed.to_s, task_title: @task.title, project_name: @task.project&.title } } do %>
             <div class="w-8 h-8 border-2 rounded <%= @task.completed ? 'bg-green-500 border-green-500' : 'border-gray-400' %>">
               <% if @task.completed %>
                 <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -53,6 +53,18 @@
                 <%= @task.status ? t("statuses.#{@task.status.name.parameterize.underscore}", default: @task.status.name) : '' %>
               </span>
             </div>
+
+            <% if @task.task_result %>
+              <div>
+                <h3 class="text-sm font-medium text-gray-500"><%= t('views.tasks.result_modal.result_label') %></h3>
+                <span class="mt-1 inline-block px-2 py-1 text-sm rounded-full <%= @task.task_result.result_incomplete? ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800' %>">
+                  <%= t("task_results.values.#{@task.task_result.result}") %>
+                </span>
+                <% if @task.task_result.result_incomplete? %>
+                  <p class="mt-1 text-xs text-gray-600"><%= @task.task_result.result_reason %></p>
+                <% end %>
+              </div>
+            <% end %>
 
             <% if @task.due_date %>
               <div>

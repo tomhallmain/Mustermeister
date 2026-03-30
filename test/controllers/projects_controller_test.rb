@@ -202,6 +202,19 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "project show toggle forms include accurate task title and project for result modal context" do
+    task = tasks(:one)
+    ProjectsController.class_eval { layout "application" }
+    begin
+      get project_path(@project, show_completed: false)
+      assert_response :success
+      assert_select "#task-result-modal #task-result-modal-task-title"
+      assert_select "form[action='#{toggle_task_path(task, show_completed: false)}'][data-task-title='#{task.title}'][data-project-name='#{@project.title}']"
+    ensure
+      ProjectsController.class_eval { layout "test" }
+    end
+  end
+
   test "should reprioritize tasks to match project default priority" do
     # Create a fresh project for this test
     project = Project.create!(

@@ -102,7 +102,7 @@
           <%= button_to toggle_task_path(task, show_completed: show_completed), 
               method: :patch, 
               class: "flex-shrink-0",
-              form: { data: { turbo: false } } do %>
+              form: { data: { turbo: false, task_completed: task.completed.to_s, task_title: task.title, project_name: task.project&.title } } do %>
             <div class="w-6 h-6 border-2 rounded <%= task.completed ? 'bg-green-500 border-green-500' : 'border-gray-400' %>">
               <% if task.completed %>
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

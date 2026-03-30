@@ -103,6 +103,17 @@ de:
     complete: "Vollständig"
     closed: "Geschlossen"
 
+  task_results:
+    values:
+      complete: "Vollständig"
+      incomplete: "Unvollständig"
+    reason_suggestions:
+      unneeded: "Nicht benötigt"
+      too_challenging: "Zu anspruchsvoll"
+      blocked: "Blockiert"
+      out_of_scope: "Außerhalb des Umfangs"
+      waiting_on_input: "Warten auf Input"
+
   # Error messages
   errors:
     messages:
@@ -138,6 +149,17 @@ de:
       truncate: "&hellip;"
   views:
     tasks:
+      result_modal:
+        context_task_label: "Aufgabe"
+        context_project_label: "Projekt"
+        title: "Aufgabenergebnis festlegen"
+        description: "Wie ist diese Aufgabe ausgegangen?"
+        result_label: "Ergebnis"
+        reason_label: "Grund"
+        reason_placeholder: "Grund wählen oder eingeben"
+        reason_help: "Ein Grund ist nur bei unvollständig erforderlich."
+        cancel: "Abbrechen"
+        confirm: "Ergebnis speichern"
       show:
         refresh: "Aktualisieren"
         comments: "Kommentare"
