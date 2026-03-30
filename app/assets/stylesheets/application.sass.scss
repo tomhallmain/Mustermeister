@@ -4,12 +4,13 @@
 
 // Theme tokens: day (default) and night
 :root {
-  --color-bg: #f7fafc; // gray-100
-  --color-surface: #ffffff;
-  --color-surface-elevated: #f1f5f9; // more contrast - slate-100
-  --color-text: #1f2937; // gray-800
-  --color-muted: #6b7280; // gray-500
-  --color-border: #e5e7eb; // gray-200
+  --color-bg: #f3f1ec; // warm gray-beige background
+  --color-surface: #f8f6f2; // off-white with subtle tan tint
+  --color-surface-nav: #f5f2ed; // close to bg, but a touch brighter
+  --color-surface-elevated: #ece7df; // slightly deeper warm surface
+  --color-text: #2b2b28; // softened dark text
+  --color-muted: #6f6a62; // muted warm gray
+  --color-border: #ddd7cf; // warm light border
 }
 
 .theme-night {
@@ -31,6 +32,47 @@ body {
 body.bg-gray-100,
 body.bg-white {
   background-color: var(--color-bg) !important;
+}
+
+// Keep day theme close to existing look while reducing white glare
+html:not(.theme-night) {
+  nav.bg-white,
+  .bg-white {
+    background-color: var(--color-surface) !important;
+  }
+  nav.bg-white {
+    background-color: var(--color-surface-nav) !important;
+  }
+  .bg-gray-100 {
+    background-color: var(--color-surface-elevated) !important;
+  }
+  .border-gray-200,
+  .border-gray-300 {
+    border-color: var(--color-border) !important;
+  }
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="date"],
+  select,
+  textarea {
+    background-color: var(--color-surface) !important;
+    border-color: var(--color-border) !important;
+    color: var(--color-text) !important;
+  }
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  input[type="password"]:focus,
+  input[type="date"]:focus,
+  select:focus,
+  textarea:focus {
+    background-color: var(--color-surface) !important;
+    border-color: #6366f1 !important; // indigo-500
+    color: var(--color-text) !important;
+  }
+  .hover\:bg-gray-50:hover {
+    background-color: var(--color-surface-elevated) !important;
+  }
 }
 
 // Cards, navs, surfaces that used white bg
