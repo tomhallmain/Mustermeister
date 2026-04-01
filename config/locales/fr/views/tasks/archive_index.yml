@@ -1,0 +1,19 @@
+fr:
+  views:
+    tasks:
+      archive_index:
+        archive_statistics: "Statistiques d'archives"
+        total_archived_tasks: "Total des tâches archivées"
+        archived_this_month: "Archivé ce mois-ci"
+        total_completed_tasks: "Total des tâches terminées"
+        bulk_archive_title: "Archiver en masse les tâches"
+        archive_completed_before: "Archiver les tâches terminées avant"
+        archive_tasks: "Archiver les tâches"
+        archive_confirm: "Êtes-vous sûr de vouloir archiver les tâches terminées ? Cette action ne peut pas être annulée."
+        archived_tasks_list: "Tâches archivées"
+        project_label: "Projet"
+        archived_by: "Archivé par"
+        archived_on: "Archivé le"
+        unknown: "Inconnu"
+        last_comment: "Dernier commentaire"
+        no_archived_tasks: "Aucune tâche archivée trouvée."

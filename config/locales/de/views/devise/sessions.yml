@@ -1,0 +1,12 @@
+de:
+  views:
+    devise:
+      sessions:
+        title: "Melden Sie sich bei Ihrem Konto an"
+        or: "Oder"
+        create_account: "ein neues Konto erstellen"
+        email_placeholder: "E-Mail-Adresse"
+        password_placeholder: "Kennwort"
+        remember_me: "An mich erinnern"
+        forgot_password: "Kennwort vergessen?"
+        sign_in: "Anmelden"

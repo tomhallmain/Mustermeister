@@ -18,6 +18,7 @@ fr:
       sign_out: "Se déconnecter"
       sign_in: "Se connecter"
       sign_up: "S'inscrire"
+      reports: "Rapports"
     actions:
       create: "Créer"
       edit: "Modifier"
@@ -43,6 +44,10 @@ fr:
       'True': "application.actions.True"
       'False': "application.actions.False"
       ok: "D'accord"
+      yes: "Oui"
+      no: "Non"
+      'true': "Oui"
+      'false': "Non"
     messages:
       created: "%{resource} a été créé avec succès."
       updated: "%{resource} a été mis à jour avec succès."

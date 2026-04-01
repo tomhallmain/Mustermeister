@@ -1,0 +1,10 @@
+de:
+  views:
+    shared:
+      priority_badge:
+        leisure: "Freizeit"
+        low: "Niedrig"
+        medium: "Mittel"
+        high: "Hoch"
+        priority: "Priorität"
+        priority_level: "Prioritätsstufe"

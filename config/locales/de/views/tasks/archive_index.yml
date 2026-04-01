@@ -1,0 +1,19 @@
+de:
+  views:
+    tasks:
+      archive_index:
+        archive_statistics: "Archivstatistik"
+        total_archived_tasks: "Gesamtzahl archivierter Aufgaben"
+        archived_this_month: "In diesem Monat archiviert"
+        total_completed_tasks: "Gesamtzahl der abgeschlossenen Aufgaben"
+        bulk_archive_title: "Aufgaben in großen Mengen archivieren"
+        archive_completed_before: "Archivieren Sie die zuvor erledigten Aufgaben"
+        archive_tasks: "Aufgaben archivieren"
+        archive_confirm: "Möchten Sie abgeschlossene Aufgaben wirklich archivieren? Diese Aktion kann nicht rückgängig gemacht werden."
+        archived_tasks_list: "Archivierte Aufgaben"
+        project_label: "Projekt"
+        archived_by: "Archiviert von"
+        archived_on: "Archiviert am"
+        unknown: "Unbekannt"
+        last_comment: "Letzter Kommentar"
+        no_archived_tasks: "Es wurden keine archivierten Aufgaben gefunden."

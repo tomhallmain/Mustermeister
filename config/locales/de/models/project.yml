@@ -1,0 +1,28 @@
+de:
+  activerecord:
+    models:
+      project:
+        one: "Project"
+        other: "Projects"
+    attributes:
+      project:
+        title: "Title"
+        description: "Description"
+        default_priority: "Default Priority"
+        due_date: "Due Date"
+        created_at: "Erstellt am"
+        updated_at: "Aktualisiert am"
+        last_activity_at: "Letzte Aktivität"
+        user_id: "Benutzer"
+    errors:
+      models:
+        project:
+          attributes:
+            title:
+              blank: "Der Titel darf nicht leer sein"
+              too_short: "Der Titel ist zu kurz (Mindestanzahl: %{count} Zeichen)"
+            default_priority:
+              inclusion: "muss eine gültige Prioritätsstufe sein"
+            due_date:
+              invalid: "muss ein gültiges Datum sein"
+              in_past: "kann nicht in der Vergangenheit liegen"

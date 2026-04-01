@@ -1,0 +1,22 @@
+es:
+  views:
+    projects:
+      index:
+        title: "Proyectos"
+        new_project: "Nuevo proyecto"
+        view_all_reports: "Ver todos los informes"
+        search_placeholder: "Buscar proyectos..."
+        search: "Buscar"
+        clear: "Borrar"
+        project: "Proyecto"
+        tasks: "Tareas"
+        created: "Creado"
+        updated: "Actualizado"
+        last_activity: "Última actividad"
+        complete: "Completo"
+        delete_confirm: "¿Estás seguro?"
+        no_projects: "No se han encontrado proyectos"
+        status:
+          not_started: "No iniciado"
+          completed: "Completado"
+          in_progress: "En curso"

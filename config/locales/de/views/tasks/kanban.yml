@@ -1,0 +1,34 @@
+de:
+  views:
+    tasks:
+      kanban:
+        title: "Meine Aufgabenübersicht"
+        all_projects: "Alle Projekte"
+        all_priorities: "Alle Prioritäten"
+        sort:
+          last_updated: "Aktualisiert am"
+          created_at: "Erstellungsdatum"
+          priority: "Prioridad"
+        all_time: "Alle Zeiten"
+        updated_within:
+          last_1_day: "Letzter Tag"
+          last_3_days: "Letzten 3 Tage"
+          last_7_days: "Letzte 7 Tage"
+          last_14_days: "Letzte 14 Tage"
+          last_30_days: "Letzte 30 Tage"
+          last_60_days: "Letzte 60 Tage"
+          last_90_days: "Letzte 90 Tage"
+          not_7_days: "Seit 7 Tagen nicht aktualisiert"
+          not_14_days: "Seit 14 Tagen nicht aktualisiert"
+          not_30_days: "Seit 30 Tagen nicht aktualisiert"
+        search_placeholder: "Aufgaben suchen..."
+        columns:
+          not_started: "Nicht begonnen"
+          investigations: "Untersuchungen"
+          to_investigate: "Untersuchen"
+          in_progress: "In Bearbeitung"
+          ready_to_test: "Bereit zum Testen"
+          complete: "Vollständig"
+        previous_page: "Vorherige Seite"
+        reset_to_first_page: "Zurück zur ersten Seite"
+        load_more: "Mehr laden"

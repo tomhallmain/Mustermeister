@@ -1,0 +1,12 @@
+es:
+  views:
+    devise:
+      sessions:
+        title: "Inicie sesión en su cuenta"
+        or: "O"
+        create_account: "crear una nueva cuenta"
+        email_placeholder: "Dirección de correo electrónico"
+        password_placeholder: "Contraseña"
+        remember_me: "Recordarme"
+        forgot_password: "¿Olvidó su contraseña?"
+        sign_in: "Iniciar sesión"

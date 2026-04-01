@@ -1,0 +1,34 @@
+es:
+  views:
+    tasks:
+      kanban:
+        title: "Mi tablero de tareas"
+        all_projects: "Todos los proyectos"
+        all_priorities: "Todas las prioridades"
+        sort:
+          last_updated: "Actualizado el"
+          created_at: "Fecha de creación"
+          priority: "Prioridad"
+        all_time: "Todo el tiempo"
+        updated_within:
+          last_1_day: "Último día"
+          last_3_days: "Últimos 3 días"
+          last_7_days: "Últimos 7 días"
+          last_14_days: "Últimos 14 días"
+          last_30_days: "Últimos 30 días"
+          last_60_days: "Últimos 60 días"
+          last_90_days: "Últimos 90 días"
+          not_7_days: "Sin actualizar en 7 días"
+          not_14_days: "Sin actualizar en 14 días"
+          not_30_days: "Sin actualizar en 30 días"
+        search_placeholder: "Buscar las tareas..."
+        columns:
+          not_started: "No iniciado"
+          investigations: "Investigaciones"
+          to_investigate: "Investigar"
+          in_progress: "En curso"
+          ready_to_test: "Listo para probar"
+          complete: "Completo"
+        previous_page: "Página anterior"
+        reset_to_first_page: "Volver a la primera página"
+        load_more: "Cargar más"

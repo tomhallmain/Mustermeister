@@ -1,0 +1,14 @@
+es:
+  views:
+    tasks:
+      reschedule_index:
+        title: "Reprogramar tareas"
+        total_tasks: "Total de tareas"
+        overdue_tasks: "Tareas vencidas"
+        upcoming_tasks: "Tareas pendientes"
+        bulk_reschedule_title: "Reorganizar tareas seleccionadas de forma masiva"
+        new_due_date: "Nueva fecha de vencimiento"
+        reschedule_selected: "Reprogramar tareas seleccionadas"
+        reschedule_confirm: "Êtes-vous sûr de vouloir reprogrammer les tâches sélectionnées ?"
+        project_label: "Proyecto"
+        due_label: "Vencido"

@@ -1,0 +1,14 @@
+de:
+  views:
+    tasks:
+      reschedule_index:
+        title: "Aufgaben neu planen"
+        total_tasks: "Gesamtanzahl Aufgaben"
+        overdue_tasks: "Überfällige Aufgaben"
+        upcoming_tasks: "Anstehende Aufgaben"
+        bulk_reschedule_title: "Ausgewählte Aufgaben in großen Mengen neu planen"
+        new_due_date: "Neues Fälligkeitsdatum"
+        reschedule_selected: "Ausgewählte Aufgaben verschieben"
+        reschedule_confirm: "Möchten Sie die ausgewählten Aufgaben wirklich verschieben?"
+        project_label: "Projekt"
+        due_label: "Fällig"

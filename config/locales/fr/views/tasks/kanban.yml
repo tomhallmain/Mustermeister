@@ -1,0 +1,34 @@
+fr:
+  views:
+    tasks:
+      kanban:
+        title: "Mon tableau des tâches"
+        all_projects: "Tous les projets"
+        all_priorities: "Toutes les priorités"
+        sort:
+          last_updated: "Mis à jour le"
+          created_at: "Date de création"
+          priority: "Priorité"
+        all_time: "Tout le temps"
+        updated_within:
+          last_1_day: "Il y a 1 jour"
+          last_3_days: "Les 3 derniers jours"
+          last_7_days: "Les 7 derniers jours"
+          last_14_days: "Les 14 derniers jours"
+          last_30_days: "Les 30 derniers jours"
+          last_60_days: "Les 60 derniers jours"
+          last_90_days: "Les 90 derniers jours"
+          not_7_days: "Pas mis à jour depuis 7 jours"
+          not_14_days: "Pas mis à jour depuis 14 jours"
+          not_30_days: "Non mis à jour depuis 30 jours"
+        search_placeholder: "Rechercher des tâches..."
+        columns:
+          not_started: "Non commencé"
+          investigations: "Enquêtes"
+          to_investigate: "Enquêter"
+          in_progress: "En cours"
+          ready_to_test: "Prêt à tester"
+          complete: "Complète"
+        previous_page: "Page précédente"
+        reset_to_first_page: "Revenir à la première page"
+        load_more: "Charger plus"

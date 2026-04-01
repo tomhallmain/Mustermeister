@@ -1,0 +1,12 @@
+fr:
+  views:
+    devise:
+      sessions:
+        title: "Connectez-vous à votre compte"
+        or: "Ou"
+        create_account: "créer un nouveau compte"
+        email_placeholder: "Adresse électronique"
+        password_placeholder: "Mot de passe"
+        remember_me: "Se souvenir de moi"
+        forgot_password: "Mot de passe oublié ?"
+        sign_in: "Se connecter"

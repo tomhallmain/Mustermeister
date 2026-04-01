@@ -18,6 +18,7 @@ de:
       sign_out: "Abmelden"
       sign_in: "Anmelden"
       sign_up: "Registrieren"
+      reports: "Berichte"
     actions:
       create: "Erstellen"
       edit: "Bearbeiten"
@@ -43,6 +44,10 @@ de:
       'True': "application.actions.True"
       'False': "application.actions.False"
       ok: "Gut"
+      yes: "Ja"
+      no: "Nein"
+      'true': "Ja"
+      'false': "Nein"
     messages:
       created: "%{resource} wurde erfolgreich erstellt."
       updated: "%{resource} wurde erfolgreich aktualisiert."

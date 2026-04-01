@@ -1,0 +1,28 @@
+fr:
+  activerecord:
+    models:
+      project:
+        one: "Project"
+        other: "Projects"
+    attributes:
+      project:
+        title: "Title"
+        description: "Description"
+        default_priority: "Default Priority"
+        due_date: "Due Date"
+        created_at: "Créé le"
+        updated_at: "Mis à jour le"
+        last_activity_at: "Dernière activité"
+        user_id: "Utilisateur"
+    errors:
+      models:
+        project:
+          attributes:
+            title:
+              blank: "Le titre ne peut pas être vide"
+              too_short: "Le titre est trop court (minimum %{count} caractères)"
+            default_priority:
+              inclusion: "doit être un niveau de priorité valide"
+            due_date:
+              invalid: "doit être une date valide"
+              in_past: "ne peut pas être dans le passé"

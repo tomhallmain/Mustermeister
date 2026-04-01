@@ -1,0 +1,47 @@
+es:
+  activerecord:
+    models:
+      task:
+        one: "Task"
+        other: "Tasks"
+    attributes:
+      task:
+        title: "Title"
+        description: "Description"
+        priority: "Priority"
+        status: "Status"
+        due_date: "Due Date"
+        created_at: "Creado en"
+        updated_at: "Actualizado el"
+        completed_at: "Completado en"
+        archived_at: "Archivado en"
+        project_id: "Proyecto"
+        user_id: "Usuario"
+    errors:
+      models:
+        task:
+          attributes:
+            title:
+              blank: "El título no puede estar en blanco"
+              too_short: "El título es demasiado corto (el mínimo es %{count} caracteres)."
+            priority:
+              inclusion: "debe ser un nivel de prioridad válido"
+            status:
+              inclusion: "debe ser un estado válido"
+            due_date:
+              invalid: "debe ser una fecha válida"
+              in_past: "no puede estar en el pasado"
+  priorities:
+    leisure: "Leisure"
+    low: "Low"
+    medium: "Medium"
+    high: "High"
+
+  statuses:
+    not_started: "Not Started"
+    to_investigate: "To Investigate"
+    investigated: "Investigated"
+    in_progress: "In Progress"
+    ready_to_test: "Ready to Test"
+    complete: "Complete"
+    closed: "Closed"
