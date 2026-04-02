@@ -335,7 +335,7 @@ GEM
     responders (3.1.1)
       actionpack (>= 5.2)
       railties (>= 5.2)
-    rexml (3.4.1)
+    rexml (3.4.4)
     rotp (6.3.0)
     rspec-core (3.13.4)
       rspec-support (~> 3.13.0)
@@ -396,9 +396,11 @@ GEM
       railties (>= 4.0.0)
     secure_headers (7.1.0)
     securerandom (0.4.1)
-    selenium-webdriver (4.10.0)
+    selenium-webdriver (4.38.0)
+      base64 (~> 0.2)
+      logger (~> 1.4)
       rexml (~> 3.2, >= 3.2.5)
-      rubyzip (>= 1.2.2, < 3.0)
+      rubyzip (>= 1.2.2, < 4.0)
       websocket (~> 1.0)
     shrine (3.6.0)
       content_disposition (~> 1.0)
@@ -525,7 +527,7 @@ DEPENDENCIES
   sassc-rails
   scenic
   secure_headers
-  selenium-webdriver (~> 4.10.0)
+  selenium-webdriver (~> 4.38.0)
   shrine
   simplecov
   solid_cable
