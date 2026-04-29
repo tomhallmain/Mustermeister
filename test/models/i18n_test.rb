@@ -66,7 +66,7 @@ class I18nTest < ActiveSupport::TestCase
 
   test "task status display method works" do
     task = tasks(:one)
-    task.status = statuses(:not_started)
+    task.status = statuses(:project_one_not_started)
     assert_equal 'Not Started', task.status_display
   end
 

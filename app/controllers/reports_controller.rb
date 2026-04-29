@@ -54,6 +54,13 @@ class ReportsController < ApplicationController
     @selected_stats = stats_to_show
     @sort_by = sort_by
     @sort_direction = sort_direction
+    @available_ai_locales = I18n.available_locales.map(&:to_s)
+    requested_ai_locale = params[:ai_locale].to_s
+    @ai_locale = if @available_ai_locales.include?(requested_ai_locale)
+      requested_ai_locale
+    else
+      I18n.locale.to_s
+    end
     @llm_summary = nil
     @llm_summary_error = nil
 
@@ -61,7 +68,7 @@ class ReportsController < ApplicationController
       begin
         @llm_summary = ReportLlmSummaryService.call(
           result: @result,
-          locale: I18n.locale,
+          locale: @ai_locale,
           model_name: ENV["OLLAMA_REPORT_MODEL"]
         )
       rescue StandardError => e

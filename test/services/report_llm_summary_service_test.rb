@@ -18,7 +18,29 @@ class ReportLlmSummaryServiceTest < ActiveSupport::TestCase
       assert_equal "AI summary", summary
     end
     assert_includes fake_llm.prompt_received, "total_tasks: 10"
+    assert_includes fake_llm.prompt_received, "Kanban snapshot"
+    assert_includes fake_llm.prompt_received, "Highest-risk tasks"
     assert_includes fake_llm.system_prompt_received, "summarizes project analytics"
+  end
+
+  test "uses localized prompt copy for selected locale" do
+    result = sample_result
+    fake_llm = Class.new do
+      attr_reader :prompt_received
+
+      def generate_response(prompt, system_prompt:)
+        @prompt_received = prompt
+        OllamaLlmService::Result.new(response: "Zusammenfassung")
+      end
+    end.new
+
+    OllamaLlmService.stub :new, fake_llm do
+      ReportLlmSummaryService.call(result: result, locale: :de, model_name: "llama3")
+    end
+
+    assert_includes fake_llm.prompt_received, "Gesamtbild:"
+    assert_includes fake_llm.prompt_received, "Beispiele je Gruppe"
+    assert_includes fake_llm.prompt_received, "Anforderungen:"
   end
 
   private
