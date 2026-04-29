@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_30_090000) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_29_210000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -109,6 +109,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_30_090000) do
     t.datetime "remember_created_at"
     t.boolean "admin", default: false, null: false
     t.string "theme_preference"
+    t.string "ai_summary_locale"
+    t.string "ai_summary_model"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end

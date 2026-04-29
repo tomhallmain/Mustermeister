@@ -11,4 +11,23 @@ class OllamaLlmServiceTest < ActiveSupport::TestCase
     result = OllamaLlmService::Result.new(response: '{"completion_ratio": 92}')
     assert_equal 92, result.json_attr("completion ratio")
   end
+
+  test "available_models reads locally downloaded models from tags endpoint" do
+    fake_http = Class.new do
+      def open_timeout=(_value); end
+      def read_timeout=(_value); end
+
+      def request(_req)
+        Struct.new(:body) do
+          def is_a?(klass)
+            klass == Net::HTTPSuccess
+          end
+        end.new('{"models":[{"name":"llama3:8b"},{"name":"deepseek-r1:14b"}]}')
+      end
+    end.new
+
+    Net::HTTP.stub :new, fake_http do
+      assert_equal ["deepseek-r1:14b", "llama3:8b"], OllamaLlmService.available_models
+    end
+  end
 end

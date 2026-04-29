@@ -16,9 +16,18 @@
             <option value="<%= locale_code %>" <%= 'selected' if locale_code == @ai_locale %>><%= locale_code %></option>
           <% end %>
         </select>
-        <button type="submit" id="ai-summary-submit" class="bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2 px-4 rounded">
+        <label for="ai_model" class="text-sm text-gray-600"><%= t('views.reports.analysis.ai_model_label', default: 'Model') %></label>
+        <select name="ai_model" id="ai_model" class="rounded-md border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
+          <% @available_ai_models.each do |model_name| %>
+            <option value="<%= model_name %>" <%= 'selected' if model_name == @ai_model %>><%= model_name %></option>
+          <% end %>
+        </select>
+        <button type="submit" id="ai-summary-submit" class="bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2 px-4 rounded" <%= 'disabled' if @available_ai_models.empty? %>>
           <%= t('views.reports.analysis.ai_summary_button', default: 'Generate AI Summary') %>
         </button>
+      <% end %>
+      <% if @available_ai_models.empty? %>
+        <span class="text-sm text-amber-700"><%= t('views.reports.analysis.ai_no_local_models', default: 'No local Ollama models found') %></span>
       <% end %>
     </div>
   </div>

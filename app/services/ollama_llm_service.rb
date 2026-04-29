@@ -74,6 +74,7 @@ class OllamaLlmService
   end
 
   ENDPOINT = ENV.fetch("OLLAMA_ENDPOINT", "http://localhost:11434/api/generate")
+  TAGS_ENDPOINT = ENV.fetch("OLLAMA_TAGS_ENDPOINT", "http://localhost:11434/api/tags")
   DEFAULT_MODEL = ENV.fetch("OLLAMA_MODEL", "deepseek-r1:14b")
   DEFAULT_TIMEOUT = 180
   DEFAULT_SYSTEM_PROMPT_DROP_RATE = 0.9
@@ -105,6 +106,37 @@ class OllamaLlmService
 
     def failing_for_state?(state_key)
       failure_count_for_state(state_key) >= FAILURE_THRESHOLD
+    end
+
+    def available_models(timeout: 5)
+      uri = URI.parse(tags_endpoint)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.open_timeout = timeout
+      http.read_timeout = timeout
+      req = Net::HTTP::Get.new(uri.request_uri)
+      response = http.request(req)
+      return [] unless response.is_a?(Net::HTTPSuccess)
+
+      payload = JSON.parse(response.body)
+      extract_model_names(payload)
+    rescue StandardError => e
+      Rails.logger.warn("Unable to fetch Ollama model list: #{e.message}")
+      []
+    end
+
+    private
+
+    def tags_endpoint
+      explicit = TAGS_ENDPOINT.to_s
+      return explicit if explicit.present?
+
+      ENDPOINT.to_s.sub(%r{/api/generate\z}, "/api/tags")
+    end
+
+    def extract_model_names(payload)
+      models = Array(payload["models"])
+      names = models.map { |item| item["name"].to_s }.reject(&:blank?)
+      names.uniq.sort
     end
   end
 

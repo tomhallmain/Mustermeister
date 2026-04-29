@@ -13,6 +13,7 @@ class User < ApplicationRecord
                    uniqueness: { case_sensitive: false },
                    format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :theme_preference, inclusion: { in: %w[day night auto], allow_blank: true }
+  validates :ai_summary_locale, inclusion: { in: I18n.available_locales.map(&:to_s), allow_blank: true }
 
   def assigned_tasks
     tasks.where(completed: false).order(due_date: :asc)
