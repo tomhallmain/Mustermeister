@@ -152,7 +152,7 @@ class Task < ApplicationRecord
   end
 
   def status_display
-    I18n.t("statuses.#{status.name.parameterize}")
+    I18n.t("statuses.#{status.name.parameterize.underscore}", default: status.name)
   end
 
   def result_display

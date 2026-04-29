@@ -311,6 +311,9 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     };
 
+    const translatedPriority =
+      kanbanI18n?.priorities?.[task.priority] || task.priority;
+
     return `
       <div class="surface rounded-lg shadow p-2 cursor-move ${getProjectColorClasses(task.project_color)}" data-task-id="${task.id}" data-task-title="${escapeHtmlAttr(task.title)}" data-project-name="${escapeHtmlAttr(task.project)}">
         <div class="flex justify-between items-start mb-1">
@@ -326,7 +329,7 @@ document.addEventListener("DOMContentLoaded", function () {
                   ? "bg-purple-100 text-purple-800"
                   : "bg-green-100 text-green-800"
           }">
-            ${task.priority}
+            ${translatedPriority}
           </span>
         </div>
         <p class="text-xs text-gray-600 mb-1 whitespace-pre-line">${truncateText(task.description, 40, 40, 10)}</p>

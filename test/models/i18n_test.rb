@@ -18,6 +18,23 @@ class I18nTest < ActiveSupport::TestCase
     assert_equal 'Closed', I18n.t('statuses.closed')
   end
 
+  test "non-english priority and status translations are loaded" do
+    I18n.with_locale(:de) do
+      assert_equal 'Mittel', I18n.t('priorities.medium')
+      assert_equal 'In Bearbeitung', I18n.t('statuses.in_progress')
+    end
+
+    I18n.with_locale(:fr) do
+      assert_equal 'Moyen', I18n.t('priorities.medium')
+      assert_equal 'En cours', I18n.t('statuses.in_progress')
+    end
+
+    I18n.with_locale(:es) do
+      assert_equal 'Medio', I18n.t('priorities.medium')
+      assert_equal 'En curso', I18n.t('statuses.in_progress')
+    end
+  end
+
   test "task result translations are available" do
     assert_equal 'Complete', I18n.t('task_results.values.complete')
     assert_equal 'Incomplete', I18n.t('task_results.values.incomplete')
@@ -45,6 +62,12 @@ class I18nTest < ActiveSupport::TestCase
   test "task priority display method works" do
     task = Task.new(priority: 'high')
     assert_equal 'High', task.priority_display
+  end
+
+  test "task status display method works" do
+    task = tasks(:one)
+    task.status = statuses(:not_started)
+    assert_equal 'Not Started', task.status_display
   end
 
   test "project default priority display method works" do

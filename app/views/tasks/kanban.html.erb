@@ -1,4 +1,16 @@
-<div class="container mx-auto px-2 py-4" data-kanban-i18n="<%= { previous_page: t('views.tasks.kanban.previous_page'), reset_to_first_page: t('views.tasks.kanban.reset_to_first_page'), load_more: t('views.tasks.kanban.load_more'), show_completed: t('views.tasks.index.show_completed'), hide_completed: t('views.tasks.index.hide_completed') }.to_json %>">
+<div class="container mx-auto px-2 py-4" data-kanban-i18n="<%= {
+  previous_page: t('views.tasks.kanban.previous_page'),
+  reset_to_first_page: t('views.tasks.kanban.reset_to_first_page'),
+  load_more: t('views.tasks.kanban.load_more'),
+  show_completed: t('views.tasks.index.show_completed'),
+  hide_completed: t('views.tasks.index.hide_completed'),
+  priorities: {
+    high: t('priorities.high'),
+    medium: t('priorities.medium'),
+    low: t('priorities.low'),
+    leisure: t('priorities.leisure')
+  }
+}.to_json %>">
   <div class="flex justify-between items-center mb-4">
     <h1 class="kanban-page-title text-sm font-bold text-gray-900"><%= t('views.tasks.kanban.title') %></h1>
     
