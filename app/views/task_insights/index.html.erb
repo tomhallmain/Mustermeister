@@ -85,25 +85,46 @@
     var submit = document.getElementById('task-insights-submit');
     var liveBox = document.getElementById('task-insights-live-status');
     var liveText = document.getElementById('task-insights-live-status-text');
-    var timer = null;
+    var stepTimer = null;
 
     if (!form || !liveBox || !liveText) return;
 
+    var STATES = [
+      'Processing your question...',
+      'Querying model for next step...',
+      'Evaluating whether tools are needed...',
+      'Running tool calls if requested...',
+      'Composing final answer...'
+    ];
+
+    function clearStepTimer() {
+      if (stepTimer) {
+        window.clearInterval(stepTimer);
+        stepTimer = null;
+      }
+    }
+
+    function resetSubmitUi() {
+      if (!submit) return;
+      submit.disabled = false;
+      submit.classList.remove('opacity-70', 'cursor-not-allowed');
+    }
+
     form.addEventListener('submit', function() {
+      clearStepTimer();
       liveBox.classList.remove('hidden');
-      var states = [
-        'Processing your question...',
-        'Querying model for next step...',
-        'Evaluating whether tools are needed...',
-        'Running tool calls if requested...',
-        'Composing final answer...'
-      ];
-      var idx = 0;
-      liveText.textContent = states[idx];
-      timer = window.setInterval(function() {
-        idx = (idx + 1) % states.length;
-        liveText.textContent = states[idx];
-      }, 1400);
+
+      var i = 0;
+      liveText.textContent = STATES[i];
+
+      stepTimer = window.setInterval(function() {
+        if (i >= STATES.length - 1) {
+          clearStepTimer();
+          return;
+        }
+        i += 1;
+        liveText.textContent = STATES[i];
+      }, 1600);
 
       if (submit) {
         submit.disabled = true;
@@ -112,7 +133,10 @@
     });
 
     window.addEventListener('pageshow', function() {
-      if (timer) window.clearInterval(timer);
+      clearStepTimer();
+      resetSubmitUi();
     });
+
+    window.addEventListener('pagehide', clearStepTimer);
   })();
 </script>

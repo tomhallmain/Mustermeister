@@ -31,6 +31,15 @@ class TaskInsightsChatService
       args: { project_ids: "optional array of project ids", limit: "optional integer <= 10" }
     },
     {
+      name: "open_tasks_by_priorities",
+      description: "List open tasks filtered by one or more priorities (e.g. medium and high).",
+      args: {
+        priorities: "required array of strings from leisure|low|medium|high",
+        project_ids: "optional array of project ids",
+        limit: "optional integer <= 10"
+      }
+    },
+    {
       name: "recent_tasks",
       description: "List recently updated tasks.",
       args: { project_ids: "optional array of project ids", days: "optional integer", limit: "optional integer <= 10" }
@@ -52,6 +61,7 @@ class TaskInsightsChatService
     - If no tool result has been provided yet, you MUST return a tool_call first.
     - After receiving one or more tool results, you may either call another tool or return final.
     - Never list available tools to the user; use them directly.
+    - If the user asks about multiple priorities (e.g. medium and high), prefer open_tasks_by_priorities.
     Use at most one tool call per message.
   PROMPT
 
@@ -75,8 +85,14 @@ class TaskInsightsChatService
       @state_events << { state: "requesting_model_step", at: Time.current.iso8601 }
       step = llm_step(transcript)
       if step["type"] == "final"
-        @state_events << { state: "final_answer_ready", at: Time.current.iso8601 }
-        return Result.new(answer: step["answer"].to_s, tool_calls: @tool_calls, state_events: @state_events)
+        answer = step["answer"].to_s.strip
+        if answer.present?
+          @state_events << { state: "final_answer_ready", at: Time.current.iso8601 }
+          return Result.new(answer: answer, tool_calls: @tool_calls, state_events: @state_events)
+        end
+
+        @state_events << { state: "final_answer_empty", at: Time.current.iso8601 }
+        break
       end
       break unless step["type"] == "tool_call"
 
@@ -101,9 +117,23 @@ class TaskInsightsChatService
   def llm_step(transcript)
     prompt = build_prompt(transcript)
     response = @llm.generate_response(prompt, system_prompt: SYSTEM_PROMPT)
-    parse_llm_json(response.response)
+    raw_text = response.response.to_s
+    step = normalize_step(parse_llm_json(raw_text), transcript: transcript)
+
+    if step["type"] == "invalid"
+      @state_events << { state: "model_response_invalid", at: Time.current.iso8601 }
+      repaired = attempt_json_repair(raw_text, transcript)
+      step = normalize_step(repaired, transcript: transcript) if repaired
+    end
+
+    if step["type"] == "invalid"
+      @state_events << { state: "model_response_unrecoverable", at: Time.current.iso8601 }
+    end
+
+    step
   rescue StandardError
-    { "type" => "final", "answer" => "" }
+    @state_events << { state: "model_request_failed", at: Time.current.iso8601 }
+    { "type" => "invalid", "raw" => {} }
   end
 
   def build_prompt(transcript)
@@ -140,9 +170,56 @@ class TaskInsightsChatService
     data = JSON.parse(json_candidate)
     return data if data.is_a?(Hash)
 
-    { "type" => "final", "answer" => text.to_s }
+    { "type" => "invalid", "raw" => { "parsed" => data } }
   rescue JSON::ParserError
-    { "type" => "final", "answer" => text.to_s }
+    { "type" => "invalid", "raw" => { "text" => text.to_s } }
+  end
+
+  def normalize_step(data, transcript:)
+    return { "type" => "invalid", "raw" => data } unless data.is_a?(Hash)
+
+    type = data["type"].to_s
+    return data if %w[final tool_call].include?(type)
+
+    if data["tool_call"].is_a?(Hash)
+      tc = data["tool_call"]
+      tool = tc["tool"] || tc["name"]
+      return { "type" => "tool_call", "tool" => tool, "arguments" => tc["arguments"] || {} } if tool.present?
+    end
+
+    tool = data["tool"] || data["name"]
+    if tool.present?
+      args = data["arguments"]
+      args = {} unless args.is_a?(Hash)
+      return { "type" => "tool_call", "tool" => tool, "arguments" => args }
+    end
+
+    { "type" => "invalid", "raw" => data }
+  end
+
+  def attempt_json_repair(bad_text, transcript)
+    has_tool_results = transcript.any? { |m| m[:role] == "tool" }
+    repair_prompt = <<~PROMPT
+      Convert the assistant output below into EXACTLY one JSON object and nothing else.
+      Valid shapes only:
+      {"type":"tool_call","tool":"<tool_name>","arguments":{...}}
+      {"type":"final","answer":"<plain text>"}
+
+      Rules:
+      - If has_tool_results is false, you MUST output tool_call (not final).
+      - has_tool_results=#{has_tool_results}
+      - Choose the best tool from the tool list in the main system prompt.
+      - arguments must be a JSON object (use {} if none).
+
+      BAD_OUTPUT:
+      #{bad_text.to_s.truncate(8000)}
+    PROMPT
+
+    @state_events << { state: "attempting_json_repair", at: Time.current.iso8601 }
+    response = @llm.generate_response(repair_prompt, system_prompt: SYSTEM_PROMPT)
+    parse_llm_json(response.response)
+  rescue StandardError
+    nil
   end
 
   def run_tool(tool_name, args)
@@ -151,6 +228,7 @@ class TaskInsightsChatService
     when "status_breakdown" then status_breakdown(args)
     when "overdue_tasks" then overdue_tasks(args)
     when "high_priority_open_tasks" then high_priority_open_tasks(args)
+    when "open_tasks_by_priorities" then open_tasks_by_priorities(args)
     when "recent_tasks" then recent_tasks(args)
     when "search_tasks" then search_tasks(args)
     else
@@ -219,6 +297,19 @@ class TaskInsightsChatService
     limit = normalized_limit(args["limit"] || MAX_ITEMS)
     scoped_tasks(args["project_ids"])
       .where(completed: false, priority: "high")
+      .order(updated_at: :asc)
+      .limit(limit)
+      .map { |task| format_task(task) }
+  end
+
+  def open_tasks_by_priorities(args)
+    allowed = %w[leisure low medium high]
+    priorities = Array(args["priorities"]).map(&:to_s).uniq & allowed
+    return [] if priorities.blank?
+
+    limit = normalized_limit(args["limit"] || MAX_ITEMS)
+    scoped_tasks(args["project_ids"])
+      .where(completed: false, priority: priorities)
       .order(updated_at: :asc)
       .limit(limit)
       .map { |task| format_task(task) }
