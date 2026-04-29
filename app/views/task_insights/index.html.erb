@@ -1,0 +1,118 @@
+<div class="container mx-auto px-4 py-8 max-w-5xl">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900"><%= t("application.navigation.task_insights", default: "Task Insights") %></h1>
+    <p class="text-sm text-gray-600 mt-1">Ask questions about your current tasks to surface patterns and risks.</p>
+  </div>
+
+  <div class="surface shadow-lg rounded-lg p-6">
+    <%= form_with url: task_insights_path, method: :get, data: { turbo: false }, class: "space-y-4", id: "task-insights-form" do %>
+      <%= hidden_field_tag :ask, 1 %>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="ai_locale" class="block text-sm font-medium text-gray-700 mb-1"><%= t('views.reports.analysis.ai_locale_label', default: 'AI language') %></label>
+          <select id="ai_locale" name="ai_locale" class="w-full rounded-md border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
+            <% @available_ai_locales.each do |locale_code| %>
+              <option value="<%= locale_code %>" <%= "selected" if locale_code == @ai_locale %>><%= locale_code %></option>
+            <% end %>
+          </select>
+        </div>
+        <div>
+          <label for="ai_model" class="block text-sm font-medium text-gray-700 mb-1"><%= t('views.reports.analysis.ai_model_label', default: 'Model') %></label>
+          <select id="ai_model" name="ai_model" class="w-full rounded-md border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
+            <% @available_ai_models.each do |model_name| %>
+              <option value="<%= model_name %>" <%= "selected" if model_name == @ai_model %>><%= model_name %></option>
+            <% end %>
+          </select>
+        </div>
+      </div>
+
+      <% if @available_ai_models.empty? %>
+        <p class="text-sm text-amber-700"><%= t('views.reports.analysis.ai_no_local_models', default: 'No local Ollama models found') %></p>
+      <% end %>
+
+      <div>
+        <label for="question" class="block text-sm font-medium text-gray-700 mb-1">Your question</label>
+        <textarea id="question" name="question" rows="5" class="w-full rounded-md border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Example: What patterns do you see in high-priority open tasks?"><%= @question %></textarea>
+      </div>
+
+      <div>
+        <button type="submit" id="task-insights-submit" class="bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2 px-4 rounded" <%= "disabled" if @available_ai_models.empty? %>>
+          Ask Insights
+        </button>
+      </div>
+    <% end %>
+  </div>
+
+  <div id="task-insights-live-status" class="hidden surface shadow-lg rounded-lg p-4 mt-4 border border-indigo-200">
+    <h2 class="text-sm font-semibold text-gray-900 mb-1">Agent status</h2>
+    <div class="flex items-center gap-2 text-sm text-gray-600">
+      <span class="inline-block h-4 w-4 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin"></span>
+      <span id="task-insights-live-status-text">Preparing request...</span>
+    </div>
+  </div>
+
+  <% if @answer.present? %>
+    <div class="surface shadow-lg rounded-lg p-6 mt-6 border border-indigo-200">
+      <h2 class="text-lg font-semibold text-gray-900 mb-2">Answer</h2>
+      <p class="text-sm text-gray-700 whitespace-pre-line"><%= @answer %></p>
+      <% if @tool_calls.present? %>
+        <div class="mt-4">
+          <h3 class="text-sm font-semibold text-gray-700 mb-1">Tools used</h3>
+          <ul class="text-xs text-gray-600 space-y-1">
+            <% @tool_calls.each do |call| %>
+              <li><code><%= call[:tool] %></code> <%= call[:arguments].present? ? call[:arguments].to_json : "" %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+      <% if @state_events.present? %>
+        <div class="mt-4">
+          <h3 class="text-sm font-semibold text-gray-700 mb-1">Agent state trace</h3>
+          <ul class="text-xs text-gray-600 space-y-1">
+            <% @state_events.each do |event| %>
+              <li><%= event[:state] %><%= event[:tool].present? ? " (#{event[:tool]})" : "" %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<script>
+  (function() {
+    var form = document.getElementById('task-insights-form');
+    var submit = document.getElementById('task-insights-submit');
+    var liveBox = document.getElementById('task-insights-live-status');
+    var liveText = document.getElementById('task-insights-live-status-text');
+    var timer = null;
+
+    if (!form || !liveBox || !liveText) return;
+
+    form.addEventListener('submit', function() {
+      liveBox.classList.remove('hidden');
+      var states = [
+        'Processing your question...',
+        'Querying model for next step...',
+        'Evaluating whether tools are needed...',
+        'Running tool calls if requested...',
+        'Composing final answer...'
+      ];
+      var idx = 0;
+      liveText.textContent = states[idx];
+      timer = window.setInterval(function() {
+        idx = (idx + 1) % states.length;
+        liveText.textContent = states[idx];
+      }, 1400);
+
+      if (submit) {
+        submit.disabled = true;
+        submit.classList.add('opacity-70', 'cursor-not-allowed');
+      }
+    });
+
+    window.addEventListener('pageshow', function() {
+      if (timer) window.clearInterval(timer);
+    });
+  })();
+</script>
