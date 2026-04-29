@@ -8,6 +8,7 @@ pin "sortablejs", to: "https://ga.jspm.io/npm:sortablejs@1.15.0/Sortable.js"
 
 pin "application", preload: true
 pin "task_result_modal", to: "task_result_modal.js"
+pin "escape_to_kanban", to: "escape_to_kanban.js"
 pin "kanban_filter_persistence", to: "kanban_filter_persistence.js"
 pin "kanban", to: "kanban.js"
 # pin "@hotwired/turbo-rails", to: "turbo.min.js", preload: true
