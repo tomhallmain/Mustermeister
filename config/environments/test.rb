@@ -53,4 +53,9 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # Run jobs inline so integration tests can POST a run and read status without a queue worker.
+  config.after_initialize do
+    ActiveJob::Base.queue_adapter = :inline
+  end
 end

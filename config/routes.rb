@@ -73,4 +73,6 @@ Rails.application.routes.draw do
   post 'reports/set_config', to: 'reports#set_config', as: :set_report_config
   get 'reports/analysis', to: 'reports#analysis', as: :reports_analysis
   get 'task_insights', to: 'task_insights#index', as: :task_insights
+  post 'task_insights', to: 'task_insights#create'
+  get 'task_insights/status/:run_id', to: 'task_insights#status', as: :task_insights_status
 end

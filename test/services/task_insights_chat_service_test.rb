@@ -26,6 +26,38 @@ class TaskInsightsChatServiceTest < ActiveSupport::TestCase
     end
   end
 
+  test "notifies progress on each state change" do
+    responses = [
+      OllamaLlmService::Result.new(response: '{"type":"final","answer":"Only final."}')
+    ]
+    fake_llm = Class.new do
+      def initialize(responses)
+        @responses = responses
+      end
+
+      def generate_response(_prompt, system_prompt:)
+        @responses.shift
+      end
+    end.new(responses)
+
+    syncs = []
+    progress = Object.new
+    progress.define_singleton_method(:sync) do |state_events:, tool_calls:|
+      syncs << { event_count: state_events.size, tool_count: tool_calls.size }
+    end
+
+    OllamaLlmService.stub :new, fake_llm do
+      TaskInsightsChatService.call(
+        user: users(:one),
+        question: "Quick",
+        progress: progress
+      )
+    end
+
+    assert_operator syncs.size, :>=, 2
+    assert_operator syncs.last[:event_count], :>=, 2
+  end
+
   test "accepts legacy tool_call shape without type field" do
     responses = [
       OllamaLlmService::Result.new(response: '{"tool":"status_breakdown","arguments":{}}'),

@@ -65,13 +65,14 @@ class TaskInsightsChatService
     Use at most one tool call per message.
   PROMPT
 
-  def self.call(user:, question:, locale: I18n.locale, model_name: nil)
-    new(user: user, locale: locale, model_name: model_name).call(question)
+  def self.call(user:, question:, locale: I18n.locale, model_name: nil, progress: nil)
+    new(user: user, locale: locale, model_name: model_name, progress: progress).call(question)
   end
 
-  def initialize(user:, locale:, model_name: nil)
+  def initialize(user:, locale:, model_name: nil, progress: nil)
     @user = user
     @locale = locale
+    @progress = progress
     @llm = OllamaLlmService.new(model_name: model_name || default_model, state_key: "task_insights_#{user.id}")
     @tool_calls = []
     @state_events = []
@@ -79,36 +80,41 @@ class TaskInsightsChatService
 
   def call(question)
     transcript = [{ role: "user", content: question.to_s }]
-    @state_events << { state: "received_question", at: Time.current.iso8601 }
+    record_state(state: "received_question", at: Time.current.iso8601)
 
     MAX_TOOL_CALLS.times do
-      @state_events << { state: "requesting_model_step", at: Time.current.iso8601 }
+      record_state(state: "requesting_model_step", at: Time.current.iso8601)
       step = llm_step(transcript)
       if step["type"] == "final"
         answer = step["answer"].to_s.strip
         if answer.present?
-          @state_events << { state: "final_answer_ready", at: Time.current.iso8601 }
+          record_state(state: "final_answer_ready", at: Time.current.iso8601)
           return Result.new(answer: answer, tool_calls: @tool_calls, state_events: @state_events)
         end
 
-        @state_events << { state: "final_answer_empty", at: Time.current.iso8601 }
+        record_state(state: "final_answer_empty", at: Time.current.iso8601)
         break
       end
       break unless step["type"] == "tool_call"
 
-      @state_events << { state: "executing_tool", tool: step["tool"], at: Time.current.iso8601 }
+      record_state(state: "executing_tool", tool: step["tool"], at: Time.current.iso8601)
       tool_output = run_tool(step["tool"], step["arguments"] || {})
       @tool_calls << { tool: step["tool"], arguments: step["arguments"] || {} }
       transcript << { role: "tool", content: { tool: step["tool"], result: tool_output }.to_json }
-      @state_events << { state: "tool_result_received", tool: step["tool"], at: Time.current.iso8601 }
+      record_state(state: "tool_result_received", tool: step["tool"], at: Time.current.iso8601)
     end
 
     fallback = I18n.with_locale(@locale) { I18n.t("views.reports.analysis.ai_summary_error", default: "I couldn't complete the analysis. Please try rephrasing your question.") }
-    @state_events << { state: "fallback_answer", at: Time.current.iso8601 }
+    record_state(state: "fallback_answer", at: Time.current.iso8601)
     Result.new(answer: fallback, tool_calls: @tool_calls, state_events: @state_events)
   end
 
   private
+
+  def record_state(attrs)
+    @state_events << attrs
+    @progress&.sync(state_events: @state_events, tool_calls: @tool_calls)
+  end
 
   def default_model
     ENV["OLLAMA_REPORT_MODEL"] || OllamaLlmService::DEFAULT_MODEL
@@ -121,18 +127,18 @@ class TaskInsightsChatService
     step = normalize_step(parse_llm_json(raw_text), transcript: transcript)
 
     if step["type"] == "invalid"
-      @state_events << { state: "model_response_invalid", at: Time.current.iso8601 }
+      record_state(state: "model_response_invalid", at: Time.current.iso8601)
       repaired = attempt_json_repair(raw_text, transcript)
       step = normalize_step(repaired, transcript: transcript) if repaired
     end
 
     if step["type"] == "invalid"
-      @state_events << { state: "model_response_unrecoverable", at: Time.current.iso8601 }
+      record_state(state: "model_response_unrecoverable", at: Time.current.iso8601)
     end
 
     step
   rescue StandardError
-    @state_events << { state: "model_request_failed", at: Time.current.iso8601 }
+    record_state(state: "model_request_failed", at: Time.current.iso8601)
     { "type" => "invalid", "raw" => {} }
   end
 
@@ -215,7 +221,7 @@ class TaskInsightsChatService
       #{bad_text.to_s.truncate(8000)}
     PROMPT
 
-    @state_events << { state: "attempting_json_repair", at: Time.current.iso8601 }
+    record_state(state: "attempting_json_repair", at: Time.current.iso8601)
     response = @llm.generate_response(repair_prompt, system_prompt: SYSTEM_PROMPT)
     parse_llm_json(response.response)
   rescue StandardError

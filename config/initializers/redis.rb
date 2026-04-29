@@ -39,6 +39,9 @@ else
   }
 end
 
-# Configure Active Job (using solid_queue which works with both Redis and file system)
-Rails.application.config.active_job.queue_adapter = :solid_queue
-Rails.application.config.solid_queue.connects_to = { database: { writing: :queue } } 
+# Active Job: Solid Queue in production only. Development uses the default async adapter
+# so jobs run in-process without a separate worker. Tests force :inline in config/environments/test.rb.
+if Rails.env.production?
+  Rails.application.config.active_job.queue_adapter = :solid_queue
+  Rails.application.config.solid_queue.connects_to = { database: { writing: :queue } }
+end
