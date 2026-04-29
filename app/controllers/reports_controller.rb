@@ -54,6 +54,21 @@ class ReportsController < ApplicationController
     @selected_stats = stats_to_show
     @sort_by = sort_by
     @sort_direction = sort_direction
+    @llm_summary = nil
+    @llm_summary_error = nil
+
+    if params[:ai_summary].to_s == "1"
+      begin
+        @llm_summary = ReportLlmSummaryService.call(
+          result: @result,
+          locale: I18n.locale,
+          model_name: ENV["OLLAMA_REPORT_MODEL"]
+        )
+      rescue StandardError => e
+        Rails.logger.warn("AI report summary generation failed: #{e.message}")
+        @llm_summary_error = "AI summary is currently unavailable."
+      end
+    end
 
     respond_to do |format|
       format.html
