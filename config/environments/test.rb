@@ -17,6 +17,9 @@ Rails.application.configure do
 
   # Configure public file server for tests with cache-control for performance.
   config.public_file_server.headers = { "cache-control" => "public, max-age=3600" }
+  # SassC cannot parse modern Tailwind media query range syntax used in compiled CSS.
+  # Disabling CSS compression in tests avoids this parse step during asset rendering.
+  config.assets.css_compressor = nil
 
   # Show full error reports.
   config.consider_all_requests_local = true
