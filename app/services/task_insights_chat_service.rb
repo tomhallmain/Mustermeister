@@ -5,7 +5,10 @@ require "json"
 # Lets an LLM answer questions about a user's tasks via bounded read-only tool calls.
 class TaskInsightsChatService
   MAX_TOOL_CALLS = 4
-  MAX_ITEMS = 10
+  # Upper bound for how many tasks a single list-style tool may return (default 1000).
+  # Set TASK_INSIGHTS_MAX_LIST_ITEMS to a lower value in constrained environments.
+  MAX_LIST_ITEMS_CAP = 1000
+  MAX_LIST_ITEMS = [[ENV.fetch("TASK_INSIGHTS_MAX_LIST_ITEMS", MAX_LIST_ITEMS_CAP.to_s).to_i, 10].max, MAX_LIST_ITEMS_CAP].min
 
   Result = Struct.new(:answer, :tool_calls, :state_events, keyword_init: true)
 
@@ -23,12 +26,12 @@ class TaskInsightsChatService
     {
       name: "overdue_tasks",
       description: "List overdue open tasks.",
-      args: { project_ids: "optional array of project ids", limit: "optional integer <= 10" }
+      args: { project_ids: "optional array of project ids", limit: "optional integer <= #{MAX_LIST_ITEMS}" }
     },
     {
       name: "high_priority_open_tasks",
       description: "List high-priority open tasks.",
-      args: { project_ids: "optional array of project ids", limit: "optional integer <= 10" }
+      args: { project_ids: "optional array of project ids", limit: "optional integer <= #{MAX_LIST_ITEMS}" }
     },
     {
       name: "open_tasks_by_priorities",
@@ -36,18 +39,18 @@ class TaskInsightsChatService
       args: {
         priorities: "required array of strings from leisure|low|medium|high",
         project_ids: "optional array of project ids",
-        limit: "optional integer <= 10"
+        limit: "optional integer <= #{MAX_LIST_ITEMS}"
       }
     },
     {
       name: "recent_tasks",
       description: "List recently updated tasks.",
-      args: { project_ids: "optional array of project ids", days: "optional integer", limit: "optional integer <= 10" }
+      args: { project_ids: "optional array of project ids", days: "optional integer", limit: "optional integer <= #{MAX_LIST_ITEMS}" }
     },
     {
       name: "search_tasks",
       description: "Search task titles/descriptions.",
-      args: { keyword: "required string", project_ids: "optional array of project ids", limit: "optional integer <= 10" }
+      args: { keyword: "required string", project_ids: "optional array of project ids", limit: "optional integer <= #{MAX_LIST_ITEMS}" }
     }
   ].freeze
 
@@ -255,7 +258,7 @@ class TaskInsightsChatService
   end
 
   def normalized_limit(limit)
-    [[limit.to_i, 1].max, MAX_ITEMS].min
+    [[limit.to_i, 1].max, self.class::MAX_LIST_ITEMS].min
   end
 
   def format_task(task)
@@ -290,7 +293,7 @@ class TaskInsightsChatService
   end
 
   def overdue_tasks(args)
-    limit = normalized_limit(args["limit"] || MAX_ITEMS)
+    limit = normalized_limit(args["limit"] || self.class::MAX_LIST_ITEMS)
     scoped_tasks(args["project_ids"])
       .where(completed: false)
       .where("due_date < ?", Time.current)
@@ -300,7 +303,7 @@ class TaskInsightsChatService
   end
 
   def high_priority_open_tasks(args)
-    limit = normalized_limit(args["limit"] || MAX_ITEMS)
+    limit = normalized_limit(args["limit"] || self.class::MAX_LIST_ITEMS)
     scoped_tasks(args["project_ids"])
       .where(completed: false, priority: "high")
       .order(updated_at: :asc)
@@ -313,7 +316,7 @@ class TaskInsightsChatService
     priorities = Array(args["priorities"]).map(&:to_s).uniq & allowed
     return [] if priorities.blank?
 
-    limit = normalized_limit(args["limit"] || MAX_ITEMS)
+    limit = normalized_limit(args["limit"] || self.class::MAX_LIST_ITEMS)
     scoped_tasks(args["project_ids"])
       .where(completed: false, priority: priorities)
       .order(updated_at: :asc)
@@ -322,7 +325,7 @@ class TaskInsightsChatService
   end
 
   def recent_tasks(args)
-    limit = normalized_limit(args["limit"] || MAX_ITEMS)
+    limit = normalized_limit(args["limit"] || self.class::MAX_LIST_ITEMS)
     days = [args["days"].to_i, 1].max
     scoped_tasks(args["project_ids"])
       .where("tasks.updated_at >= ?", days.days.ago)
@@ -335,7 +338,7 @@ class TaskInsightsChatService
     keyword = args["keyword"].to_s.strip
     return [] if keyword.blank?
 
-    limit = normalized_limit(args["limit"] || MAX_ITEMS)
+    limit = normalized_limit(args["limit"] || self.class::MAX_LIST_ITEMS)
     pattern = "%#{keyword.downcase}%"
     scoped_tasks(args["project_ids"])
       .where("LOWER(tasks.title) LIKE :q OR LOWER(tasks.description) LIKE :q", q: pattern)

@@ -40,4 +40,32 @@ class TaskInsightsController < ApplicationController
 
     render json: payload.slice("status", "state_events", "answer", "tool_calls", "error")
   end
+
+  private
+
+  def prepare_form_defaults
+    @available_ai_locales = I18n.available_locales.map(&:to_s)
+    @available_ai_models = OllamaLlmService.available_models
+
+    requested_ai_locale = params[:ai_locale].to_s
+    @ai_locale = if @available_ai_locales.include?(requested_ai_locale)
+      requested_ai_locale
+    elsif current_user.ai_summary_locale.present? && @available_ai_locales.include?(current_user.ai_summary_locale)
+      current_user.ai_summary_locale
+    else
+      I18n.locale.to_s
+    end
+
+    requested_ai_model = params[:ai_model].to_s
+    preferred_model = current_user.ai_summary_model.to_s
+    @ai_model = if @available_ai_models.include?(requested_ai_model)
+      requested_ai_model
+    elsif @available_ai_models.include?(preferred_model)
+      preferred_model
+    elsif @available_ai_models.include?(ENV["OLLAMA_REPORT_MODEL"].to_s)
+      ENV["OLLAMA_REPORT_MODEL"].to_s
+    else
+      @available_ai_models.first
+    end
+  end
 end
