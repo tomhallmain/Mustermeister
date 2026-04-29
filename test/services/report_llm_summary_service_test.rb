@@ -17,6 +17,7 @@ class ReportLlmSummaryServiceTest < ActiveSupport::TestCase
       summary = ReportLlmSummaryService.call(result: result, locale: :en, model_name: "llama3")
       assert_equal "AI summary", summary
     end
+    assert_includes fake_llm.prompt_received, "respond in English only"
     assert_includes fake_llm.prompt_received, "total_tasks: 10"
     assert_includes fake_llm.prompt_received, "Kanban snapshot"
     assert_includes fake_llm.prompt_received, "Highest-risk tasks"
@@ -38,6 +39,7 @@ class ReportLlmSummaryServiceTest < ActiveSupport::TestCase
       ReportLlmSummaryService.call(result: result, locale: :de, model_name: "llama3")
     end
 
+    assert_includes fake_llm.prompt_received, "Bitte antworte ausschliesslich auf Deutsch."
     assert_includes fake_llm.prompt_received, "Gesamtbild:"
     assert_includes fake_llm.prompt_received, "Beispiele je Gruppe"
     assert_includes fake_llm.prompt_received, "Anforderungen:"

@@ -10,6 +10,9 @@ class ReportLlmSummaryService
 
   PROMPT_COPY = {
     "en" => {
+      language_name: "English",
+      language_instruction_start: "IMPORTANT: Please respond in English only.",
+      language_instruction_end: "IMPORTANT: Final answer must be written in English only.",
       title: "Create a short executive report summary based on this data:",
       overall: "Overall:",
       projects: "Projects:",
@@ -32,6 +35,9 @@ class ReportLlmSummaryService
       none: "(none)"
     },
     "de" => {
+      language_name: "German",
+      language_instruction_start: "WICHTIG: Bitte antworte ausschliesslich auf Deutsch.",
+      language_instruction_end: "WICHTIG: Die finale Antwort muss vollstaendig auf Deutsch sein.",
       title: "Erstelle eine kurze Executive-Zusammenfassung auf Basis dieser Daten:",
       overall: "Gesamtbild:",
       projects: "Projekte:",
@@ -54,6 +60,9 @@ class ReportLlmSummaryService
       none: "(keine)"
     },
     "fr" => {
+      language_name: "French",
+      language_instruction_start: "IMPORTANT : Reponds uniquement en francais.",
+      language_instruction_end: "IMPORTANT : La reponse finale doit etre entierement en francais.",
       title: "Cree un court resume executif base sur ces donnees :",
       overall: "Vue d'ensemble :",
       projects: "Projets :",
@@ -76,6 +85,9 @@ class ReportLlmSummaryService
       none: "(aucune)"
     },
     "es" => {
+      language_name: "Spanish",
+      language_instruction_start: "IMPORTANTE: Responde solo en espanol.",
+      language_instruction_end: "IMPORTANTE: La respuesta final debe estar completamente en espanol.",
       title: "Crea un resumen ejecutivo corto basado en estos datos:",
       overall: "Vision general:",
       projects: "Proyectos:",
@@ -129,6 +141,8 @@ class ReportLlmSummaryService
     end.join("\n")
 
     <<~PROMPT
+      #{copy[:language_instruction_start]}
+
       #{copy[:title]}
 
       #{copy[:overall]}
@@ -167,6 +181,8 @@ class ReportLlmSummaryService
       #{copy[:req_bullets]}
       #{copy[:req_metrics]}
       #{copy[:req_grounded]}
+
+      #{copy[:language_instruction_end]}
     PROMPT
   end
 
