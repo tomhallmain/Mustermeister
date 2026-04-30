@@ -49,8 +49,8 @@ class TaskInsightsChatService
     },
     {
       name: "search_tasks",
-      description: "Search task titles/descriptions.",
-      args: { keyword: "required string", project_ids: "optional array of project ids", limit: "optional integer <= #{MAX_LIST_ITEMS}" }
+      description: "Search task titles/descriptions via local substring matching.",
+      args: { keyword: "required plain substring string (not a natural-language query)", project_ids: "optional array of project ids", limit: "optional integer <= #{MAX_LIST_ITEMS}" }
     }
   ].freeze
   TOOL_NAMES = TOOL_DEFINITIONS.map { |tool| tool[:name] }.freeze
@@ -67,6 +67,9 @@ class TaskInsightsChatService
     - If no tool result has been provided yet, you MUST return a tool_call first.
     - After receiving one or more tool results, you may either call another tool or return final.
     - Never list available tools to the user; use them directly.
+    - Tool calls are local function calls in this process, NOT a request to another agent/API.
+    - Use ONLY the exact tool names listed in <TOOLS>. Do not invent names like task_manager/query_engine.
+    - For text filtering, use search_tasks with a plain substring keyword (e.g. "backup"), not open-ended NL query text.
     - If the user asks about multiple priorities (e.g. medium and high), prefer open_tasks_by_priorities.
     Use at most one tool call per message.
   PROMPT
@@ -148,7 +151,13 @@ class TaskInsightsChatService
     response = @llm.generate_response(prompt, system_prompt: full_system_prompt)
     log_debug("LLM response (main step)", response.response.to_s)
     raw_text = response.response.to_s
-    step = normalize_step(parse_llm_json(raw_text), transcript: transcript)
+    parsed = parse_llm_json(raw_text)
+    if obvious_error_payload?(parsed)
+      record_state(state: "model_error_payload", message: parsed["error"].to_s, at: Time.current.iso8601)
+      return { "type" => "final", "answer" => "Model error: #{parsed['error']}" }
+    end
+
+    step = normalize_step(parsed, transcript: transcript)
 
     if step["type"] == "invalid"
       record_state(state: "model_response_invalid", at: Time.current.iso8601)
@@ -168,12 +177,16 @@ class TaskInsightsChatService
 
   def build_prompt(transcript)
     has_tool_results = transcript.any? { |m| m[:role] == "tool" }
+    user_question = transcript.find { |m| m[:role] == "user" }&.dig(:content).to_s
+    tool_results = transcript.select { |m| m[:role] == "tool" }.map { |m| m[:content] }
     cap = self.class::MAX_LIST_ITEMS
     <<~PROMPT
       <CONTEXT>
+      task=Generate insights for the user's task list data.
       locale=#{@locale}
       has_tool_results=#{has_tool_results}
       list_limit_cap=#{cap}
+      user_question=#{user_question}
       </CONTEXT>
 
       <TOOLS>
@@ -182,13 +195,19 @@ class TaskInsightsChatService
       </TOOLS>
 
       <CONVERSATION>
-      #{transcript.map { |m| "#{m[:role].upcase}: #{m[:content]}" }.join("\n")}
+      USER: #{user_question}
       </CONVERSATION>
+
+      <TOOL_RESULTS>
+      #{tool_results.present? ? tool_results.join("\n") : "none"}
+      </TOOL_RESULTS>
 
       <INSTRUCTION>
       Return one JSON object matching the response contract from system prompt.
       For list tools that accept "limit", use limit=#{cap} when you need broad coverage (or omit limit for the same default).
       Do not default to limit=10 unless you only need ten rows.
+      Do not output agent-style schemas such as {"query":"...","tool_name":"...","parameters":{...}}.
+      For tool calls use only {"type":"tool_call","tool":"<exact listed tool name>","arguments":{...}}.
       </INSTRUCTION>
     PROMPT
   end
@@ -231,6 +250,11 @@ class TaskInsightsChatService
       return normalized_tool_call(tool_name, tool_args)
     end
 
+    if data["tool_name"].present?
+      tool_args = data["arguments"] || data["parameters"] || data["tool_args"] || data["args"]
+      return normalized_tool_call(data["tool_name"], tool_args)
+    end
+
     tool = data["tool"] || data["name"]
     return normalized_tool_call(tool, data["arguments"]) if tool.present?
 
@@ -249,12 +273,18 @@ class TaskInsightsChatService
     { "type" => "tool_call", "tool" => tool, "arguments" => args }
   end
 
+  def obvious_error_payload?(data)
+    data.is_a?(Hash) && data["error"].present? && data["type"].blank? && data["tool"].blank? && data["tool_calls"].blank?
+  end
+
   def full_system_prompt
     cap = self.class::MAX_LIST_ITEMS
     <<~PROMPT
       #{SYSTEM_PROMPT}
 
       LIST TOOLS: optional "limit" is clamped to #{cap}. Prefer limit=#{cap} when analyzing trends across many tasks, or omit "limit" for that same default. Avoid limit=10 unless you truly need only ten rows.
+      TOOLS ARE LOCAL FUNCTIONS ONLY: do not use external-agent style schemas or invented tool names.
+      SEARCH_TASKS NOTE: keyword is a plain local substring match over task title/description text.
 
       FINAL: "answer" must be a JSON string of human-readable prose, never a nested JSON object or array.
     PROMPT
@@ -274,6 +304,8 @@ class TaskInsightsChatService
       - Choose the best tool from the tool list in the main system prompt.
       - arguments must be a JSON object (use {} if none).
       - For final, "answer" must be a JSON string (quoted prose). Never use a JSON object or array as answer.
+      - Do NOT output agent-style schemas like query/tool_name/parameters.
+      - If outputting tool_call, "tool" must be one of the exact listed tool names.
 
       BAD_OUTPUT:
       #{bad_text.to_s.truncate(8000)}

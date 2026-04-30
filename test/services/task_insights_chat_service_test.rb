@@ -113,6 +113,30 @@ class TaskInsightsChatServiceTest < ActiveSupport::TestCase
     end
   end
 
+  test "accepts top-level tool_name with parameters alias" do
+    responses = [
+      OllamaLlmService::Result.new(response: '{"tool_name":"status_breakdown","parameters":{}}'),
+      OllamaLlmService::Result.new(response: '{"type":"final","answer":"Done."}')
+    ]
+
+    fake_llm = Class.new do
+      def initialize(responses)
+        @responses = responses
+      end
+
+      def generate_response(_prompt, system_prompt:)
+        raise "missing system prompt" if system_prompt.blank?
+        @responses.shift
+      end
+    end.new(responses)
+
+    OllamaLlmService.stub :new, fake_llm do
+      result = TaskInsightsChatService.call(user: users(:one), question: "Breakdown?")
+      assert_equal "Done.", result.answer
+      assert_equal "status_breakdown", result.tool_calls.first[:tool]
+    end
+  end
+
   test "falls back when model returns empty final" do
     responses = [
       OllamaLlmService::Result.new(response: '{"type":"final","answer":"   "}')
@@ -132,6 +156,29 @@ class TaskInsightsChatServiceTest < ActiveSupport::TestCase
       result = TaskInsightsChatService.call(user: users(:one), question: "Hi", locale: :en)
       assert_includes result.answer, "rephrasing"
       assert result.state_events.any? { |e| e[:state] == "final_answer_empty" }
+    end
+  end
+
+  test "treats model error payload as terminal without repair" do
+    responses = [
+      OllamaLlmService::Result.new(response: '{"error":"No items found"}')
+    ]
+
+    fake_llm = Class.new do
+      def initialize(responses)
+        @responses = responses
+      end
+
+      def generate_response(_prompt, system_prompt:)
+        @responses.shift
+      end
+    end.new(responses)
+
+    OllamaLlmService.stub :new, fake_llm do
+      result = TaskInsightsChatService.call(user: users(:one), question: "Hi", locale: :en)
+      assert_equal "Model error: No items found", result.answer
+      assert result.state_events.any? { |e| e[:state] == "model_error_payload" }
+      assert result.state_events.none? { |e| e[:state] == "attempting_json_repair" }
     end
   end
 end
