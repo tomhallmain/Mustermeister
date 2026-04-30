@@ -53,6 +53,7 @@ class TaskInsightsChatService
       args: { keyword: "required string", project_ids: "optional array of project ids", limit: "optional integer <= #{MAX_LIST_ITEMS}" }
     }
   ].freeze
+  TOOL_NAMES = TOOL_DEFINITIONS.map { |tool| tool[:name] }.freeze
 
   SYSTEM_PROMPT = <<~PROMPT
     You are a task insights assistant.
@@ -104,9 +105,10 @@ class TaskInsightsChatService
 
       record_state(state: "executing_tool", tool: step["tool"], at: Time.current.iso8601)
       tool_output = run_tool(step["tool"], step["arguments"] || {})
-      @tool_calls << { tool: step["tool"], arguments: step["arguments"] || {} }
+      result_count = tool_output_count(tool_output)
+      @tool_calls << { tool: step["tool"], arguments: step["arguments"] || {}, result_count: result_count }
       transcript << { role: "tool", content: { tool: step["tool"], result: tool_output }.to_json }
-      record_state(state: "tool_result_received", tool: step["tool"], at: Time.current.iso8601)
+      record_state(state: "tool_result_received", tool: step["tool"], result_count: result_count, at: Time.current.iso8601)
     end
 
     fallback = I18n.with_locale(@locale) { I18n.t("views.reports.analysis.ai_summary_error", default: "I couldn't complete the analysis. Please try rephrasing your question.") }
@@ -198,26 +200,29 @@ class TaskInsightsChatService
       return { "type" => "invalid", "raw" => data } unless final_answer_json_ok?(data["answer"])
       return data
     end
-    return data if type == "tool_call"
+    return normalized_tool_call(data["tool"], data["arguments"]) if type == "tool_call"
 
     if data["tool_call"].is_a?(Hash)
       tc = data["tool_call"]
-      tool = tc["tool"] || tc["name"]
-      return { "type" => "tool_call", "tool" => tool, "arguments" => tc["arguments"] || {} } if tool.present?
+      return normalized_tool_call(tc["tool"] || tc["name"], tc["arguments"])
     end
 
     tool = data["tool"] || data["name"]
-    if tool.present?
-      args = data["arguments"]
-      args = {} unless args.is_a?(Hash)
-      return { "type" => "tool_call", "tool" => tool, "arguments" => args }
-    end
+    return normalized_tool_call(tool, data["arguments"]) if tool.present?
 
     { "type" => "invalid", "raw" => data }
   end
 
   def final_answer_json_ok?(answer)
     answer.is_a?(String) || answer.is_a?(Numeric)
+  end
+
+  def normalized_tool_call(tool_name, arguments)
+    tool = tool_name.to_s
+    return { "type" => "invalid", "raw" => { "tool" => tool_name, "arguments" => arguments } } unless tool.present? && TOOL_NAMES.include?(tool)
+
+    args = arguments.is_a?(Hash) ? arguments : {}
+    { "type" => "tool_call", "tool" => tool, "arguments" => args }
   end
 
   def full_system_prompt
@@ -269,6 +274,13 @@ class TaskInsightsChatService
     else
       { error: "Unknown tool: #{tool_name}" }
     end
+  end
+
+  def tool_output_count(output)
+    return output.size if output.is_a?(Array)
+    return output.size if output.is_a?(Hash) && output["items"].is_a?(Array)
+
+    nil
   end
 
   def scoped_tasks(project_ids = nil)

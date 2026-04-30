@@ -122,6 +122,15 @@
       return d.innerHTML;
     }
 
+    function displayToolName(tool) {
+      if (typeof tool === 'string') return tool;
+      try {
+        return JSON.stringify(tool);
+      } catch (_e) {
+        return String(tool);
+      }
+    }
+
     function renderResult(payload) {
       var answer = payload.answer || '';
       var tools = payload.tool_calls || [];
@@ -134,7 +143,8 @@
         for (var t = 0; t < tools.length; t++) {
           var c = tools[t];
           var args = c.arguments && Object.keys(c.arguments).length ? esc(JSON.stringify(c.arguments)) : '';
-          html += '<li><code>' + esc(c.tool) + '</code> ' + args + '</li>';
+          var countText = (typeof c.result_count === 'number') ? ' → returned ' + c.result_count + ' item(s)' : '';
+          html += '<li><code>' + esc(displayToolName(c.tool)) + '</code> ' + args + esc(countText) + '</li>';
         }
         html += '</ul></div>';
       }
@@ -143,7 +153,8 @@
         for (var e = 0; e < events.length; e++) {
           var ev = events[e];
           var line = esc(ev.state || '');
-          if (ev.tool) line += ' (' + esc(ev.tool) + ')';
+          if (ev.tool) line += ' (' + esc(displayToolName(ev.tool)) + ')';
+          if (typeof ev.result_count === 'number') line += ' — returned ' + esc(ev.result_count) + ' item(s)';
           if (ev.message) line += ' — ' + esc(ev.message);
           html += '<li>' + line + '</li>';
         }
