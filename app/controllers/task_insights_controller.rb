@@ -20,7 +20,8 @@ class TaskInsightsController < ApplicationController
 
     unless current_user.update(
       ai_summary_locale: @ai_locale,
-      ai_summary_model: @ai_model
+      ai_summary_model: @ai_model,
+      task_insights_excluded_project_ids: excluded_project_ids
     )
       return render json: { error: current_user.errors.full_messages.join(", ") }, status: :unprocessable_entity
     end
@@ -76,12 +77,18 @@ class TaskInsightsController < ApplicationController
     else
       @available_ai_models.first
     end
+
+    @excluded_project_ids = selected_excluded_project_ids
   end
 
   def extract_excluded_project_ids
     raw = params[:excluded_project_ids]
-    ids = raw.is_a?(Array) ? raw : []
+    ids = raw.is_a?(Array) ? raw : current_user.task_insights_excluded_project_ids
     allowed_ids = current_user.projects.where(id: ids).pluck(:id)
     allowed_ids.map(&:to_i)
+  end
+
+  def selected_excluded_project_ids
+    extract_excluded_project_ids
   end
 end

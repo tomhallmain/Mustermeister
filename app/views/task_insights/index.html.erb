@@ -45,7 +45,7 @@
             <% @available_projects.each do |project| %>
               <li class="excluded-project-row" data-project-title="<%= project.title %>">
                 <label class="flex items-center gap-3 w-full cursor-pointer py-2.5 px-3 hover:bg-gray-50 text-left">
-                  <input type="checkbox" name="excluded_project_ids[]" value="<%= project.id %>" class="excluded-project-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0">
+                  <input type="checkbox" name="excluded_project_ids[]" value="<%= project.id %>" <%= "checked" if @excluded_project_ids.include?(project.id) %> class="excluded-project-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0">
                   <span class="text-sm text-gray-700 min-w-0"><%= project.title %></span>
                 </label>
               </li>

@@ -34,11 +34,13 @@ class TaskInsightsControllerTest < ActionDispatch::IntegrationTest
 
     OllamaLlmService.stub :available_models, ["deepseek-r1:14b"] do
       OllamaLlmService.stub :new, fake_llm do
+        excluded_project_id = projects(:one).id
         post task_insights_path,
           params: {
             question: "What are risky patterns?",
             ai_locale: "en",
-            ai_model: "deepseek-r1:14b"
+            ai_model: "deepseek-r1:14b",
+            excluded_project_ids: [excluded_project_id]
           },
           as: :json
       end
@@ -56,6 +58,16 @@ class TaskInsightsControllerTest < ActionDispatch::IntegrationTest
     assert body["state_events"].is_a?(Array)
     assert_operator body["state_events"].size, :>=, 2
     assert_equal "deepseek-r1:14b", @user.reload.ai_summary_model
+    assert_equal [projects(:one).id], @user.task_insights_excluded_project_ids
+  end
+
+  test "index preselects persisted excluded projects" do
+    @user.update!(task_insights_excluded_project_ids: [projects(:one).id])
+    OllamaLlmService.stub :available_models, ["deepseek-r1:14b"] do
+      get task_insights_path
+      assert_response :success
+      assert_select "input.excluded-project-checkbox[value='#{projects(:one).id}'][checked]"
+    end
   end
 
   test "status returns not found for unknown run id" do
