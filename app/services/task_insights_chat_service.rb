@@ -74,14 +74,21 @@ class TaskInsightsChatService
     Use at most one tool call per message.
   PROMPT
 
-  def self.call(user:, question:, locale: I18n.locale, model_name: nil, progress: nil)
-    new(user: user, locale: locale, model_name: model_name, progress: progress).call(question)
+  def self.call(user:, question:, locale: I18n.locale, model_name: nil, excluded_project_ids: [], progress: nil)
+    new(
+      user: user,
+      locale: locale,
+      model_name: model_name,
+      excluded_project_ids: excluded_project_ids,
+      progress: progress
+    ).call(question)
   end
 
-  def initialize(user:, locale:, model_name: nil, progress: nil)
+  def initialize(user:, locale:, model_name: nil, excluded_project_ids: [], progress: nil)
     @user = user
     @locale = locale
     @progress = progress
+    @excluded_project_ids = normalized_excluded_project_ids(excluded_project_ids)
     @llm = OllamaLlmService.new(model_name: model_name || default_model, state_key: "task_insights_#{user.id}")
     @tool_calls = []
     @state_events = []
@@ -186,6 +193,7 @@ class TaskInsightsChatService
       locale=#{@locale}
       has_tool_results=#{has_tool_results}
       list_limit_cap=#{cap}
+      excluded_project_ids=#{@excluded_project_ids.join(",")}
       user_question=#{user_question}
       </CONTEXT>
 
@@ -385,6 +393,7 @@ class TaskInsightsChatService
 
   def scoped_tasks(project_ids = nil)
     scope = @user.tasks.not_archived.includes(:project, :status)
+    scope = scope.where.not(project_id: @excluded_project_ids) if @excluded_project_ids.present?
     return scope if project_ids.blank?
 
     scope.where(project_id: normalized_project_ids(project_ids))
@@ -392,7 +401,15 @@ class TaskInsightsChatService
 
   def normalized_project_ids(project_ids)
     ids = Array(project_ids).map(&:to_i).uniq
-    @user.projects.where(id: ids).pluck(:id)
+    allowed = @user.projects.where(id: ids).pluck(:id)
+    @excluded_project_ids.present? ? allowed - @excluded_project_ids : allowed
+  end
+
+  def normalized_excluded_project_ids(project_ids)
+    ids = Array(project_ids).map(&:to_i).uniq
+    return [] if ids.empty?
+
+    @user.projects.where(id: ids).pluck(:id).map(&:to_i)
   end
 
   def normalized_limit(limit)

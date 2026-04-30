@@ -30,6 +30,32 @@
       <% end %>
 
       <div>
+        <h2 class="text-sm font-medium text-gray-700 mb-1">Exclude Projects From AI Context</h2>
+        <p class="text-xs text-gray-500 mb-2">Excluded projects are never sent to AI tools or included in stats/results.</p>
+        <div class="mb-2">
+          <input type="text" id="excluded-project-search" placeholder="Search projects to exclude..." class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" autocomplete="off">
+        </div>
+        <div class="mb-2">
+          <button type="button" id="toggle-all-excluded-projects" class="text-sm text-blue-600 hover:text-blue-800">Select all</button>
+        </div>
+        <ul id="excluded-projects-list" class="max-h-56 border border-gray-200 rounded-md surface overflow-y-auto list-none p-0 m-0 divide-y divide-gray-200">
+          <% if @available_projects.empty? %>
+            <li class="px-3 py-3 text-gray-500 italic">No projects available</li>
+          <% else %>
+            <% @available_projects.each do |project| %>
+              <li class="excluded-project-row" data-project-title="<%= project.title %>">
+                <label class="flex items-center gap-3 w-full cursor-pointer py-2.5 px-3 hover:bg-gray-50 text-left">
+                  <input type="checkbox" name="excluded_project_ids[]" value="<%= project.id %>" class="excluded-project-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0">
+                  <span class="text-sm text-gray-700 min-w-0"><%= project.title %></span>
+                </label>
+              </li>
+            <% end %>
+          <% end %>
+        </ul>
+        <p id="excluded-project-search-no-results" class="hidden mt-2 text-sm text-gray-500 italic">No projects matched your search.</p>
+      </div>
+
+      <div>
         <label for="question" class="block text-sm font-medium text-gray-700 mb-1">Your question</label>
         <textarea id="question" name="question" rows="5" class="w-full rounded-md border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Example: What patterns do you see in high-priority open tasks?"><%= @question %></textarea>
       </div>
@@ -63,6 +89,10 @@
     var liveError = document.getElementById('task-insights-live-error');
     var spinner = document.getElementById('task-insights-live-spinner');
     var resultEl = document.getElementById('task-insights-result');
+    var excludedSearch = document.getElementById('excluded-project-search');
+    var excludedList = document.getElementById('excluded-projects-list');
+    var excludedNoResults = document.getElementById('excluded-project-search-no-results');
+    var excludedToggleAll = document.getElementById('toggle-all-excluded-projects');
     var pollTimer = null;
 
     if (!form || !liveBox || !liveText || !resultEl) return;
@@ -139,6 +169,28 @@
       } catch (_e) {
         return String(tool);
       }
+    }
+
+    function applyExcludedProjectFilter() {
+      if (!excludedSearch || !excludedList) return;
+      var query = excludedSearch.value.trim().toLowerCase();
+      var rows = Array.from(excludedList.querySelectorAll('li.excluded-project-row'));
+      var visibleCount = 0;
+      rows.forEach(function(row) {
+        var title = (row.getAttribute('data-project-title') || '').toLowerCase();
+        var show = !query || title.indexOf(query) !== -1;
+        row.style.display = show ? '' : 'none';
+        if (show) visibleCount += 1;
+      });
+      if (excludedNoResults) excludedNoResults.classList.toggle('hidden', visibleCount > 0 || !query);
+    }
+
+    function toggleAllExcludedProjects() {
+      if (!excludedList) return;
+      var boxes = Array.from(excludedList.querySelectorAll('input.excluded-project-checkbox'));
+      var anyUnchecked = boxes.some(function(box) { return !box.checked; });
+      boxes.forEach(function(box) { box.checked = anyUnchecked; });
+      if (excludedToggleAll) excludedToggleAll.textContent = anyUnchecked ? 'Deselect all' : 'Select all';
     }
 
     function renderResult(payload) {
@@ -258,6 +310,12 @@
 
       var aiLocale = (document.getElementById('ai_locale') || {}).value;
       var aiModel = (document.getElementById('ai_model') || {}).value;
+      var excludedProjectIds = [];
+      if (excludedList) {
+        excludedList.querySelectorAll('input.excluded-project-checkbox:checked').forEach(function(box) {
+          excludedProjectIds.push(parseInt(box.value, 10));
+        });
+      }
 
       fetch(createUrl, {
         method: 'POST',
@@ -270,7 +328,8 @@
         body: JSON.stringify({
           question: question,
           ai_locale: aiLocale,
-          ai_model: aiModel
+          ai_model: aiModel,
+          excluded_project_ids: excludedProjectIds
         })
       }).then(function(r) {
         return r.json().then(function(body) {
@@ -299,5 +358,13 @@
     });
 
     window.addEventListener('pagehide', clearPoll);
+
+    if (excludedSearch) {
+      excludedSearch.addEventListener('input', applyExcludedProjectFilter);
+      excludedSearch.addEventListener('change', applyExcludedProjectFilter);
+    }
+    if (excludedToggleAll) {
+      excludedToggleAll.addEventListener('click', toggleAllExcludedProjects);
+    }
   })();
 </script>

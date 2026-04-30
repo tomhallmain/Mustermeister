@@ -230,4 +230,27 @@ class TaskInsightsChatServiceTest < ActiveSupport::TestCase
       assert_match(/\A\d{4}-\d{2}-\d{2}\z/, any_task[:updated_date])
     end
   end
+
+  test "excluded projects are not visible to tools" do
+    user = users(:one)
+    excluded_project = projects(:reprioritize_test)
+    included_fixture_title = tasks(:two).title
+    excluded_fixture_title = tasks(:reprioritize_high).title
+
+    service = TaskInsightsChatService.new(
+      user: user,
+      locale: :en,
+      excluded_project_ids: [excluded_project.id]
+    )
+    payload = service.send(:open_tasks_by_priorities, { "priorities" => %w[high], "limit" => 200 })
+
+    titles = payload[:priorities].values
+      .flat_map { |priority| priority[:statuses].values }
+      .flat_map { |status_group| status_group[:projects].values }
+      .flatten
+      .map { |task| task[:title] }
+
+    assert_includes titles, included_fixture_title
+    assert_not_includes titles, excluded_fixture_title
+  end
 end

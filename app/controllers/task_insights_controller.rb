@@ -9,6 +9,7 @@ class TaskInsightsController < ApplicationController
   def create
     prepare_form_defaults
     question = params[:question].to_s.strip
+    excluded_project_ids = extract_excluded_project_ids
 
     if question.blank?
       return render json: { error: "Question is required." }, status: :unprocessable_entity
@@ -26,7 +27,14 @@ class TaskInsightsController < ApplicationController
 
     run_id = SecureRandom.uuid
     TaskInsightsRunStore.init(run_id, user_id: current_user.id)
-    TaskInsightsRunJob.perform_later(run_id, current_user.id, question, @ai_locale.to_s, @ai_model.to_s)
+    TaskInsightsRunJob.perform_later(
+      run_id,
+      current_user.id,
+      question,
+      @ai_locale.to_s,
+      @ai_model.to_s,
+      excluded_project_ids
+    )
 
     render json: { run_id: run_id }, status: :accepted
   end
@@ -46,6 +54,7 @@ class TaskInsightsController < ApplicationController
   def prepare_form_defaults
     @available_ai_locales = I18n.available_locales.map(&:to_s)
     @available_ai_models = OllamaLlmService.available_models
+    @available_projects = current_user.projects.order(:title)
 
     requested_ai_locale = params[:ai_locale].to_s
     @ai_locale = if @available_ai_locales.include?(requested_ai_locale)
@@ -67,5 +76,12 @@ class TaskInsightsController < ApplicationController
     else
       @available_ai_models.first
     end
+  end
+
+  def extract_excluded_project_ids
+    raw = params[:excluded_project_ids]
+    ids = raw.is_a?(Array) ? raw : []
+    allowed_ids = current_user.projects.where(id: ids).pluck(:id)
+    allowed_ids.map(&:to_i)
   end
 end

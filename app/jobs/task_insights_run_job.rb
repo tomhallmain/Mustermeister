@@ -3,7 +3,7 @@
 class TaskInsightsRunJob < ApplicationJob
   queue_as :default
 
-  def perform(run_id, user_id, question, locale, model_name)
+  def perform(run_id, user_id, question, locale, model_name, excluded_project_ids = [])
     user = User.find(user_id)
     progress = TaskInsightsRunProgress.new(run_id)
 
@@ -12,6 +12,7 @@ class TaskInsightsRunJob < ApplicationJob
       question: question,
       locale: locale.presence || I18n.default_locale,
       model_name: model_name.presence,
+      excluded_project_ids: excluded_project_ids,
       progress: progress
     )
 
