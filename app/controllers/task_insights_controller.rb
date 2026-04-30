@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class TaskInsightsController < ApplicationController
+  helper ApplicationHelper
+
   def index
     prepare_form_defaults
     @question = params[:question].to_s
@@ -58,7 +60,16 @@ class TaskInsightsController < ApplicationController
       return
     end
 
-    render json: payload.slice("status", "state_events", "answer", "tool_calls", "error")
+    json = payload.slice("status", "state_events", "answer", "tool_calls", "error")
+    if %w[complete failed].include?(json["status"]) && json["answer"].present?
+      json = json.merge("answer_html" => helpers.markdown_robust(json["answer"].to_s))
+    end
+    render json: json
+  end
+
+  def ollama_health
+    models = OllamaLlmService.available_models
+    render json: { ok: models.any?, models: models }
   end
 
   private

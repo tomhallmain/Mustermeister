@@ -75,4 +75,5 @@ Rails.application.routes.draw do
   get 'task_insights', to: 'task_insights#index', as: :task_insights
   post 'task_insights', to: 'task_insights#create'
   get 'task_insights/status/:run_id', to: 'task_insights#status', as: :task_insights_status
+  get 'task_insights/ollama_health', to: 'task_insights#ollama_health', as: :task_insights_ollama_health
 end

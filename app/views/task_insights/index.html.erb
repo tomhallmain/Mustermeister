@@ -44,9 +44,9 @@
         </div>
       </div>
 
-      <% if @available_ai_models.empty? %>
-        <p class="text-sm text-amber-700"><%= t('views.reports.analysis.ai_no_local_models', default: 'No local Ollama models found') %></p>
-      <% end %>
+      <p id="task-insights-ollama-msg" class="text-sm text-amber-700 <%= 'hidden' if @available_ai_models.any? %>" role="status">
+        <%= t('views.reports.analysis.ai_no_local_models', default: 'No local Ollama models found') %>
+      </p>
 
       <div>
         <h2 class="text-sm font-medium text-gray-700 mb-1">Exclude Projects From AI Context</h2>
@@ -100,7 +100,11 @@
     <% @messages.each do |message| %>
       <div class="surface shadow-lg rounded-lg p-4 border <%= message.role == 'user' ? 'border-gray-200' : 'border-indigo-200' %>">
         <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1"><%= message.role == "user" ? "You" : "Assistant" %></h3>
-        <p class="text-sm text-gray-700 whitespace-pre-line"><%= message.content %></p>
+        <% if message.role == "user" %>
+          <p class="text-sm text-gray-700 whitespace-pre-line"><%= message.content %></p>
+        <% else %>
+          <div class="text-sm text-gray-700 prose prose-sm max-w-none"><%= markdown_robust(message.content) %></div>
+        <% end %>
       </div>
     <% end %>
   </div>
@@ -120,11 +124,16 @@
     var excludedNoResults = document.getElementById('excluded-project-search-no-results');
     var excludedToggleAll = document.getElementById('toggle-all-excluded-projects');
     var pollTimer = null;
+    var ollamaHealthTimer = null;
+    var ollamaOk = <%= @available_ai_models.any? ? 'true' : 'false' %>;
+    var jobRunning = false;
 
     if (!form || !liveBox || !liveText || !resultEl) return;
 
     var createUrl = <%= raw task_insights_path.to_json %>;
     var statusUrlTemplate = <%= raw task_insights_status_path(run_id: "__RUN_ID__").to_json %>;
+    var ollamaHealthUrl = <%= raw task_insights_ollama_health_path.to_json %>;
+    var ollamaMsg = document.getElementById('task-insights-ollama-msg');
     var csrfToken = document.querySelector('meta[name="csrf-token"]');
     csrfToken = csrfToken ? csrfToken.getAttribute('content') : '';
 
@@ -150,10 +159,62 @@
       }
     }
 
-    function resetSubmitUi() {
+    function applySubmitAvailability() {
       if (!submit) return;
-      submit.disabled = false;
-      submit.classList.remove('opacity-70', 'cursor-not-allowed');
+      var canSubmit = ollamaOk && !jobRunning;
+      submit.disabled = !canSubmit;
+      submit.classList.toggle('opacity-70', !canSubmit);
+      submit.classList.toggle('cursor-not-allowed', !canSubmit);
+    }
+
+    function resetSubmitUi() {
+      jobRunning = false;
+      applySubmitAvailability();
+    }
+
+    function refreshModelSelect(models) {
+      var sel = document.getElementById('ai_model');
+      if (!sel || !models || !models.length) return;
+      var prev = sel.value;
+      sel.innerHTML = '';
+      for (var i = 0; i < models.length; i++) {
+        var m = models[i];
+        var opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = m;
+        if (m === prev) opt.selected = true;
+        sel.appendChild(opt);
+      }
+      if (!sel.value && models.length) sel.selectedIndex = 0;
+    }
+
+    function updateOllamaBanner() {
+      if (!ollamaMsg) return;
+      ollamaMsg.classList.toggle('hidden', !!ollamaOk);
+    }
+
+    function fetchOllamaHealth() {
+      fetch(ollamaHealthUrl, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        credentials: 'same-origin'
+      }).then(function(r) {
+        return r.ok ? r.json() : Promise.resolve({ ok: false, models: [] });
+      }).then(function(data) {
+        ollamaOk = !!(data && data.ok);
+        if (ollamaOk && data.models && data.models.length) refreshModelSelect(data.models);
+        updateOllamaBanner();
+        applySubmitAvailability();
+      }).catch(function() {
+        ollamaOk = false;
+        updateOllamaBanner();
+        applySubmitAvailability();
+      });
+    }
+
+    function startOllamaHealthPolling() {
+      if (ollamaHealthTimer) window.clearInterval(ollamaHealthTimer);
+      ollamaHealthTimer = window.setInterval(fetchOllamaHealth, 12000);
     }
 
     function setSpinner(active) {
@@ -221,11 +282,16 @@
 
     function renderResult(payload) {
       var answer = payload.answer || '';
+      var answerHtml = payload.answer_html;
       var tools = payload.tool_calls || [];
       var events = payload.state_events || [];
       var html = '<div class="surface shadow-lg rounded-lg p-6 border border-indigo-200">';
       html += '<h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Assistant</h3>';
-      html += '<p class="text-sm text-gray-700 whitespace-pre-line">' + esc(answer) + '</p>';
+      if (answerHtml) {
+        html += '<div class="text-sm text-gray-700 prose prose-sm max-w-none">' + answerHtml + '</div>';
+      } else {
+        html += '<p class="text-sm text-gray-700 whitespace-pre-line">' + esc(answer) + '</p>';
+      }
       if (tools.length) {
         html += '<div class="mt-4"><h3 class="text-sm font-semibold text-gray-700 mb-1">Tools used</h3><ul class="text-xs text-gray-600 space-y-1">';
         for (var t = 0; t < tools.length; t++) {
@@ -329,6 +395,10 @@
 
       var question = (document.getElementById('question') || {}).value || '';
       if (!question.trim()) return;
+      if (!ollamaOk) return;
+
+      jobRunning = true;
+      applySubmitAvailability();
 
       liveBox.classList.remove('hidden');
       liveError.classList.add('hidden');
@@ -336,11 +406,6 @@
       liveText.textContent = 'Sending request…';
       setSpinner(true);
       appendUserMessage(question.trim());
-
-      if (submit) {
-        submit.disabled = true;
-        submit.classList.add('opacity-70', 'cursor-not-allowed');
-      }
 
       var aiLocale = (document.getElementById('ai_locale') || {}).value;
       var aiModel = (document.getElementById('ai_model') || {}).value;
@@ -392,12 +457,17 @@
       });
     });
 
-    window.addEventListener('pageshow', function() {
+    window.addEventListener('pageshow', function(ev) {
       clearPoll();
       resetSubmitUi();
+      if (ev.persisted) fetchOllamaHealth();
     });
 
     window.addEventListener('pagehide', clearPoll);
+
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'visible') fetchOllamaHealth();
+    });
 
     if (excludedSearch) {
       excludedSearch.addEventListener('input', applyExcludedProjectFilter);
@@ -406,5 +476,9 @@
     if (excludedToggleAll) {
       excludedToggleAll.addEventListener('click', toggleAllExcludedProjects);
     }
+
+    applySubmitAvailability();
+    fetchOllamaHealth();
+    startOllamaHealthPolling();
   })();
 </script>

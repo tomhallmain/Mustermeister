@@ -65,6 +65,8 @@ class TaskInsightsControllerTest < ActionDispatch::IntegrationTest
     body = JSON.parse(response.body)
     assert_equal "complete", body["status"]
     assert_equal "Pattern detected.", body["answer"]
+    assert body["answer_html"].present?
+    assert_includes body["answer_html"], "Pattern"
     assert body["state_events"].is_a?(Array)
     assert_operator body["state_events"].size, :>=, 2
     assert_equal "deepseek-r1:14b", @user.reload.ai_summary_model
@@ -115,5 +117,23 @@ class TaskInsightsControllerTest < ActionDispatch::IntegrationTest
       get task_insights_status_path(run_id: SecureRandom.uuid), as: :json
     end
     assert_response :not_found
+  end
+
+  test "ollama_health reflects model availability" do
+    OllamaLlmService.stub :available_models, [] do
+      get task_insights_ollama_health_path, as: :json
+    end
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal false, body["ok"]
+    assert_equal [], body["models"]
+
+    OllamaLlmService.stub :available_models, ["mistral:latest"] do
+      get task_insights_ollama_health_path, as: :json
+    end
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal true, body["ok"]
+    assert_equal ["mistral:latest"], body["models"]
   end
 end
