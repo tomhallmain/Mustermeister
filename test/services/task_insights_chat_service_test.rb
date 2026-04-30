@@ -137,6 +137,33 @@ class TaskInsightsChatServiceTest < ActiveSupport::TestCase
     end
   end
 
+  test "maps wrapped get_tasks function to local search_tasks tool" do
+    responses = [
+      OllamaLlmService::Result.new(
+        response: '{"tool_calls":[{"function":"get_tasks","args":{"project":"Code Generation","since_date":"2024-05-20"}}]}'
+      ),
+      OllamaLlmService::Result.new(response: '{"type":"final","answer":"Done."}')
+    ]
+
+    fake_llm = Class.new do
+      def initialize(responses)
+        @responses = responses
+      end
+
+      def generate_response(_prompt, system_prompt:)
+        raise "missing system prompt" if system_prompt.blank?
+        @responses.shift
+      end
+    end.new(responses)
+
+    OllamaLlmService.stub :new, fake_llm do
+      result = TaskInsightsChatService.call(user: users(:one), question: "Find trends")
+      assert_equal "Done.", result.answer
+      assert_equal "search_tasks", result.tool_calls.first[:tool]
+      assert_equal "Code Generation", result.tool_calls.first[:arguments]["keyword"]
+    end
+  end
+
   test "falls back when model returns empty final" do
     responses = [
       OllamaLlmService::Result.new(response: '{"type":"final","answer":"   "}')
@@ -179,6 +206,28 @@ class TaskInsightsChatServiceTest < ActiveSupport::TestCase
       assert_equal "Model error: No items found", result.answer
       assert result.state_events.any? { |e| e[:state] == "model_error_payload" }
       assert result.state_events.none? { |e| e[:state] == "attempting_json_repair" }
+    end
+  end
+
+  test "open_tasks_by_priorities returns grouped compact payload" do
+    service = TaskInsightsChatService.new(user: users(:one), locale: :en, progress: nil)
+    payload = service.send(:open_tasks_by_priorities, { "priorities" => %w[medium high], "limit" => 50 })
+
+    assert payload[:priorities].is_a?(Hash)
+    assert payload[:returned_count].is_a?(Integer)
+    assert payload[:total_matching_count].is_a?(Integer)
+    assert payload[:limit].is_a?(Integer)
+
+    any_task = payload[:priorities].values
+      .flat_map { |p| p[:statuses].values }
+      .flat_map { |s| s[:projects].values }
+      .flatten
+      .first
+
+    if any_task
+      assert any_task.key?(:updated_date)
+      assert_not any_task.key?(:updated_at)
+      assert_match(/\A\d{4}-\d{2}-\d{2}\z/, any_task[:updated_date])
     end
   end
 end

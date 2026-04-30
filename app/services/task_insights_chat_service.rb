@@ -206,8 +206,9 @@ class TaskInsightsChatService
       Return one JSON object matching the response contract from system prompt.
       For list tools that accept "limit", use limit=#{cap} when you need broad coverage (or omit limit for the same default).
       Do not default to limit=10 unless you only need ten rows.
-      Do not output agent-style schemas such as {"query":"...","tool_name":"...","parameters":{...}}.
-      For tool calls use only {"type":"tool_call","tool":"<exact listed tool name>","arguments":{...}}.
+      For tool calls, ALWAYS return exactly:
+      {"type":"tool_call","tool":"<exact listed tool name>","arguments":{...}}
+      where "tool" is one of the names listed in <TOOLS>.
       </INSTRUCTION>
     PROMPT
   end
@@ -267,10 +268,44 @@ class TaskInsightsChatService
 
   def normalized_tool_call(tool_name, arguments)
     tool = tool_name.to_s
-    return { "type" => "invalid", "raw" => { "tool" => tool_name, "arguments" => arguments } } unless tool.present? && TOOL_NAMES.include?(tool)
+    unless tool.present? && TOOL_NAMES.include?(tool)
+      mapped = map_external_tool_call(tool, arguments)
+      return mapped if mapped
+      return { "type" => "invalid", "raw" => { "tool" => tool_name, "arguments" => arguments } }
+    end
 
     args = arguments.is_a?(Hash) ? arguments : {}
     { "type" => "tool_call", "tool" => tool, "arguments" => args }
+  end
+
+  def map_external_tool_call(tool, arguments)
+    args = arguments.is_a?(Hash) ? arguments : {}
+    normalized = args.each_with_object({}) { |(k, v), h| h[k.to_s] = v }
+
+    case tool
+    when "get_tasks", "list_tasks", "fetch_tasks"
+      # Bridge common external-agent style names to local tools.
+      # - status completed/open -> status_breakdown for aggregate insight
+      # - project/since_date filters -> search_tasks with project keyword fallback
+      status = normalized["status"].to_s.downcase
+      return { "type" => "tool_call", "tool" => "status_breakdown", "arguments" => {} } if status.present?
+
+      keyword = normalized["keyword"].presence ||
+        normalized["project"].presence ||
+        normalized["query"].presence
+      if keyword.present?
+        limit = normalized["limit"] || self.class::MAX_LIST_ITEMS
+        return {
+          "type" => "tool_call",
+          "tool" => "search_tasks",
+          "arguments" => { "keyword" => keyword.to_s, "limit" => limit.to_i }
+        }
+      end
+
+      { "type" => "tool_call", "tool" => "recent_tasks", "arguments" => { "limit" => self.class::MAX_LIST_ITEMS } }
+    else
+      nil
+    end
   end
 
   def obvious_error_payload?(data)
@@ -304,8 +339,9 @@ class TaskInsightsChatService
       - Choose the best tool from the tool list in the main system prompt.
       - arguments must be a JSON object (use {} if none).
       - For final, "answer" must be a JSON string (quoted prose). Never use a JSON object or array as answer.
-      - Do NOT output agent-style schemas like query/tool_name/parameters.
-      - If outputting tool_call, "tool" must be one of the exact listed tool names.
+      - If outputting tool_call, use this exact shape only:
+        {"type":"tool_call","tool":"<exact listed tool name>","arguments":{...}}
+      - "tool" must be one of the exact listed tool names.
 
       BAD_OUTPUT:
       #{bad_text.to_s.truncate(8000)}
@@ -364,15 +400,17 @@ class TaskInsightsChatService
   end
 
   def format_task(task)
-    {
+    data = {
       id: task.id,
       title: task.title,
       project: task.project&.title,
       status: task.status&.name,
       priority: task.priority,
-      due_date: task.due_date&.to_date&.iso8601,
-      updated_at: task.updated_at&.iso8601
+      updated_date: task.updated_at&.to_date&.iso8601
     }
+    due = task.due_date&.to_date&.iso8601
+    data[:due_date] = due if due.present?
+    data
   end
 
   def project_summary(args)
@@ -428,7 +466,7 @@ class TaskInsightsChatService
     scope = scoped_tasks(args["project_ids"])
       .where(completed: false, priority: priorities)
       .order(updated_at: :asc)
-    list_result(scope, limit: limit)
+    grouped_list_result(scope, limit: limit)
   end
 
   def recent_tasks(args)
@@ -467,6 +505,27 @@ class TaskInsightsChatService
       items: items,
       returned_count: items.size,
       total_matching_count: total_matching_count,
+      limit: limit
+    }
+  end
+
+  def grouped_list_result(scope, limit:)
+    limited_items = scope.limit(limit).map { |task| format_task(task) }
+    grouped = {}
+    limited_items.each do |task|
+      priority = task[:priority].presence || "unknown"
+      status = task[:status].presence || "unknown"
+      project = task[:project].presence || "unknown"
+      grouped[priority] ||= { statuses: {} }
+      grouped[priority][:statuses][status] ||= { projects: {} }
+      grouped[priority][:statuses][status][:projects][project] ||= []
+      grouped[priority][:statuses][status][:projects][project] << task.except(:priority, :status, :project)
+    end
+
+    {
+      priorities: grouped,
+      returned_count: limited_items.size,
+      total_matching_count: scope.except(:limit, :offset).count,
       limit: limit
     }
   end
