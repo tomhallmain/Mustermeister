@@ -103,11 +103,13 @@ class TaskInsightsChatService
       end
       break unless step["type"] == "tool_call"
 
-      record_state(state: "executing_tool", tool: step["tool"], at: Time.current.iso8601)
+      tool_step = @tool_calls.length + 1
+      record_state(state: "executing_tool", tool: step["tool"], tool_step: tool_step, at: Time.current.iso8601)
       tool_output = run_tool(step["tool"], step["arguments"] || {})
       result_count = tool_output_count(tool_output)
       tool_error = tool_output["error"] if tool_output.is_a?(Hash)
       @tool_calls << {
+        step: tool_step,
         tool: step["tool"],
         arguments: step["arguments"] || {},
         result_count: result_count,
@@ -117,6 +119,7 @@ class TaskInsightsChatService
       record_state(
         state: "tool_result_received",
         tool: step["tool"],
+        tool_step: tool_step,
         result_count: result_count,
         error: tool_error,
         at: Time.current.iso8601
