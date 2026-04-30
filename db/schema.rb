@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_04_30_162034) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_30_211100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -62,6 +62,28 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_30_162034) do
     t.bigint "tag_id", null: false
     t.index ["tag_id", "task_id"], name: "index_tags_tasks_on_tag_id_and_task_id"
     t.index ["task_id", "tag_id"], name: "index_tags_tasks_on_task_id_and_tag_id"
+  end
+
+  create_table "task_insights_conversations", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "title", null: false
+    t.datetime "last_message_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "last_message_at"], name: "idx_on_user_id_last_message_at_2ad2bce5cd"
+    t.index ["user_id"], name: "index_task_insights_conversations_on_user_id"
+  end
+
+  create_table "task_insights_messages", force: :cascade do |t|
+    t.bigint "task_insights_conversation_id", null: false
+    t.string "role", null: false
+    t.text "content", null: false
+    t.jsonb "tool_calls", default: [], null: false
+    t.jsonb "state_events", default: [], null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["task_insights_conversation_id", "created_at"], name: "index_task_insights_messages_on_conversation_and_created_at"
+    t.index ["task_insights_conversation_id"], name: "index_task_insights_messages_on_conversation_id"
   end
 
   create_table "task_results", force: :cascade do |t|
@@ -136,6 +158,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_30_162034) do
   add_foreign_key "comments", "users"
   add_foreign_key "projects", "users"
   add_foreign_key "statuses", "projects"
+  add_foreign_key "task_insights_conversations", "users"
+  add_foreign_key "task_insights_messages", "task_insights_conversations"
   add_foreign_key "task_results", "tasks"
   add_foreign_key "tasks", "projects"
   add_foreign_key "tasks", "statuses"

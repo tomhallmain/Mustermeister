@@ -75,21 +75,23 @@ class TaskInsightsChatService
     Use at most one tool call per message.
   PROMPT
 
-  def self.call(user:, question:, locale: I18n.locale, model_name: nil, excluded_project_ids: [], progress: nil)
+  def self.call(user:, question:, locale: I18n.locale, model_name: nil, excluded_project_ids: [], transcript_messages: [], progress: nil)
     new(
       user: user,
       locale: locale,
       model_name: model_name,
       excluded_project_ids: excluded_project_ids,
+      transcript_messages: transcript_messages,
       progress: progress
     ).call(question)
   end
 
-  def initialize(user:, locale:, model_name: nil, excluded_project_ids: [], progress: nil)
+  def initialize(user:, locale:, model_name: nil, excluded_project_ids: [], transcript_messages: [], progress: nil)
     @user = user
     @locale = locale
     @progress = progress
     @excluded_project_ids = normalized_excluded_project_ids(excluded_project_ids)
+    @transcript_messages = normalize_transcript_messages(transcript_messages)
     @llm = OllamaLlmService.new(model_name: model_name || default_model, state_key: "task_insights_#{user.id}")
     @tool_calls = []
     @state_events = []
@@ -98,7 +100,8 @@ class TaskInsightsChatService
   end
 
   def call(question)
-    transcript = [{ role: "user", content: question.to_s }]
+    transcript = @transcript_messages.dup
+    transcript << { role: "user", content: question.to_s }
     record_state(state: "received_question", at: Time.current.iso8601)
 
     MAX_TOOL_CALLS.times do
@@ -204,7 +207,13 @@ class TaskInsightsChatService
 
   def build_prompt(transcript)
     has_tool_results = @tool_result_history.any?
-    user_question = transcript.find { |m| m[:role] == "user" }&.dig(:content).to_s
+    user_question = transcript.last&.dig(:content).to_s
+    conversation_lines = transcript.filter_map do |m|
+      role = m[:role].to_s.upcase
+      next unless %w[USER ASSISTANT].include?(role)
+
+      "#{role}: #{m[:content]}"
+    end
     tool_results = build_tool_results_context
     cap = self.class::MAX_LIST_ITEMS
     <<~PROMPT
@@ -222,7 +231,7 @@ class TaskInsightsChatService
       </TOOLS>
 
       <CONVERSATION>
-      USER: #{user_question}
+      #{conversation_lines.join("\n")}
       </CONVERSATION>
 
       <TOOL_RESULTS>
@@ -238,6 +247,17 @@ class TaskInsightsChatService
       where "tool" is one of the names listed in <TOOLS>.
       </INSTRUCTION>
     PROMPT
+  end
+
+  def normalize_transcript_messages(messages)
+    Array(messages).filter_map do |message|
+      role = message[:role] || message["role"]
+      content = message[:content] || message["content"]
+      next unless %w[user assistant].include?(role.to_s)
+      next if content.to_s.blank?
+
+      { role: role.to_s, content: content.to_s }
+    end
   end
 
   def parse_llm_json(text)

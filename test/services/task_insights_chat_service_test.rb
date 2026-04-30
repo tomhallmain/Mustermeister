@@ -366,4 +366,35 @@ class TaskInsightsChatServiceTest < ActiveSupport::TestCase
       assert result.state_events.none? { |e| e[:state] == "model_response_invalid" }
     end
   end
+
+  test "includes prior transcript messages in prompt conversation block" do
+    captured_prompt = nil
+    responses = [OllamaLlmService::Result.new(response: '{"type":"final","answer":"ok"}')]
+    fake_llm = Class.new do
+      def initialize(responses, capture)
+        @responses = responses
+        @capture = capture
+      end
+
+      def generate_response(prompt, system_prompt:)
+        @capture.call(prompt)
+        @responses.shift
+      end
+    end.new(responses, ->(prompt) { captured_prompt = prompt })
+
+    OllamaLlmService.stub :new, fake_llm do
+      TaskInsightsChatService.call(
+        user: users(:one),
+        question: "New question",
+        transcript_messages: [
+          { role: "user", content: "Earlier question" },
+          { role: "assistant", content: "Earlier answer" }
+        ]
+      )
+    end
+
+    assert_includes captured_prompt, "USER: Earlier question"
+    assert_includes captured_prompt, "ASSISTANT: Earlier answer"
+    assert_includes captured_prompt, "USER: New question"
+  end
 end

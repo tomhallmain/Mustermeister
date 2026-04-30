@@ -47,8 +47,15 @@ class TaskInsightsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :accepted
-    run_id = JSON.parse(response.body)["run_id"]
+    parsed = JSON.parse(response.body)
+    run_id = parsed["run_id"]
+    conversation_id = parsed["conversation_id"]
     assert run_id.present?
+    assert conversation_id.present?
+    conversation = @user.task_insights_conversations.find(conversation_id)
+    assert_equal 2, conversation.task_insights_messages.count
+    assert_equal "user", conversation.task_insights_messages.order(:created_at).first.role
+    assert_equal "assistant", conversation.task_insights_messages.order(:created_at).last.role
 
     get task_insights_status_path(run_id: run_id), as: :json
     assert_response :success
@@ -68,6 +75,36 @@ class TaskInsightsControllerTest < ActionDispatch::IntegrationTest
       assert_response :success
       assert_select "input.excluded-project-checkbox[value='#{projects(:one).id}'][checked]"
     end
+  end
+
+  test "create appends to existing conversation" do
+    conversation = @user.task_insights_conversations.create!(title: "Existing chat", last_message_at: Time.current)
+    conversation.task_insights_messages.create!(role: "user", content: "Earlier question")
+    responses = [OllamaLlmService::Result.new(response: '{"type":"final","answer":"Next answer"}')]
+    fake_llm = Class.new do
+      def initialize(responses)
+        @responses = responses
+      end
+
+      def generate_response(_prompt, system_prompt:)
+        @responses.shift
+      end
+    end.new(responses)
+
+    OllamaLlmService.stub :available_models, ["deepseek-r1:14b"] do
+      OllamaLlmService.stub :new, fake_llm do
+        post task_insights_path, params: {
+          question: "Follow-up",
+          ai_locale: "en",
+          ai_model: "deepseek-r1:14b",
+          conversation_id: conversation.id
+        }, as: :json
+      end
+    end
+
+    assert_response :accepted
+    assert_equal conversation.id, JSON.parse(response.body)["conversation_id"]
+    assert_equal 3, conversation.reload.task_insights_messages.count
   end
 
   test "status returns not found for unknown run id" do

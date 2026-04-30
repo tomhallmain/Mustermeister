@@ -4,12 +4,20 @@ class TaskInsightsController < ApplicationController
   def index
     prepare_form_defaults
     @question = params[:question].to_s
+    @conversations = current_user.task_insights_conversations.order(last_message_at: :desc).limit(30)
+    @active_conversation = if params[:conversation_id].present?
+      @conversations.find { |c| c.id == params[:conversation_id].to_i }
+    else
+      @conversations.first
+    end
+    @messages = @active_conversation ? @active_conversation.task_insights_messages.order(:created_at) : []
   end
 
   def create
     prepare_form_defaults
     question = params[:question].to_s.strip
     excluded_project_ids = extract_excluded_project_ids
+    conversation = find_or_create_conversation(question)
 
     if question.blank?
       return render json: { error: "Question is required." }, status: :unprocessable_entity
@@ -28,16 +36,19 @@ class TaskInsightsController < ApplicationController
 
     run_id = SecureRandom.uuid
     TaskInsightsRunStore.init(run_id, user_id: current_user.id)
+    conversation.task_insights_messages.create!(role: "user", content: question)
+    conversation.update!(last_message_at: Time.current)
     TaskInsightsRunJob.perform_later(
       run_id,
       current_user.id,
       question,
       @ai_locale.to_s,
       @ai_model.to_s,
-      excluded_project_ids
+      excluded_project_ids,
+      conversation.id
     )
 
-    render json: { run_id: run_id }, status: :accepted
+    render json: { run_id: run_id, conversation_id: conversation.id }, status: :accepted
   end
 
   def status
@@ -90,5 +101,18 @@ class TaskInsightsController < ApplicationController
 
   def selected_excluded_project_ids
     extract_excluded_project_ids
+  end
+
+  def find_or_create_conversation(question)
+    if params[:conversation_id].present?
+      existing = current_user.task_insights_conversations.find_by(id: params[:conversation_id].to_i)
+      return existing if existing
+    end
+
+    title = question.truncate(80, omission: "...")
+    current_user.task_insights_conversations.create!(
+      title: title,
+      last_message_at: Time.current
+    )
   end
 end

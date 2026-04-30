@@ -4,8 +4,22 @@
     <p class="text-sm text-gray-600 mt-1">Ask questions about your current tasks to surface patterns and risks.</p>
   </div>
 
+  <% if @conversations.present? %>
+    <div class="surface shadow-lg rounded-lg p-4 mb-6">
+      <h2 class="text-sm font-semibold text-gray-900 mb-2">Recent Chats</h2>
+      <ul class="list-none p-0 m-0 divide-y divide-gray-200">
+        <% @conversations.each do |conversation| %>
+          <li class="py-2">
+            <%= link_to conversation.title, task_insights_path(conversation_id: conversation.id), class: "text-sm #{conversation.id == @active_conversation&.id ? 'text-indigo-700 font-semibold' : 'text-gray-700 hover:text-indigo-700'}" %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
   <div class="surface shadow-lg rounded-lg p-6">
     <%= form_with url: task_insights_path, method: :post, data: { turbo: false }, class: "space-y-4", id: "task-insights-form", html: { novalidate: true } do %>
+      <%= hidden_field_tag :conversation_id, @active_conversation&.id, id: "conversation_id" %>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label for="ai_locale" class="block text-sm font-medium text-gray-700 mb-1"><%= t('views.reports.analysis.ai_locale_label', default: 'AI language') %></label>
@@ -77,7 +91,14 @@
     <p id="task-insights-live-error" class="hidden mt-2 text-sm text-red-700"></p>
   </div>
 
-  <div id="task-insights-result" class="mt-6"></div>
+  <div id="task-insights-result" class="mt-6 space-y-3">
+    <% @messages.each do |message| %>
+      <div class="surface shadow-lg rounded-lg p-4 border <%= message.role == 'user' ? 'border-gray-200' : 'border-indigo-200' %>">
+        <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1"><%= message.role == "user" ? "You" : "Assistant" %></h3>
+        <p class="text-sm text-gray-700 whitespace-pre-line"><%= message.content %></p>
+      </div>
+    <% end %>
+  </div>
 </div>
 
 <script>
@@ -198,7 +219,7 @@
       var tools = payload.tool_calls || [];
       var events = payload.state_events || [];
       var html = '<div class="surface shadow-lg rounded-lg p-6 border border-indigo-200">';
-      html += '<h2 class="text-lg font-semibold text-gray-900 mb-2">Answer</h2>';
+      html += '<h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Assistant</h3>';
       html += '<p class="text-sm text-gray-700 whitespace-pre-line">' + esc(answer) + '</p>';
       if (tools.length) {
         html += '<div class="mt-4"><h3 class="text-sm font-semibold text-gray-700 mb-1">Tools used</h3><ul class="text-xs text-gray-600 space-y-1">';
@@ -227,7 +248,15 @@
         html += '</ul></div>';
       }
       html += '</div>';
-      resultEl.innerHTML = html;
+      resultEl.insertAdjacentHTML('beforeend', html);
+    }
+
+    function appendUserMessage(question) {
+      var html = '<div class="surface shadow-lg rounded-lg p-4 border border-gray-200">';
+      html += '<h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">You</h3>';
+      html += '<p class="text-sm text-gray-700 whitespace-pre-line">' + esc(question) + '</p>';
+      html += '</div>';
+      resultEl.insertAdjacentHTML('beforeend', html);
     }
 
     function pollStatus(runId) {
@@ -301,7 +330,7 @@
       liveError.textContent = '';
       liveText.textContent = 'Sending request…';
       setSpinner(true);
-      resultEl.innerHTML = '';
+      appendUserMessage(question.trim());
 
       if (submit) {
         submit.disabled = true;
@@ -310,6 +339,7 @@
 
       var aiLocale = (document.getElementById('ai_locale') || {}).value;
       var aiModel = (document.getElementById('ai_model') || {}).value;
+      var conversationId = (document.getElementById('conversation_id') || {}).value;
       var excludedProjectIds = [];
       if (excludedList) {
         excludedList.querySelectorAll('input.excluded-project-checkbox:checked').forEach(function(box) {
@@ -329,6 +359,7 @@
           question: question,
           ai_locale: aiLocale,
           ai_model: aiModel,
+          conversation_id: conversationId,
           excluded_project_ids: excludedProjectIds
         })
       }).then(function(r) {
@@ -341,6 +372,10 @@
           throw new Error(msg);
         }
         if (!res.body.run_id) throw new Error('No run id returned.');
+        if (res.body.conversation_id) {
+          var conversationInput = document.getElementById('conversation_id');
+          if (conversationInput) conversationInput.value = res.body.conversation_id;
+        }
         liveText.textContent = 'Run started; waiting for updates…';
         pollStatus(res.body.run_id);
       }).catch(function(err) {
