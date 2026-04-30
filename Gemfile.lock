@@ -127,6 +127,9 @@ GEM
     diff-lcs (1.6.2)
     docile (1.4.1)
     dotenv (3.1.7)
+    dotenv-rails (3.1.7)
+      dotenv (= 3.1.7)
+      railties (>= 6.1)
     down (5.4.2)
       addressable (~> 2.8)
     drb (2.2.1)
@@ -500,6 +503,7 @@ DEPENDENCIES
   debug
   devise
   devise-two-factor
+  dotenv-rails
   http_accept_language
   i18n-tasks
   importmap-rails

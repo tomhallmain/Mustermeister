@@ -1,6 +1,13 @@
 require "test_helper"
 
 class TaskInsightsChatServiceTest < ActiveSupport::TestCase
+  test "rejects final step when answer is structured JSON instead of a string" do
+    service = TaskInsightsChatService.new(user: users(:one), locale: :en, progress: nil)
+    data = { "type" => "final", "answer" => { "project_totals" => { "A" => 1 } } }
+    step = service.send(:normalize_step, data, transcript: [])
+    assert_equal "invalid", step["type"]
+  end
+
   test "executes tool call then returns final answer" do
     responses = [
       OllamaLlmService::Result.new(response: '{"type":"tool_call","tool":"status_breakdown","arguments":{}}'),

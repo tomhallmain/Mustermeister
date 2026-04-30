@@ -60,7 +60,9 @@ class TaskInsightsChatService
     RESPONSE CONTRACT (strict):
     - Return exactly one JSON object and nothing else (no markdown fences, no prose before/after JSON).
     - Tool call shape: {"type":"tool_call","tool":"tool_name","arguments":{...}}
-    - Final answer shape: {"type":"final","answer":"..."}
+    - Final answer shape: {"type":"final","answer":"plain text only as a JSON string"}
+    - The "answer" value MUST be a JSON string (quoted text). Never put a JSON object or array as "answer".
+      Put structured data only inside tool arguments or describe it in prose inside the string.
     - If no tool result has been provided yet, you MUST return a tool_call first.
     - After receiving one or more tool results, you may either call another tool or return final.
     - Never list available tools to the user; use them directly.
@@ -125,7 +127,7 @@ class TaskInsightsChatService
 
   def llm_step(transcript)
     prompt = build_prompt(transcript)
-    response = @llm.generate_response(prompt, system_prompt: SYSTEM_PROMPT)
+    response = @llm.generate_response(prompt, system_prompt: full_system_prompt)
     raw_text = response.response.to_s
     step = normalize_step(parse_llm_json(raw_text), transcript: transcript)
 
@@ -147,10 +149,12 @@ class TaskInsightsChatService
 
   def build_prompt(transcript)
     has_tool_results = transcript.any? { |m| m[:role] == "tool" }
+    cap = self.class::MAX_LIST_ITEMS
     <<~PROMPT
       <CONTEXT>
       locale=#{@locale}
       has_tool_results=#{has_tool_results}
+      list_limit_cap=#{cap}
       </CONTEXT>
 
       <TOOLS>
@@ -164,6 +168,8 @@ class TaskInsightsChatService
 
       <INSTRUCTION>
       Return one JSON object matching the response contract from system prompt.
+      For list tools that accept "limit", use limit=#{cap} when you need broad coverage (or omit limit for the same default).
+      Do not default to limit=10 unless you only need ten rows.
       </INSTRUCTION>
     PROMPT
   end
@@ -188,7 +194,11 @@ class TaskInsightsChatService
     return { "type" => "invalid", "raw" => data } unless data.is_a?(Hash)
 
     type = data["type"].to_s
-    return data if %w[final tool_call].include?(type)
+    if type == "final"
+      return { "type" => "invalid", "raw" => data } unless final_answer_json_ok?(data["answer"])
+      return data
+    end
+    return data if type == "tool_call"
 
     if data["tool_call"].is_a?(Hash)
       tc = data["tool_call"]
@@ -206,6 +216,21 @@ class TaskInsightsChatService
     { "type" => "invalid", "raw" => data }
   end
 
+  def final_answer_json_ok?(answer)
+    answer.is_a?(String) || answer.is_a?(Numeric)
+  end
+
+  def full_system_prompt
+    cap = self.class::MAX_LIST_ITEMS
+    <<~PROMPT
+      #{SYSTEM_PROMPT}
+
+      LIST TOOLS: optional "limit" is clamped to #{cap}. Prefer limit=#{cap} when analyzing trends across many tasks, or omit "limit" for that same default. Avoid limit=10 unless you truly need only ten rows.
+
+      FINAL: "answer" must be a JSON string of human-readable prose, never a nested JSON object or array.
+    PROMPT
+  end
+
   def attempt_json_repair(bad_text, transcript)
     has_tool_results = transcript.any? { |m| m[:role] == "tool" }
     repair_prompt = <<~PROMPT
@@ -219,13 +244,14 @@ class TaskInsightsChatService
       - has_tool_results=#{has_tool_results}
       - Choose the best tool from the tool list in the main system prompt.
       - arguments must be a JSON object (use {} if none).
+      - For final, "answer" must be a JSON string (quoted prose). Never use a JSON object or array as answer.
 
       BAD_OUTPUT:
       #{bad_text.to_s.truncate(8000)}
     PROMPT
 
     record_state(state: "attempting_json_repair", at: Time.current.iso8601)
-    response = @llm.generate_response(repair_prompt, system_prompt: SYSTEM_PROMPT)
+    response = @llm.generate_response(repair_prompt, system_prompt: full_system_prompt)
     parse_llm_json(response.response)
   rescue StandardError
     nil
