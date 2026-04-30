@@ -13,6 +13,9 @@ class TaskInsightsControllerTest < ActionDispatch::IntegrationTest
       get task_insights_path
       assert_response :success
       assert_select "h1", text: /Task Insights/i
+      assert_select "h2", text: /Recent Chats/i
+      assert_select "a", text: /New chat/i
+      assert_select "p", text: /No conversations yet/i
     end
   end
 

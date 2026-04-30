@@ -4,9 +4,12 @@
     <p class="text-sm text-gray-600 mt-1">Ask questions about your current tasks to surface patterns and risks.</p>
   </div>
 
-  <% if @conversations.present? %>
-    <div class="surface shadow-lg rounded-lg p-4 mb-6">
-      <h2 class="text-sm font-semibold text-gray-900 mb-2">Recent Chats</h2>
+  <div class="surface shadow-lg rounded-lg p-4 mb-6">
+    <div class="flex items-center justify-between mb-2">
+      <h2 class="text-sm font-semibold text-gray-900">Recent Chats</h2>
+      <%= link_to "New chat", task_insights_path, class: "text-sm text-indigo-700 hover:text-indigo-900 font-medium" %>
+    </div>
+    <% if @conversations.present? %>
       <ul class="list-none p-0 m-0 divide-y divide-gray-200">
         <% @conversations.each do |conversation| %>
           <li class="py-2">
@@ -14,8 +17,10 @@
           </li>
         <% end %>
       </ul>
-    </div>
-  <% end %>
+    <% else %>
+      <p class="text-sm text-gray-500 italic">No conversations yet. Start by asking your first question.</p>
+    <% end %>
+  </div>
 
   <div class="surface shadow-lg rounded-lg p-6">
     <%= form_with url: task_insights_path, method: :post, data: { turbo: false }, class: "space-y-4", id: "task-insights-form", html: { novalidate: true } do %>
