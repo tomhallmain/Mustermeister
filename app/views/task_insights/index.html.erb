@@ -110,9 +110,15 @@
       if (!events.length) return 'Waiting for the job to start…';
       var last = events[events.length - 1];
       var key = last.state;
+      var modelCalls = events.filter(function(e) { return e.state === 'requesting_model_step'; }).length;
+      var toolCalls = events.filter(function(e) { return e.state === 'executing_tool'; }).length;
+      if (key === 'requesting_model_step') return 'Querying model for next step (model call ' + modelCalls + ')…';
+      if (key === 'executing_tool' && last.tool) return 'Running tool #' + toolCalls + ': ' + displayToolName(last.tool);
+      if (key === 'tool_result_received' && last.tool) {
+        var count = (typeof last.result_count === 'number') ? ('; returned ' + last.result_count + ' item(s)') : '';
+        return 'Tool #' + toolCalls + ' finished: ' + displayToolName(last.tool) + count;
+      }
       if (STATE_LABELS[key]) return STATE_LABELS[key];
-      if (key === 'executing_tool' && last.tool) return 'Running tool: ' + last.tool;
-      if (key === 'tool_result_received' && last.tool) return 'Tool finished: ' + last.tool;
       return key || 'Working…';
     }
 
@@ -142,9 +148,10 @@
         html += '<div class="mt-4"><h3 class="text-sm font-semibold text-gray-700 mb-1">Tools used</h3><ul class="text-xs text-gray-600 space-y-1">';
         for (var t = 0; t < tools.length; t++) {
           var c = tools[t];
-          var args = c.arguments && Object.keys(c.arguments).length ? esc(JSON.stringify(c.arguments)) : '';
+          var args = esc(JSON.stringify(c.arguments || {}));
           var countText = (typeof c.result_count === 'number') ? ' → returned ' + c.result_count + ' item(s)' : '';
-          html += '<li><code>' + esc(displayToolName(c.tool)) + '</code> ' + args + esc(countText) + '</li>';
+          var errorText = c.error ? ' — error: ' + c.error : '';
+          html += '<li><code>' + esc(displayToolName(c.tool)) + '</code> ' + args + esc(countText + errorText) + '</li>';
         }
         html += '</ul></div>';
       }
@@ -155,6 +162,7 @@
           var line = esc(ev.state || '');
           if (ev.tool) line += ' (' + esc(displayToolName(ev.tool)) + ')';
           if (typeof ev.result_count === 'number') line += ' — returned ' + esc(ev.result_count) + ' item(s)';
+          if (ev.error) line += ' — error: ' + esc(ev.error);
           if (ev.message) line += ' — ' + esc(ev.message);
           html += '<li>' + line + '</li>';
         }

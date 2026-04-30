@@ -106,9 +106,21 @@ class TaskInsightsChatService
       record_state(state: "executing_tool", tool: step["tool"], at: Time.current.iso8601)
       tool_output = run_tool(step["tool"], step["arguments"] || {})
       result_count = tool_output_count(tool_output)
-      @tool_calls << { tool: step["tool"], arguments: step["arguments"] || {}, result_count: result_count }
+      tool_error = tool_output["error"] if tool_output.is_a?(Hash)
+      @tool_calls << {
+        tool: step["tool"],
+        arguments: step["arguments"] || {},
+        result_count: result_count,
+        error: tool_error
+      }
       transcript << { role: "tool", content: { tool: step["tool"], result: tool_output }.to_json }
-      record_state(state: "tool_result_received", tool: step["tool"], result_count: result_count, at: Time.current.iso8601)
+      record_state(
+        state: "tool_result_received",
+        tool: step["tool"],
+        result_count: result_count,
+        error: tool_error,
+        at: Time.current.iso8601
+      )
     end
 
     fallback = I18n.with_locale(@locale) { I18n.t("views.reports.analysis.ai_summary_error", default: "I couldn't complete the analysis. Please try rephrasing your question.") }
@@ -278,7 +290,8 @@ class TaskInsightsChatService
 
   def tool_output_count(output)
     return output.size if output.is_a?(Array)
-    return output.size if output.is_a?(Hash) && output["items"].is_a?(Array)
+    return output["items"].size if output.is_a?(Hash) && output["items"].is_a?(Array)
+    return output[:items].size if output.is_a?(Hash) && output[:items].is_a?(Array)
 
     nil
   end
@@ -352,7 +365,12 @@ class TaskInsightsChatService
   def open_tasks_by_priorities(args)
     allowed = %w[leisure low medium high]
     priorities = Array(args["priorities"]).map(&:to_s).uniq & allowed
-    return [] if priorities.blank?
+    if priorities.blank?
+      return {
+        error: "priorities must include at least one of #{allowed.join(', ')}",
+        items: []
+      }
+    end
 
     limit = normalized_limit(args["limit"] || self.class::MAX_LIST_ITEMS)
     scoped_tasks(args["project_ids"])
@@ -374,7 +392,12 @@ class TaskInsightsChatService
 
   def search_tasks(args)
     keyword = args["keyword"].to_s.strip
-    return [] if keyword.blank?
+    if keyword.blank?
+      return {
+        error: "keyword is required",
+        items: []
+      }
+    end
 
     limit = normalized_limit(args["limit"] || self.class::MAX_LIST_ITEMS)
     pattern = "%#{keyword.downcase}%"
