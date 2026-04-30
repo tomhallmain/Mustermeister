@@ -70,6 +70,7 @@ class TaskInsightsChatService
     - Tool calls are local function calls in this process, NOT a request to another agent/API.
     - Use ONLY the exact tool names listed in <TOOLS>. Do not invent names like task_manager/query_engine.
     - For text filtering, use search_tasks with a plain substring keyword (e.g. "backup"), not open-ended NL query text.
+    - Do not call the same tool again with identical arguments if the result is already available in TOOL_RESULTS.
     - If the user asks about multiple priorities (e.g. medium and high), prefer open_tasks_by_priorities.
     Use at most one tool call per message.
   PROMPT
@@ -92,6 +93,8 @@ class TaskInsightsChatService
     @llm = OllamaLlmService.new(model_name: model_name || default_model, state_key: "task_insights_#{user.id}")
     @tool_calls = []
     @state_events = []
+    @tool_cache = {}
+    @tool_result_history = []
   end
 
   def call(question)
@@ -115,9 +118,18 @@ class TaskInsightsChatService
 
       tool_step = @tool_calls.length + 1
       record_state(state: "executing_tool", tool: step["tool"], tool_step: tool_step, at: Time.current.iso8601)
-      tool_output = run_tool(step["tool"], step["arguments"] || {})
+      tool_key = tool_cache_key(step["tool"], step["arguments"] || {})
+      reused = @tool_cache.key?(tool_key)
+      tool_output = if reused
+        @tool_cache[tool_key]
+      else
+        output = run_tool(step["tool"], step["arguments"] || {})
+        @tool_cache[tool_key] = output
+        output
+      end
       result_count = tool_output_count(tool_output)
       tool_error = tool_output["error"] if tool_output.is_a?(Hash)
+      record_state(state: "tool_result_reused", tool: step["tool"], tool_step: tool_step, at: Time.current.iso8601) if reused
       @tool_calls << {
         step: tool_step,
         tool: step["tool"],
@@ -125,7 +137,15 @@ class TaskInsightsChatService
         result_count: result_count,
         error: tool_error
       }
-      transcript << { role: "tool", content: { tool: step["tool"], result: tool_output }.to_json }
+      unless reused
+        @tool_result_history << {
+          step: tool_step,
+          tool: step["tool"],
+          arguments: step["arguments"] || {},
+          result: tool_output
+        }
+      end
+      transcript << { role: "tool", content: { tool: step["tool"], result: summarize_tool_result(tool_output) }.to_json }
       record_state(
         state: "tool_result_received",
         tool: step["tool"],
@@ -183,9 +203,9 @@ class TaskInsightsChatService
   end
 
   def build_prompt(transcript)
-    has_tool_results = transcript.any? { |m| m[:role] == "tool" }
+    has_tool_results = @tool_result_history.any?
     user_question = transcript.find { |m| m[:role] == "user" }&.dig(:content).to_s
-    tool_results = transcript.select { |m| m[:role] == "tool" }.map { |m| m[:content] }
+    tool_results = build_tool_results_context
     cap = self.class::MAX_LIST_ITEMS
     <<~PROMPT
       <CONTEXT>
@@ -193,7 +213,6 @@ class TaskInsightsChatService
       locale=#{@locale}
       has_tool_results=#{has_tool_results}
       list_limit_cap=#{cap}
-      excluded_project_ids=#{@excluded_project_ids.join(",")}
       user_question=#{user_question}
       </CONTEXT>
 
@@ -207,7 +226,7 @@ class TaskInsightsChatService
       </CONVERSATION>
 
       <TOOL_RESULTS>
-      #{tool_results.present? ? tool_results.join("\n") : "none"}
+      #{tool_results}
       </TOOL_RESULTS>
 
       <INSTRUCTION>
@@ -237,6 +256,32 @@ class TaskInsightsChatService
     { "type" => "invalid", "raw" => { "text" => text.to_s } }
   end
 
+  def build_tool_results_context
+    return "none" if @tool_result_history.empty?
+
+    summaries = @tool_result_history.map do |entry|
+      {
+        step: entry[:step],
+        tool: entry[:tool],
+        arguments: entry[:arguments],
+        result_summary: summarize_tool_result(entry[:result])
+      }
+    end
+
+    latest = @tool_result_history.last
+    latest_full = {
+      step: latest[:step],
+      tool: latest[:tool],
+      arguments: latest[:arguments],
+      result: latest[:result]
+    }
+
+    <<~TEXT
+      history_summaries=#{summaries.to_json}
+      latest_result_full=#{latest_full.to_json}
+    TEXT
+  end
+
   def normalize_step(data, transcript:)
     return { "type" => "invalid", "raw" => data } unless data.is_a?(Hash)
 
@@ -245,6 +290,8 @@ class TaskInsightsChatService
       return { "type" => "invalid", "raw" => data } unless final_answer_json_ok?(data["answer"])
       return data
     end
+    structured_final = normalize_structured_final_payload(data)
+    return structured_final if structured_final
     return normalized_tool_call(data["tool"], data["arguments"]) if type == "tool_call"
 
     if data["tool_call"].is_a?(Hash)
@@ -268,6 +315,20 @@ class TaskInsightsChatService
     return normalized_tool_call(tool, data["arguments"]) if tool.present?
 
     { "type" => "invalid", "raw" => data }
+  end
+
+  def normalize_structured_final_payload(data)
+    type = data["type"].to_s.downcase
+    likely_final_type = %w[insights analysis summary result].include?(type)
+    has_insight_keys = %w[trends_and_patterns recommendations batch_opportunities quick_wins].any? { |k| data.key?(k) }
+    return nil unless likely_final_type || has_insight_keys
+
+    content = data.dup
+    content.delete("type")
+    answer = JSON.pretty_generate(content)
+    { "type" => "final", "answer" => answer }
+  rescue StandardError
+    nil
   end
 
   def final_answer_json_ok?(answer)
@@ -318,6 +379,21 @@ class TaskInsightsChatService
 
   def obvious_error_payload?(data)
     data.is_a?(Hash) && data["error"].present? && data["type"].blank? && data["tool"].blank? && data["tool_calls"].blank?
+  end
+
+  def tool_cache_key(tool_name, args)
+    { tool: tool_name.to_s, arguments: deep_sort(args) }.to_json
+  end
+
+  def deep_sort(value)
+    case value
+    when Hash
+      value.each_with_object({}) { |(k, v), acc| acc[k.to_s] = deep_sort(v) }.sort.to_h
+    when Array
+      value.map { |v| deep_sort(v) }
+    else
+      value
+    end
   end
 
   def full_system_prompt
@@ -389,6 +465,25 @@ class TaskInsightsChatService
     return output[:items].size if output.is_a?(Hash) && output[:items].is_a?(Array)
 
     nil
+  end
+
+  def summarize_tool_result(output)
+    if output.is_a?(Hash)
+      summary = {}
+      error = output[:error] || output["error"]
+      returned_count = output[:returned_count] || output["returned_count"]
+      total_matching_count = output[:total_matching_count] || output["total_matching_count"]
+      limit = output[:limit] || output["limit"]
+      summary[:error] = error if error.present?
+      summary[:returned_count] = returned_count if returned_count.present?
+      summary[:total_matching_count] = total_matching_count if total_matching_count.present?
+      summary[:limit] = limit if limit.present?
+      summary[:keys] = output.keys.map(&:to_s).sort if summary.empty?
+      return summary
+    end
+    return { returned_count: output.size } if output.is_a?(Array)
+
+    { value_class: output.class.name }
   end
 
   def scoped_tasks(project_ids = nil)

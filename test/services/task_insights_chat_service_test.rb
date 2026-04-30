@@ -253,4 +253,117 @@ class TaskInsightsChatServiceTest < ActiveSupport::TestCase
     assert_includes titles, included_fixture_title
     assert_not_includes titles, excluded_fixture_title
   end
+
+  test "reuses identical tool call result instead of re-running tool" do
+    responses = [
+      OllamaLlmService::Result.new(response: '{"type":"tool_call","tool":"status_breakdown","arguments":{}}'),
+      OllamaLlmService::Result.new(response: '{"type":"tool_call","tool":"status_breakdown","arguments":{}}'),
+      OllamaLlmService::Result.new(response: '{"type":"final","answer":"Done."}')
+    ]
+    fake_llm = Class.new do
+      def initialize(responses)
+        @responses = responses
+      end
+
+      def generate_response(_prompt, system_prompt:)
+        raise "missing system prompt" if system_prompt.blank?
+        @responses.shift
+      end
+    end.new(responses)
+
+    call_count = 0
+    OllamaLlmService.stub :new, fake_llm do
+      service = TaskInsightsChatService.new(user: users(:one), locale: :en)
+      service.stub(:run_tool, ->(*_args) { call_count += 1; { "items" => [] } }) do
+        result = service.call("repeat?")
+        assert_equal "Done.", result.answer
+        assert_equal 1, call_count
+        assert result.state_events.any? { |e| e[:state] == "tool_result_reused" }
+        assert_equal 1, service.instance_variable_get(:@tool_result_history).size
+      end
+    end
+  end
+
+  test "reuses identical tool call even when argument key order differs" do
+    responses = [
+      OllamaLlmService::Result.new(
+        response: '{"type":"tool_call","tool":"open_tasks_by_priorities","arguments":{"limit":50,"priorities":["high","medium"]}}'
+      ),
+      OllamaLlmService::Result.new(
+        response: '{"type":"tool_call","tool":"open_tasks_by_priorities","arguments":{"priorities":["high","medium"],"limit":50}}'
+      ),
+      OllamaLlmService::Result.new(response: '{"type":"final","answer":"Done."}')
+    ]
+
+    fake_llm = Class.new do
+      def initialize(responses)
+        @responses = responses
+      end
+
+      def generate_response(_prompt, system_prompt:)
+        raise "missing system prompt" if system_prompt.blank?
+        @responses.shift
+      end
+    end.new(responses)
+
+    call_count = 0
+    OllamaLlmService.stub :new, fake_llm do
+      service = TaskInsightsChatService.new(user: users(:one), locale: :en)
+      service.stub(:run_tool, ->(*_args) { call_count += 1; { "returned_count" => 0, "items" => [] } }) do
+        result = service.call("repeat?")
+        assert_equal "Done.", result.answer
+        assert_equal 1, call_count
+        assert_equal 1, service.instance_variable_get(:@tool_result_history).size
+      end
+    end
+  end
+
+  test "tool_results context keeps latest full and summarized history" do
+    service = TaskInsightsChatService.new(user: users(:one), locale: :en)
+    service.instance_variable_set(:@tool_result_history, [
+      {
+        step: 1,
+        tool: "status_breakdown",
+        arguments: {},
+        result: { "returned_count" => 2, "limit" => 10 }
+      },
+      {
+        step: 2,
+        tool: "recent_tasks",
+        arguments: { "limit" => 5 },
+        result: { "items" => [{ "id" => 1 }], "returned_count" => 1, "total_matching_count" => 9, "limit" => 5 }
+      }
+    ])
+
+    context = service.send(:build_tool_results_context)
+    assert_includes context, "history_summaries="
+    assert_includes context, "latest_result_full="
+    assert_includes context, "\"step\":2"
+    assert_includes context, "\"tool\":\"recent_tasks\""
+  end
+
+  test "accepts structured insights payload as final answer" do
+    responses = [
+      OllamaLlmService::Result.new(
+        response: '{"type":"insights","trends_and_patterns":{"quick_wins":[{"category":"UI","tasks":["Add tooltips"]}]},"recommendations":{"priority_batching":["Do X"]}}'
+      )
+    ]
+    fake_llm = Class.new do
+      def initialize(responses)
+        @responses = responses
+      end
+
+      def generate_response(_prompt, system_prompt:)
+        raise "missing system prompt" if system_prompt.blank?
+        @responses.shift
+      end
+    end.new(responses)
+
+    OllamaLlmService.stub :new, fake_llm do
+      result = TaskInsightsChatService.call(user: users(:one), question: "insights?")
+      assert_includes result.answer, "\"trends_and_patterns\""
+      assert result.state_events.any? { |e| e[:state] == "final_answer_ready" }
+      assert result.state_events.none? { |e| e[:state] == "model_response_invalid" }
+    end
+  end
 end
