@@ -144,7 +144,9 @@ class TaskInsightsChatService
 
   def llm_step(transcript)
     prompt = build_prompt(transcript)
+    log_debug("LLM prompt (main step)", prompt)
     response = @llm.generate_response(prompt, system_prompt: full_system_prompt)
+    log_debug("LLM response (main step)", response.response.to_s)
     raw_text = response.response.to_s
     step = normalize_step(parse_llm_json(raw_text), transcript: transcript)
 
@@ -192,7 +194,7 @@ class TaskInsightsChatService
   end
 
   def parse_llm_json(text)
-    cleaned = text.to_s.gsub("```", "").strip
+    cleaned = text.to_s.gsub("```", "").gsub("'''", "").strip
     cleaned = cleaned.delete_prefix("json").strip if cleaned.start_with?("json")
     json_candidate = cleaned
     unless json_candidate.start_with?("{") && json_candidate.end_with?("}")
@@ -220,6 +222,13 @@ class TaskInsightsChatService
     if data["tool_call"].is_a?(Hash)
       tc = data["tool_call"]
       return normalized_tool_call(tc["tool"] || tc["name"], tc["arguments"])
+    end
+
+    if data["tool_calls"].is_a?(Array) && data["tool_calls"].first.is_a?(Hash)
+      call = data["tool_calls"].first
+      tool_name = call["tool"] || call["tool_name"] || call["name"] || call["function"]
+      tool_args = call["arguments"] || call["tool_args"] || call["args"]
+      return normalized_tool_call(tool_name, tool_args)
     end
 
     tool = data["tool"] || data["name"]
@@ -271,10 +280,17 @@ class TaskInsightsChatService
     PROMPT
 
     record_state(state: "attempting_json_repair", at: Time.current.iso8601)
+    log_debug("LLM prompt (repair step)", repair_prompt)
     response = @llm.generate_response(repair_prompt, system_prompt: full_system_prompt)
+    log_debug("LLM response (repair step)", response.response.to_s)
     parse_llm_json(response.response)
   rescue StandardError
     nil
+  end
+
+  def log_debug(label, payload)
+    sanitized = payload.to_s.gsub("```", "'''")
+    Rails.logger.debug("[TaskInsightsChatService] #{label}:\n#{sanitized}")
   end
 
   def run_tool(tool_name, args)
@@ -348,21 +364,19 @@ class TaskInsightsChatService
 
   def overdue_tasks(args)
     limit = normalized_limit(args["limit"] || self.class::MAX_LIST_ITEMS)
-    scoped_tasks(args["project_ids"])
+    scope = scoped_tasks(args["project_ids"])
       .where(completed: false)
       .where("due_date < ?", Time.current)
       .order(due_date: :asc)
-      .limit(limit)
-      .map { |task| format_task(task) }
+    list_result(scope, limit: limit)
   end
 
   def high_priority_open_tasks(args)
     limit = normalized_limit(args["limit"] || self.class::MAX_LIST_ITEMS)
-    scoped_tasks(args["project_ids"])
+    scope = scoped_tasks(args["project_ids"])
       .where(completed: false, priority: "high")
       .order(updated_at: :asc)
-      .limit(limit)
-      .map { |task| format_task(task) }
+    list_result(scope, limit: limit)
   end
 
   def open_tasks_by_priorities(args)
@@ -371,26 +385,27 @@ class TaskInsightsChatService
     if priorities.blank?
       return {
         error: "priorities must include at least one of #{allowed.join(', ')}",
-        items: []
+        items: [],
+        returned_count: 0,
+        total_matching_count: 0,
+        limit: 0
       }
     end
 
     limit = normalized_limit(args["limit"] || self.class::MAX_LIST_ITEMS)
-    scoped_tasks(args["project_ids"])
+    scope = scoped_tasks(args["project_ids"])
       .where(completed: false, priority: priorities)
       .order(updated_at: :asc)
-      .limit(limit)
-      .map { |task| format_task(task) }
+    list_result(scope, limit: limit)
   end
 
   def recent_tasks(args)
     limit = normalized_limit(args["limit"] || self.class::MAX_LIST_ITEMS)
     days = [args["days"].to_i, 1].max
-    scoped_tasks(args["project_ids"])
+    scope = scoped_tasks(args["project_ids"])
       .where("tasks.updated_at >= ?", days.days.ago)
       .order(updated_at: :desc)
-      .limit(limit)
-      .map { |task| format_task(task) }
+    list_result(scope, limit: limit)
   end
 
   def search_tasks(args)
@@ -398,16 +413,29 @@ class TaskInsightsChatService
     if keyword.blank?
       return {
         error: "keyword is required",
-        items: []
+        items: [],
+        returned_count: 0,
+        total_matching_count: 0,
+        limit: 0
       }
     end
 
     limit = normalized_limit(args["limit"] || self.class::MAX_LIST_ITEMS)
     pattern = "%#{keyword.downcase}%"
-    scoped_tasks(args["project_ids"])
+    scope = scoped_tasks(args["project_ids"])
       .where("LOWER(tasks.title) LIKE :q OR LOWER(tasks.description) LIKE :q", q: pattern)
       .order(updated_at: :desc)
-      .limit(limit)
-      .map { |task| format_task(task) }
+    list_result(scope, limit: limit)
+  end
+
+  def list_result(scope, limit:)
+    total_matching_count = scope.except(:limit, :offset).count
+    items = scope.limit(limit).map { |task| format_task(task) }
+    {
+      items: items,
+      returned_count: items.size,
+      total_matching_count: total_matching_count,
+      limit: limit
+    }
   end
 end
