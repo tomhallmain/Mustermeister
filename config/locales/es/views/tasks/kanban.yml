@@ -32,3 +32,5 @@ es:
         previous_page: "Página anterior"
         reset_to_first_page: "Volver a la primera página"
         load_more: "Cargar más"
+        copy_task_title: "Copiar título"
+        title_copied: "Título copiado"

@@ -136,6 +136,9 @@ html:not(.theme-night) {
   .hover\:bg-gray-50:hover {
     background-color: var(--color-surface-elevated) !important;
   }
+  .hover\:bg-gray-100:hover {
+    background-color: var(--color-surface-elevated) !important;
+  }
   .divide-y > * + * {
     border-color: var(--color-border) !important;
   }
@@ -185,6 +188,25 @@ html:not(.theme-night) {
 // Muted text utility when not using tailwind classes directly
 .text-muted {
   color: var(--color-muted);
+}
+
+// Kanban task card context menu
+#kanban-task-context-menu {
+  border-color: var(--color-border) !important;
+}
+
+.kanban-context-menu-item {
+  color: var(--color-text);
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background-color: var(--color-surface-elevated);
+    color: var(--color-text);
+    outline: none;
+  }
 }
 
 // Task result modal theme-aware styling

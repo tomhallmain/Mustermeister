@@ -5,12 +5,14 @@ import {
   applyFilterState as applyPersistedState,
   applyProjectIdFromUrl
 } from "kanban_filter_persistence";
+import { setupKanbanTaskContextMenu } from "kanban_context_menu";
 import Sortable from "sortablejs";
 
 document.addEventListener("DOMContentLoaded", function () {
   const kanbanI18n = JSON.parse(
     document.querySelector("[data-kanban-i18n]")?.dataset?.kanbanI18n || "{}"
   );
+  setupKanbanTaskContextMenu(document, window, { kanbanI18n });
   const projectFilter = document.getElementById("project-filter");
   const priorityFilter = document.getElementById("priority-filter");
   const sortBy = document.getElementById("sort-by");
