@@ -120,9 +120,9 @@
                     <%= time_ago_in_words(comment.created_at) %> ago
                   </p>
                 </div>
-                <p class="mt-2 text-sm text-gray-700">
-                  <%= comment.content %>
-                </p>
+                <div class="mt-2 text-sm text-gray-700 prose prose-sm max-w-none">
+                  <%= markdown_robust(comment.content) %>
+                </div>
               </div>
               
               <%= button_to comment_path(comment), 

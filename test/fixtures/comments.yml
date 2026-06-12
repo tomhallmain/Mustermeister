@@ -20,3 +20,10 @@ three:
   task: two
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+markdown_comment:
+  content: "**Insight from review** with `inline comment code`"
+  user: one
+  task: markdown_test_task
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

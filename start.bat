@@ -1,4 +1,4 @@
-CALL TITLE To Do
+CALL TITLE Mustermeister
 @echo off
 :: Check if running as administrator
 net session >nul 2>&1

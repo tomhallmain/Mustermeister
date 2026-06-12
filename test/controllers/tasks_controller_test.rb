@@ -97,6 +97,16 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "task show renders markdown in comments" do
+    task = tasks(:markdown_test_task)
+
+    get task_path(task)
+
+    assert_response :success
+    assert_select "strong", text: "Insight from review"
+    assert_select "code", text: "inline comment code"
+  end
+
   test "kanban_tasks should include project color in JSON response" do
     # Ensure project has a color set
     @project.update!(color: 'green')
