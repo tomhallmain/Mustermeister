@@ -55,5 +55,17 @@ module Myapp
 
     # Configure timezone behavior for Rails 8.1 compatibility
     config.active_support.to_time_preserves_timezone = :zone
+
+    # PaperTrail serializes versions as YAML; without these classes Psych returns {}
+    # for changeset/object deserialization (e.g. when updated_at changes on every save).
+    config.active_record.yaml_column_permitted_classes = [
+      Symbol,
+      Date,
+      Time,
+      ActiveSupport::TimeWithZone,
+      ActiveSupport::TimeZone,
+      BigDecimal,
+      ActiveRecord::Type::Time::Value
+    ]
   end
 end

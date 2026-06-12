@@ -161,6 +161,50 @@ class Task < ApplicationRecord
     I18n.t("task_results.values.#{task_result.result}")
   end
 
+  StatusChangeEntry = Struct.new(:from_status, :to_status, :changed_at, :user, :event, keyword_init: true)
+
+  def self.localized_status_name(status)
+    return I18n.t("views.tasks.show.status_history.unknown") unless status
+
+    I18n.t("statuses.#{status.name.parameterize.underscore}", default: status.name)
+  end
+
+  def status_change_history
+    chron = versions.reorder(created_at: :asc, id: :asc).to_a
+    return [] if chron.empty?
+
+    raw_entries = []
+    previous_status_id = nil
+
+    chron.each_with_index do |version, index|
+      status_after = status_id_after_event(version, chron, index)
+      next unless status_after
+
+      if previous_status_id.nil?
+        raw_entries << build_status_change_raw_entry(version, nil, status_after)
+      elsif previous_status_id != status_after
+        raw_entries << build_status_change_raw_entry(version, previous_status_id, status_after)
+      end
+
+      previous_status_id = status_after
+    end
+
+    status_ids = raw_entries.flat_map { |entry| [entry[:from_id], entry[:to_id]] }.compact.uniq
+    user_ids = raw_entries.map { |entry| entry[:user_id] }.compact.uniq
+    statuses_by_id = Status.where(id: status_ids).index_by(&:id)
+    users_by_id = User.where(id: user_ids).index_by(&:id)
+
+    raw_entries.map do |entry|
+      StatusChangeEntry.new(
+        from_status: statuses_by_id[entry[:from_id]],
+        to_status: statuses_by_id[entry[:to_id]],
+        changed_at: entry[:changed_at],
+        user: users_by_id[entry[:user_id]],
+        event: entry[:event]
+      )
+    end.reverse
+  end
+
   private
   
   def set_defaults
@@ -225,5 +269,38 @@ class Task < ApplicationRecord
   
   def user_agent_for_paper_trail
     PaperTrail.request.controller_info[:user_agent]
+  end
+
+  def build_status_change_raw_entry(version, from_id, to_id)
+    {
+      from_id: from_id,
+      to_id: to_id,
+      changed_at: version.created_at,
+      user_id: version_user_id(version),
+      event: version.event
+    }
+  end
+
+  # Status after this version was applied. The next version's `object` snapshot is the
+  # pre-update state for that later change, i.e. the post-change state for this one.
+  def status_id_after_event(version, chron, index)
+    next_version = chron[index + 1]
+    if next_version&.object.present?
+      status_id_from_serialized_object(next_version.object)
+    else
+      status_id
+    end
+  end
+
+  def version_user_id(version)
+    id = version.user_id.presence || version.whodunnit.presence
+    id.present? ? id.to_i : nil
+  end
+
+  def status_id_from_serialized_object(serialized)
+    data = PaperTrail.serializer.load(serialized)
+    data["status_id"] || data[:status_id]
+  rescue StandardError
+    nil
   end
 end

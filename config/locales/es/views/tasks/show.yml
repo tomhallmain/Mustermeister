@@ -34,3 +34,17 @@ es:
         comments: "Comentarios"
         add_comment_placeholder: "Añadir un comentario..."
         post_comment: "Publicar comentario"
+        status_history:
+          title: "Historial de estados"
+          empty: "Aún no se han registrado cambios de estado."
+          unknown: "Desconocido"
+          system_user: "Sistema"
+          changed_by: "%{user} cambió el estado de %{from} a %{to}"
+          set_by: "%{user} estableció el estado en %{to}"
+          events:
+            bulk_status_update: "actualización masiva"
+            archive: "archivo"
+            transfer_ownership: "transferencia de propiedad"
+            bulk_reschedule: "reprogramación masiva"
+            project_reschedule: "reprogramación del proyecto"
+            project_reprioritize: "repriorización del proyecto"

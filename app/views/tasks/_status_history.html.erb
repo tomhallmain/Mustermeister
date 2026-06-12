@@ -1,0 +1,40 @@
+<div class="surface rounded-lg shadow p-6">
+  <h2 class="text-xl font-semibold text-gray-900 mb-4"><%= t("views.tasks.show.status_history.title") %></h2>
+
+  <% history = @task.status_change_history %>
+  <% if history.any? %>
+    <ul class="space-y-3 list-none p-0 m-0">
+      <% history.each do |entry| %>
+        <li class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 p-3 surface rounded-lg" style="background-color: var(--color-surface-elevated);">
+          <p class="text-sm text-gray-700">
+            <% actor = entry.user&.name || t("views.tasks.show.status_history.system_user") %>
+            <% if entry.from_status %>
+              <%= t(
+                    "views.tasks.show.status_history.changed_by",
+                    user: actor,
+                    from: Task.localized_status_name(entry.from_status),
+                    to: Task.localized_status_name(entry.to_status)
+                  ) %>
+            <% else %>
+              <%= t(
+                    "views.tasks.show.status_history.set_by",
+                    user: actor,
+                    to: Task.localized_status_name(entry.to_status)
+                  ) %>
+            <% end %>
+            <% if entry.event.present? && %w[update create].exclude?(entry.event) %>
+              <span class="text-xs text-gray-500">
+                (<%= t("views.tasks.show.status_history.events.#{entry.event}", default: entry.event.humanize) %>)
+              </span>
+            <% end %>
+          </p>
+          <time class="text-xs text-gray-500 shrink-0" datetime="<%= entry.changed_at.iso8601 %>">
+            <%= l(entry.changed_at, format: :short) %>
+          </time>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="text-sm text-gray-500 italic"><%= t("views.tasks.show.status_history.empty") %></p>
+  <% end %>
+</div>

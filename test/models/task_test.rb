@@ -214,6 +214,30 @@ class TaskTest < ActiveSupport::TestCase
     assert_empty Comment.where(task_id: task.id)
   end
 
+  test "status_change_history records create and status updates" do
+    @task.save!
+    in_progress = @project.status_by_key(:in_progress)
+
+    @task.update!(status: in_progress)
+
+    update_version = @task.versions.where(event: "update").order(:id).last
+    assert update_version.present?, "expected a PaperTrail update version"
+    assert update_version.changeset["status_id"].present?,
+      "expected status_id in changeset (check yaml_column_permitted_classes)"
+
+    history = @task.status_change_history
+    assert_equal 2, history.size
+
+    latest = history.first
+    initial = history.last
+    assert_nil initial.from_status
+    assert_equal @status, initial.to_status
+    assert_equal @status, latest.from_status
+    assert_equal in_progress, latest.to_status
+    assert_equal @user, latest.user
+    assert_not_nil latest.changed_at
+  end
+
   test "should be searchable by title and description" do
     # Search for "zeb" which should only match our specific test fixtures
     results = Task.where("title ILIKE ? OR description ILIKE ?", "%zeb%", "%zeb%")

@@ -34,3 +34,17 @@ fr:
         comments: "Commentaires"
         add_comment_placeholder: "Ajouter un commentaire..."
         post_comment: "Publier un commentaire"
+        status_history:
+          title: "Historique des statuts"
+          empty: "Aucun changement de statut enregistré."
+          unknown: "Inconnu"
+          system_user: "Système"
+          changed_by: "%{user} a changé le statut de %{from} à %{to}"
+          set_by: "%{user} a défini le statut sur %{to}"
+          events:
+            bulk_status_update: "mise à jour groupée"
+            archive: "archivage"
+            transfer_ownership: "transfert de propriété"
+            bulk_reschedule: "replanification groupée"
+            project_reschedule: "replanification du projet"
+            project_reprioritize: "repriorisation du projet"

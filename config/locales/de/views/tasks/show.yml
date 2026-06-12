@@ -34,3 +34,17 @@ de:
         comments: "Kommentare"
         add_comment_placeholder: "Kommentar hinzufügen..."
         post_comment: "Kommentar posten"
+        status_history:
+          title: "Statusverlauf"
+          empty: "Noch keine Statusänderungen erfasst."
+          unknown: "Unbekannt"
+          system_user: "System"
+          changed_by: "%{user} hat den Status von %{from} auf %{to} geändert"
+          set_by: "%{user} hat den Status auf %{to} gesetzt"
+          events:
+            bulk_status_update: "Massenaktualisierung"
+            archive: "Archivierung"
+            transfer_ownership: "Eigentümerwechsel"
+            bulk_reschedule: "Massenverschiebung"
+            project_reschedule: "Projektverschiebung"
+            project_reprioritize: "Projektpriorisierung"

@@ -97,6 +97,20 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "task show displays status change history" do
+    new_status = @project.status_by_key(:in_progress)
+    assert_not_nil new_status
+
+    patch task_path(@task), params: { task: { status_id: new_status.id } }
+
+    get task_path(@task)
+
+    assert_response :success
+    assert_select "h2", text: "Status History"
+    assert_match(/In Progress/, response.body)
+    assert_match(@user.name, response.body)
+  end
+
   test "task show renders markdown in comments" do
     task = tasks(:markdown_test_task)
 
