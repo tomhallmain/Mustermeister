@@ -1,6 +1,7 @@
 /**
- * Escape-to-kanban keyboard shortcut.
- * Enabled only when the page defines data-escape-to-kanban-url.
+ * Escape keyboard navigation shortcut.
+ * Enabled when the page defines data-escape-to-url or data-escape-to-kanban-url.
+ * Escape inside a text field is left to the browser (blur/clear); no navigation.
  */
 export function shouldIgnoreEscapeTarget(target) {
   if (!target || !(target instanceof Element)) return false;
@@ -13,11 +14,16 @@ export function shouldIgnoreEscapeTarget(target) {
   return false;
 }
 
+export function escapeNavigationUrl(container) {
+  if (!container) return null;
+  return container.dataset.escapeToUrl || container.dataset.escapeToKanbanUrl || null;
+}
+
 export function setupEscapeToKanbanShortcut(doc = document, win = window) {
-  const container = doc.querySelector("[data-escape-to-kanban-url]");
+  const container = doc.querySelector("[data-escape-to-url], [data-escape-to-kanban-url]");
   if (!container) return false;
 
-  const destination = container.dataset.escapeToKanbanUrl;
+  const destination = escapeNavigationUrl(container);
   if (!destination) return false;
 
   doc.addEventListener("keydown", (event) => {

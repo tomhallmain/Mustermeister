@@ -1,5 +1,6 @@
 const {
   shouldIgnoreEscapeTarget,
+  escapeNavigationUrl,
   setupEscapeToKanbanShortcut,
 } = require("../../app/javascript/escape_to_kanban.js");
 
@@ -39,5 +40,36 @@ describe("escape_to_kanban", () => {
 
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     expect(assign).not.toHaveBeenCalled();
+  });
+
+  test("setupEscapeToKanbanShortcut navigates on escape with data-escape-to-url", () => {
+    document.body.innerHTML = '<div data-escape-to-url="/tasks/42"></div>';
+    const assign = jest.fn();
+    const mockWindow = { location: { assign } };
+
+    setupEscapeToKanbanShortcut(document, mockWindow);
+
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    expect(assign).toHaveBeenCalledWith("/tasks/42");
+  });
+
+  test("setupEscapeToKanbanShortcut ignores escape inside textarea", () => {
+    document.body.innerHTML = '<div data-escape-to-url="/tasks/42"></div><textarea id="desc"></textarea>';
+    const assign = jest.fn();
+    const mockWindow = { location: { assign } };
+    const textarea = document.getElementById("desc");
+
+    setupEscapeToKanbanShortcut(document, mockWindow);
+
+    textarea.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    expect(assign).not.toHaveBeenCalled();
+  });
+
+  test("escapeNavigationUrl prefers data-escape-to-url", () => {
+    const container = document.createElement("div");
+    container.dataset.escapeToUrl = "/tasks/1";
+    container.dataset.escapeToKanbanUrl = "/kanban";
+
+    expect(escapeNavigationUrl(container)).toBe("/tasks/1");
   });
 });
