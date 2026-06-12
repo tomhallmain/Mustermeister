@@ -199,7 +199,7 @@ class Task < ApplicationRecord
         from_status: statuses_by_id[entry[:from_id]],
         to_status: statuses_by_id[entry[:to_id]],
         changed_at: entry[:changed_at],
-        user: users_by_id[entry[:user_id]],
+        user: resolve_status_change_user(entry, users_by_id),
         event: entry[:event]
       )
     end.reverse
@@ -277,8 +277,16 @@ class Task < ApplicationRecord
       to_id: to_id,
       changed_at: version.created_at,
       user_id: version_user_id(version),
-      event: version.event
+      event: version.event,
+      version: version
     }
+  end
+
+  def resolve_status_change_user(entry, users_by_id)
+    user_id = entry[:user_id]
+    return users_by_id[user_id] if user_id && users_by_id[user_id]
+
+    user if entry[:event] == "create"
   end
 
   # Status after this version was applied. The next version's `object` snapshot is the

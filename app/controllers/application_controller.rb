@@ -3,6 +3,7 @@ class ApplicationController < ActionController::Base
   allow_browser versions: :modern
 
   before_action :authenticate_user!
+  before_action :set_paper_trail_whodunnit
   before_action :configure_permitted_parameters, if: :devise_controller?
   before_action :set_session_timeout
   before_action :set_locale
@@ -37,6 +38,14 @@ class ApplicationController < ActionController::Base
                  http_accept_language.compatible_language_from(I18n.available_locales) ||
                  I18n.default_locale
     session[:locale] = I18n.locale
+  end
+
+  def set_paper_trail_whodunnit
+    PaperTrail.request.whodunnit = current_user&.id
+    PaperTrail.request.controller_info = {
+      ip: request.remote_ip,
+      user_agent: request.user_agent
+    }
   end
 
   def default_url_options
