@@ -226,6 +226,38 @@ class ProjectTest < ActiveSupport::TestCase
     end
   end
 
+  test "ordered_by_last_task_update orders by most recently updated task, falling back to project's own updated_at" do
+    project_no_tasks = Project.create!(title: "No Tasks Project", user: @user, updated_at: 2.days.ago)
+    project_old_task = Project.create!(title: "Old Task Project", user: @user)
+    project_old_task.create_task!(title: "Old task", user: @user, updated_at: 3.days.ago)
+    project_new_task = Project.create!(title: "New Task Project", user: @user)
+    project_new_task.create_task!(title: "New task", user: @user, updated_at: 1.hour.ago)
+
+    ordered_titles = Project.where(id: [project_no_tasks.id, project_old_task.id, project_new_task.id])
+                             .ordered_by_last_task_update
+                             .map(&:title)
+
+    assert_equal [
+      "New Task Project",  # last task updated 1 hour ago
+      "No Tasks Project",  # no tasks, falls back to updated_at 2 days ago
+      "Old Task Project"   # last task updated 3 days ago
+    ], ordered_titles
+  end
+
+  test "ordered_by_last_task_update uses the most recently updated task when a project has several" do
+    project = Project.create!(title: "Multi Task Project", user: @user)
+    project.create_task!(title: "First task", user: @user, updated_at: 5.days.ago)
+    project.create_task!(title: "Second task", user: @user, updated_at: 1.hour.ago)
+    other_project = Project.create!(title: "Older Single Task Project", user: @user)
+    other_project.create_task!(title: "Only task", user: @user, updated_at: 2.days.ago)
+
+    ordered_titles = Project.where(id: [project.id, other_project.id])
+                             .ordered_by_last_task_update
+                             .map(&:title)
+
+    assert_equal ["Multi Task Project", "Older Single Task Project"], ordered_titles
+  end
+
   test "color_classes should return correct CSS classes" do
     @project.color = 'red'
     assert_equal 'border-l-4 border-l-red-500 bg-red-50', @project.color_classes

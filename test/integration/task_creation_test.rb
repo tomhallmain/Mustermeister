@@ -226,4 +226,36 @@ class TaskCreationTest < ActionDispatch::IntegrationTest
     # 2. Verify that only statuses belonging to the current project are shown
     # 3. Verify that no statuses from other projects are included
   end
-end 
+
+  test "new task dropdown on tasks index orders current user's projects by last task update time" do
+    other_user = users(:two)
+
+    no_tasks_project = Project.create!(title: "Dropdown No Tasks Project", user: @user, updated_at: 2.days.ago)
+
+    old_task_project = Project.create!(title: "Dropdown Old Task Project", user: @user)
+    old_task_project.create_task!(title: "Old task", user: @user, updated_at: 3.days.ago)
+
+    new_task_project = Project.create!(title: "Dropdown New Task Project", user: @user)
+    new_task_project.create_task!(title: "New task", user: @user, updated_at: 1.hour.ago)
+
+    # A project belonging to another user, with a very recently updated task, should never appear.
+    foreign_project = Project.create!(title: "Dropdown Foreign Project", user: other_user)
+    foreign_project.create_task!(title: "Foreign task", user: other_user, updated_at: 1.minute.ago)
+
+    get tasks_path(show_completed: false)
+    assert_response :success
+
+    dropdown_links = css_select("a[href*='/tasks/new']")
+    dropdown_titles = dropdown_links.map { |link| link.text.strip }
+
+    assert_not_includes dropdown_titles, foreign_project.title,
+      "Dropdown should not include another user's project"
+
+    relevant_titles = dropdown_titles & [no_tasks_project.title, old_task_project.title, new_task_project.title]
+    assert_equal [
+      new_task_project.title,  # last task updated 1 hour ago
+      no_tasks_project.title,  # no tasks, falls back to updated_at 2 days ago
+      old_task_project.title   # last task updated 3 days ago
+    ], relevant_titles
+  end
+end

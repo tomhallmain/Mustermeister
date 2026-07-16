@@ -47,6 +47,7 @@
 *.crt
 *.key
 *.swp
+*.log
 
 db_backups/
 

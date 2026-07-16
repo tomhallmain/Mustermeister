@@ -22,10 +22,18 @@ class Project < ApplicationRecord
   before_create :set_initial_activity
   after_create :create_default_statuses
   
-  scope :not_completed, -> { 
+  scope :not_completed, -> {
     joins(:tasks)
       .where(tasks: { completed: false })
       .distinct
+  }
+
+  # Orders projects by the update time of their most recently updated task,
+  # falling back to the project's own updated_at when it has no tasks yet.
+  scope :ordered_by_last_task_update, -> {
+    left_joins(:tasks)
+      .group("projects.id")
+      .order(Arel.sql('COALESCE(MAX(tasks.updated_at), projects.updated_at) DESC'))
   }
   
   # Color-related methods
