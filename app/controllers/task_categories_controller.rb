@@ -1,5 +1,6 @@
 class TaskCategoriesController < ApplicationController
   before_action :set_task_category, only: [:edit, :update, :destroy]
+  before_action :forbid_default_category_destroy, only: [:destroy]
 
   def index
     TaskCategory.ensure_default_categories!
@@ -24,6 +25,9 @@ class TaskCategoriesController < ApplicationController
   def edit
   end
 
+  # Default categories are shared system-wide, so only their color can be
+  # changed here (see #task_category_params) - their name stays fixed so the
+  # "always available" baseline list can't be renamed out from under anyone.
   def update
     if @task_category.update(task_category_params)
       redirect_to task_categories_path, notice: "Task category was successfully updated."
@@ -40,12 +44,19 @@ class TaskCategoriesController < ApplicationController
   private
 
   def set_task_category
-    @task_category = current_user.task_categories.find(params[:id])
+    @task_category = TaskCategory.where(user_id: [nil, current_user.id]).find(params[:id])
   rescue ActiveRecord::RecordNotFound
     redirect_to task_categories_path, alert: "Task category not found."
   end
 
+  def forbid_default_category_destroy
+    return unless @task_category.default?
+
+    redirect_to task_categories_path, alert: "Default categories cannot be deleted."
+  end
+
   def task_category_params
-    params.require(:task_category).permit(:name)
+    permitted_attributes = @task_category&.default? ? [:color] : [:name, :color]
+    params.require(:task_category).permit(*permitted_attributes)
   end
 end

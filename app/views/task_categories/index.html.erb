@@ -9,7 +9,14 @@
     <p class="text-sm text-gray-500 mb-3"><%= t('views.task_categories.index.defaults_help') %></p>
     <div class="surface shadow rounded-lg divide-y divide-gray-200">
       <% @default_categories.each do |category| %>
-        <div class="px-4 py-3 text-sm text-gray-900"><%= category.display_name %></div>
+        <div class="px-4 py-3 flex items-center justify-between">
+          <%= render 'shared/category_badge', task_category: category, size: 'text-sm' %>
+          <%= link_to edit_task_category_path(category), class: "text-blue-600 hover:text-blue-800" do %>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+          <% end %>
+        </div>
       <% end %>
     </div>
   </div>
@@ -22,7 +29,7 @@
       <div class="surface shadow rounded-lg divide-y divide-gray-200">
         <% @custom_categories.each do |category| %>
           <div class="px-4 py-3 flex items-center justify-between">
-            <span class="text-sm text-gray-900"><%= category.name %></span>
+            <%= render 'shared/category_badge', task_category: category, size: 'text-sm' %>
             <div class="flex space-x-2">
               <%= link_to edit_task_category_path(category), class: "text-blue-600 hover:text-blue-800" do %>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

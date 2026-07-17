@@ -92,4 +92,48 @@ class TaskCategoryTest < ActiveSupport::TestCase
 
     assert_nil task.reload.task_category_id
   end
+
+  test "should validate color inclusion" do
+    category = TaskCategory.new(name: "Research", color: "invalid")
+    assert_not category.valid?
+    assert_includes category.errors[:color], "must be a valid color"
+
+    TaskCategory::COLORS.each do |valid_color|
+      category.color = valid_color
+      assert category.valid?, "#{valid_color} should be a valid color"
+    end
+
+    category.color = nil
+    assert category.valid?
+
+    category.color = ""
+    assert category.valid?
+  end
+
+  test "badge_classes returns the classes for the category's color, or a fallback when unset" do
+    assert_equal "bg-blue-100 text-blue-800", task_categories(:feature).badge_classes
+    assert_equal "bg-red-100 text-red-800", task_categories(:fix).badge_classes
+
+    uncolored = TaskCategory.new(name: "Uncolored")
+    assert_equal "bg-teal-100 text-teal-800", uncolored.badge_classes
+  end
+
+  test "ensure_default_categories! seeds default colors for the built-in categories" do
+    TaskCategory.default_categories.destroy_all
+    TaskCategory.ensure_default_categories!
+
+    TaskCategory::DEFAULT_CATEGORY_COLORS.each do |name, color|
+      assert_equal color, TaskCategory.default_categories.find_by(name: name).color
+    end
+  end
+
+  test "ensure_default_categories! backfills a missing color without overwriting a customized one" do
+    task_categories(:feature).update_column(:color, nil)
+    task_categories(:fix).update_column(:color, "green")
+
+    TaskCategory.ensure_default_categories!
+
+    assert_equal "blue", task_categories(:feature).reload.color
+    assert_equal "green", task_categories(:fix).reload.color
+  end
 end

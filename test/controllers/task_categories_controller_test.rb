@@ -77,13 +77,33 @@ class TaskCategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Belongs To Other", other_custom.reload.name
   end
 
-  test "should not allow editing a default category" do
+  test "should not allow renaming a default category" do
     default_category = task_categories(:feature)
 
     patch task_category_path(default_category), params: { task_category: { name: "Hijacked" } }
 
     assert_redirected_to task_categories_path
     assert_equal "Feature", default_category.reload.name
+  end
+
+  test "should allow changing a default category's color" do
+    default_category = task_categories(:feature)
+
+    patch task_category_path(default_category), params: { task_category: { color: "pink" } }
+
+    assert_redirected_to task_categories_path
+    assert_equal "pink", default_category.reload.color
+  end
+
+  test "changing a default category's color does not allow sneaking in a name change" do
+    default_category = task_categories(:feature)
+
+    patch task_category_path(default_category), params: { task_category: { name: "Hijacked", color: "pink" } }
+
+    assert_redirected_to task_categories_path
+    default_category.reload
+    assert_equal "Feature", default_category.name
+    assert_equal "pink", default_category.color
   end
 
   test "should destroy the current user's own custom category" do

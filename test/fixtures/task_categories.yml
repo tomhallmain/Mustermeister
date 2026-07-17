@@ -3,26 +3,31 @@
 
 feature:
   name: "Feature"
+  color: "blue"
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
 fix:
   name: "Fix"
+  color: "red"
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
 tech_debt:
   name: "Tech Debt"
+  color: "orange"
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
 chore:
   name: "Chore"
+  color: "gray"
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
 documentation:
   name: "Documentation"
+  color: "purple"
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 

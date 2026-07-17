@@ -364,7 +364,8 @@ class TasksController < ApplicationController
                 user: task.user.name,
                 updated_at: task.updated_at,
                 priority: task.priority,
-                category: task.task_category&.display_name
+                category: task.task_category&.display_name,
+                category_color: task.task_category&.color
               }
             }
           },

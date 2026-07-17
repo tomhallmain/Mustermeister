@@ -3,7 +3,7 @@
 <% if task_category %>
   <%
     size ||= 'text-xs'
-    all_classes = [size, 'px-2 py-1 rounded-full', 'bg-teal-100 text-teal-800']
+    all_classes = [size, 'px-2 py-1 rounded-full', task_category.badge_classes]
     all_classes << additional_classes if defined?(additional_classes)
   %>
   <span class="<%= all_classes.join(' ') %>">
