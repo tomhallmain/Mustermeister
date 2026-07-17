@@ -47,8 +47,8 @@ class ProjectsController < ApplicationController
     session[:projects_search] ||= {}
 
     # Debug values on entry
-    Rails.logger.debug "ENTRY params[:show_completed]: #{params[:show_completed].inspect}"
-    Rails.logger.debug "ENTRY session value: #{session[:projects_show_completed][@project.id.to_s].inspect}"
+    AppDebugLogger.debug { "ENTRY params[:show_completed]: #{params[:show_completed].inspect}" }
+    AppDebugLogger.debug { "ENTRY session value: #{session[:projects_show_completed][@project.id.to_s].inspect}" }
 
     # Add headers to disable Turbo for this response to prevent double requests
     response.headers["Turbo-Frame"] = "_top"
@@ -67,7 +67,7 @@ class ProjectsController < ApplicationController
     # If no param and we have a stored preference, redirect to include it
     if params[:show_completed].nil?
       redirect_url = project_path(@project, show_completed: stored_preference, page: params[:page])
-      Rails.logger.debug "REDIRECTING to: #{redirect_url}"
+      AppDebugLogger.debug { "REDIRECTING to: #{redirect_url}" }
       redirect_to redirect_url
       return
     end

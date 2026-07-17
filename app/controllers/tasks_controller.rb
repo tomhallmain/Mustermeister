@@ -340,7 +340,7 @@ class TasksController < ApplicationController
     @per_page = 100
     @show_all_completed = params[:show_all_completed] == 'true'
 
-    Rails.logger.debug "Kanban tasks request - Project: #{@current_project&.id}, Sort: #{@sort_by}, Page: #{@page}, Show All Completed: #{@show_all_completed}, Priority: #{@priority_filter}, Updated Within Days: #{@updated_within_days}"
+    AppDebugLogger.debug { "Kanban tasks request - Project: #{@current_project&.id}, Sort: #{@sort_by}, Page: #{@page}, Show All Completed: #{@show_all_completed}, Priority: #{@priority_filter}, Updated Within Days: #{@updated_within_days}" }
 
     tasks = current_user.tasks
       .includes(:project, :status, :user, :task_category)
@@ -395,7 +395,7 @@ class TasksController < ApplicationController
       paginated_tasks = status_tasks.page(@page).per(@per_page)
       @tasks_by_status[key] = paginated_tasks
       has_more ||= paginated_tasks.total_pages > @page
-      Rails.logger.debug "Status #{key}: #{@tasks_by_status[key].count} tasks"
+      AppDebugLogger.debug { "Status #{key}: #{@tasks_by_status[key].count} tasks" }
     end
 
     respond_to do |format|

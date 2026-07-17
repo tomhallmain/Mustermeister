@@ -461,8 +461,10 @@ class TaskInsightsChatService
   end
 
   def log_debug(label, payload)
+    return unless AppDebugLogger.enabled?
+
     sanitized = payload.to_s.gsub("```", "'''")
-    Rails.logger.debug("[TaskInsightsChatService] #{label}:\n#{sanitized}")
+    AppDebugLogger.debug { "[TaskInsightsChatService] #{label}:\n#{sanitized}" }
   end
 
   def run_tool(tool_name, args)
