@@ -28,10 +28,17 @@ class Project < ApplicationRecord
       .distinct
   }
 
-  # Orders projects by the update time of their most recently updated task,
-  # falling back to the project's own updated_at when it has no tasks yet.
+  # Orders projects by the update time of their most recently updated ACTIVE
+  # (not completed, not archived) task, falling back to the project's own
+  # updated_at when it has no active tasks. The active condition lives in the
+  # JOIN itself (not a WHERE clause) so a project with only completed/archived
+  # tasks still gets a row here (with null task columns) and correctly falls
+  # back, rather than being dropped from the result entirely. Deliberately
+  # excludes completed/archived tasks so that bulk-archiving old, already-done
+  # tasks (see TaskManagementService.archive_completed_tasks) doesn't bump a
+  # dormant project to the top just because one of its old tasks got touched.
   scope :ordered_by_last_task_update, -> {
-    left_joins(:tasks)
+    joins("LEFT JOIN tasks ON tasks.project_id = projects.id AND tasks.completed = false AND tasks.archived = false")
       .group("projects.id")
       .order(Arel.sql('COALESCE(MAX(tasks.updated_at), projects.updated_at) DESC'))
   }

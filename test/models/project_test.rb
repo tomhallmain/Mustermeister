@@ -219,10 +219,33 @@ class ProjectTest < ActiveSupport::TestCase
   test "should update last_activity_at when task is created" do
     project = Project.create!(title: "Test Project", user: @user)
     initial_activity = project.last_activity_at
-    
+
     travel 1.hour do
       project.create_task!(title: "Test Task", user: @user)
       assert project.reload.last_activity_at > initial_activity
+    end
+  end
+
+  test "archiving a task does not update last_activity_at" do
+    project = Project.create!(title: "Test Project", user: @user)
+    task = project.create_task!(title: "Test Task", user: @user)
+    activity_before_archive = project.reload.last_activity_at
+
+    travel 1.hour do
+      task.archive!(@user)
+      assert_equal activity_before_archive, project.reload.last_activity_at
+    end
+  end
+
+  test "un-archiving a task still updates last_activity_at" do
+    project = Project.create!(title: "Test Project", user: @user)
+    task = project.create_task!(title: "Test Task", user: @user)
+    task.archive!(@user)
+    activity_after_archive = project.reload.last_activity_at
+
+    travel 1.hour do
+      task.update!(archived: false)
+      assert project.reload.last_activity_at > activity_after_archive
     end
   end
 
@@ -256,6 +279,56 @@ class ProjectTest < ActiveSupport::TestCase
                              .map(&:title)
 
     assert_equal ["Multi Task Project", "Older Single Task Project"], ordered_titles
+  end
+
+  test "ordered_by_last_task_update ignores completed tasks when computing recency" do
+    stale_active_project = Project.create!(title: "Stale Active Project", user: @user)
+    stale_active_project.create_task!(title: "Stale active task", user: @user, updated_at: 5.days.ago)
+    # Simulates a bulk-archive/cleanup touching an old, already-completed task -
+    # this should not make the project look recently active.
+    stale_active_project.create_task!(title: "Recently completed task", user: @user, completed: true, updated_at: 1.hour.ago)
+
+    genuinely_recent_project = Project.create!(title: "Genuinely Recent Project", user: @user)
+    genuinely_recent_project.create_task!(title: "Recent active task", user: @user, updated_at: 1.day.ago)
+
+    ordered_titles = Project.where(id: [stale_active_project.id, genuinely_recent_project.id])
+                             .ordered_by_last_task_update
+                             .map(&:title)
+
+    assert_equal ["Genuinely Recent Project", "Stale Active Project"], ordered_titles
+  end
+
+  test "ordered_by_last_task_update ignores archived tasks when computing recency" do
+    stale_active_project = Project.create!(title: "Stale Active Project", user: @user)
+    stale_active_project.create_task!(title: "Stale active task", user: @user, updated_at: 5.days.ago)
+    stale_active_project.create_task!(title: "Recently archived task", user: @user, archived: true, archived_at: 1.hour.ago, updated_at: 1.hour.ago)
+
+    genuinely_recent_project = Project.create!(title: "Genuinely Recent Project", user: @user)
+    genuinely_recent_project.create_task!(title: "Recent active task", user: @user, updated_at: 1.day.ago)
+
+    ordered_titles = Project.where(id: [stale_active_project.id, genuinely_recent_project.id])
+                             .ordered_by_last_task_update
+                             .map(&:title)
+
+    assert_equal ["Genuinely Recent Project", "Stale Active Project"], ordered_titles
+  end
+
+  test "ordered_by_last_task_update falls back to the project's own updated_at when all tasks are completed or archived" do
+    all_done_project = Project.create!(title: "All Done Project", user: @user, updated_at: 2.days.ago)
+    all_done_project.create_task!(title: "Completed task", user: @user, completed: true, updated_at: 1.hour.ago)
+
+    older_project = Project.create!(title: "Older Project", user: @user, updated_at: 3.days.ago)
+
+    ordered_titles = Project.where(id: [all_done_project.id, older_project.id])
+                             .ordered_by_last_task_update
+                             .map(&:title)
+
+    # If the completed task's updated_at (1 hour ago) were wrongly used, "All Done
+    # Project" would sort first regardless; it should instead fall back to its own
+    # updated_at (2 days ago), which still beats "Older Project" (3 days ago) -
+    # proving the fallback value itself is correct, not just that the project
+    # didn't silently disappear from the result.
+    assert_equal ["All Done Project", "Older Project"], ordered_titles
   end
 
   test "color_classes should return correct CSS classes" do

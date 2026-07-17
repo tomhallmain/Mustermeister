@@ -274,6 +274,12 @@ class Task < ApplicationRecord
   end
   
   def update_project_activity
+    # Archiving is bulk cleanup, not activity on the project - don't let it
+    # bump last_activity_at (see TaskManagementService.archive_completed_tasks,
+    # which can touch old, already-done tasks across many dormant projects at
+    # once). Un-archiving and every other kind of task save still count.
+    return if saved_change_to_archived? && archived?
+
     project.update_column(:last_activity_at, Time.current)
   end
   
