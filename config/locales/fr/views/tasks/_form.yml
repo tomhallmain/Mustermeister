@@ -97,3 +97,4 @@ fr:
         prohibited_save: "a interdit l'enregistrement de cette tâche :"
         tags: "Étiquettes"
         completed: "Terminé"
+        copy_suffix: "(Copie)"

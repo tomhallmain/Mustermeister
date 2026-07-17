@@ -98,3 +98,4 @@ de:
         prohibited_save: "verbot, diese Aufgabe zu speichern:"
         tags: "Stichworte"
         completed: "Abgeschlossen"
+        copy_suffix: "(Kopie)"

@@ -33,3 +33,4 @@ en:
         prohibited_save: "prohibited this task from being saved:"
         tags: "Tags"
         completed: "Completed"
+        copy_suffix: "(Copy)"

@@ -21,6 +21,7 @@ en:
         completed_at: "Completed"
         archived_at: "Archived"
         edit_task: "Edit Task"
+        duplicate_task: "Duplicate"
         refresh: "Refresh"
         delete_task: "Delete Task"
         back_to_tasks: "Back to Tasks"

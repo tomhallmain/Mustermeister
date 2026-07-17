@@ -21,6 +21,7 @@ fr:
         completed_at: "Terminé"
         archived_at: "Archivé"
         edit_task: "Modifier la tâche"
+        duplicate_task: "Dupliquer"
         refresh: "Actualiser"
         delete_task: "Supprimer la tâche"
         back_to_tasks: "Retour aux tâches"

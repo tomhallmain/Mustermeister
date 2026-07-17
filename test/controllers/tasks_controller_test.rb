@@ -106,6 +106,13 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "task show includes a link to duplicate the task" do
+    get task_path(@task)
+    assert_response :success
+
+    assert_select "a[href=?]", new_project_task_path(@task.project, source_task_id: @task.id)
+  end
+
   test "task show displays the task's category badge" do
     @task.update!(task_category: task_categories(:feature))
 

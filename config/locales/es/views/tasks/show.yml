@@ -21,6 +21,7 @@ es:
         completed_at: "Completado"
         archived_at: "Archivado"
         edit_task: "Editar tarea"
+        duplicate_task: "Duplicar"
         refresh: "Actualizar"
         delete_task: "Eliminar tarea"
         back_to_tasks: "Volver a las tareas"

@@ -296,4 +296,52 @@ class TaskCreationTest < ActionDispatch::IntegrationTest
 
     assert_select "a[href=?]", task_categories_path
   end
+
+  test "new task form pre-fills fields when duplicating another task" do
+    source_tag = tags(:one)
+    source_task = @project.create_task!(
+      title: "Source Task",
+      description: "Source description",
+      user: @user,
+      priority: "high",
+      due_date: Date.new(2026, 8, 1),
+      task_category: task_categories(:feature),
+      tag_ids: [source_tag.id]
+    )
+
+    get new_project_task_path(@project, source_task_id: source_task.id)
+    assert_response :success
+
+    assert_equal "Source Task (Copy)", css_select("input[name='task[title]']").first['value']
+    assert_equal "Source description", css_select("textarea[name='task[description]']").first.text.strip
+    assert_equal "high", css_select("select[name='task[priority]'] option[selected]").first['value']
+    assert_equal "2026-08-01", css_select("input[name='task[due_date]']").first['value']
+    assert_equal task_categories(:feature).id.to_s,
+      css_select("select[name='task[task_category_id]'] option[selected]").first['value']
+    assert_select "input[name='task[tag_ids][]'][value='#{source_tag.id}'][checked]"
+  end
+
+  test "duplicating a task does not carry over its completed status" do
+    source_task = @project.create_task!(
+      title: "Finished Source Task",
+      user: @user,
+      completed: true
+    )
+
+    get new_project_task_path(@project, source_task_id: source_task.id)
+    assert_response :success
+
+    assert_select "input[name='task[completed]'][checked]", count: 0
+  end
+
+  test "new task form ignores a source_task_id belonging to another user" do
+    other_user = users(:two)
+    other_project = Project.create!(title: "Other User's Project", user: other_user)
+    other_task = other_project.create_task!(title: "Not Mine", user: other_user)
+
+    get new_project_task_path(@project, source_task_id: other_task.id)
+    assert_response :success
+
+    assert_equal "", css_select("input[name='task[title]']").first['value'].to_s
+  end
 end

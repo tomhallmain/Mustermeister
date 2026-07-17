@@ -67,7 +67,11 @@ class TasksController < ApplicationController
       project_id: params[:project_id],
       priority: @project.default_priority
     )
-    
+
+    if params[:source_task_id].present?
+      copy_fields_from_source_task!(@task)
+    end
+
     # If we have a show_completed param, update the session
     if params[:show_completed].present?
       show_completed = params[:show_completed] == 'true'
@@ -398,6 +402,24 @@ class TasksController < ApplicationController
     @tags = Tag.all
     TaskCategory.ensure_default_categories!
     @task_categories = TaskCategory.default_categories.order(:name) + current_user.task_categories.order(:name)
+  end
+
+  # Pre-fills a freshly built task with another task's field values, for the
+  # "duplicate this task" flow. Intentionally excludes completed/status so the
+  # copy always starts fresh, and only ever copies from a task the current
+  # user owns.
+  def copy_fields_from_source_task!(task)
+    source_task = current_user.tasks.find_by(id: params[:source_task_id])
+    return unless source_task
+
+    task.assign_attributes(
+      title: "#{source_task.title} #{t('views.tasks.form.copy_suffix')}",
+      description: source_task.description,
+      priority: source_task.priority,
+      due_date: source_task.due_date,
+      task_category_id: source_task.task_category_id,
+      tag_ids: source_task.tag_ids
+    )
   end
 
   def task_params

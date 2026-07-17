@@ -97,3 +97,4 @@ es:
         prohibited_save: "prohibió que se guardara esta tarea:"
         tags: "Etiquetas"
         completed: "Completado"
+        copy_suffix: "(Copia)"
