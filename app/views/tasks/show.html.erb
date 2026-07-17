@@ -52,9 +52,10 @@
 
             <div>
               <h3 class="text-sm font-medium text-gray-500"><%= t('views.tasks.show.status') %></h3>
-              <span class="mt-1 inline-block px-2 py-1 text-sm rounded-full bg-indigo-100 text-indigo-800">
-                <%= @task.status ? t("statuses.#{@task.status.name.parameterize.underscore}", default: @task.status.name) : '' %>
-              </span>
+              <%= render 'shared/status_badge',
+                  status: @task.status,
+                  size: 'text-sm',
+                  additional_classes: 'mt-1 inline-block' %>
             </div>
 
             <% if @task.task_category %>
