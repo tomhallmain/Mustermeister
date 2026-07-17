@@ -42,41 +42,28 @@ class ProjectsController < ApplicationController
   def show
     @tasks = @project.tasks
 
-    if params[:search].present?
-      search_term = params[:search]
-      @tasks = @tasks.where("title ILIKE ? OR description ILIKE ?", 
-                           "%#{search_term}%", 
-                           "%#{search_term}%")
-                     .order(Arel.sql("
-                       CASE 
-                         WHEN title ILIKE '#{search_term}%' THEN 1
-                         WHEN title ILIKE '% #{search_term}%' THEN 2
-                         ELSE 3
-                       END,
-                       created_at DESC"))
-    end
-
     # Initialize preferences for this project if not already set
     session[:projects_show_completed] ||= {}
-    
+    session[:projects_search] ||= {}
+
     # Debug values on entry
     Rails.logger.debug "ENTRY params[:show_completed]: #{params[:show_completed].inspect}"
     Rails.logger.debug "ENTRY session value: #{session[:projects_show_completed][@project.id.to_s].inspect}"
-    
+
     # Add headers to disable Turbo for this response to prevent double requests
     response.headers["Turbo-Frame"] = "_top"
     response.headers["X-Robots-Tag"] = "none"
-    
+
     # If show_completed param is present, update the session preference
     if params[:show_completed].present?
       show_completed = params[:show_completed] == 'true'
       session[:projects_show_completed][@project.id.to_s] = show_completed
     end
-    
+
     # Get the current stored preference (default to false if nil)
     stored_preference = session[:projects_show_completed][@project.id.to_s]
     stored_preference = false if stored_preference.nil?
-    
+
     # If no param and we have a stored preference, redirect to include it
     if params[:show_completed].nil?
       redirect_url = project_path(@project, show_completed: stored_preference, page: params[:page])
@@ -84,10 +71,32 @@ class ProjectsController < ApplicationController
       redirect_to redirect_url
       return
     end
-    
+
     # Current preference is from params (already stored in session above)
     current_preference = params[:show_completed] == 'true'
-    
+
+    # Remember search per-project too, so toggling show_completed doesn't clear
+    # it (no forced redirect here, unlike show_completed - search has no
+    # meaningful default, so we just fall back inline when it's absent).
+    if params.key?(:search)
+      session[:projects_search][@project.id.to_s] = params[:search].presence
+    end
+    @search = params.key?(:search) ? params[:search] : session[:projects_search][@project.id.to_s]
+
+    if @search.present?
+      search_term = @search
+      @tasks = @tasks.where("title ILIKE ? OR description ILIKE ?",
+                           "%#{search_term}%",
+                           "%#{search_term}%")
+                     .order(Arel.sql("
+                       CASE
+                         WHEN title ILIKE '#{search_term}%' THEN 1
+                         WHEN title ILIKE '% #{search_term}%' THEN 2
+                         ELSE 3
+                       END,
+                       created_at DESC"))
+    end
+
     # Now load the tasks based on the current preference
     @tasks = @tasks.includes(:tags, :user, :task_category)
     @tasks = @tasks.not_completed unless current_preference

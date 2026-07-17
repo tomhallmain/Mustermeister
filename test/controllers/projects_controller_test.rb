@@ -446,4 +446,65 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".task-item", text: /Uncompleted Zebra Task/
     assert_select ".task-item", text: /Regular Task/, count: 0
   end
+
+  test "toggling show_completed on the project page preserves the active search" do
+    project = Project.create!(title: "Toggle Search Persistence Project", user: @user)
+    Task.create!(title: "Zebra Task", project: project, user: @user)
+    Task.create!(title: "Regular Task", project: project, user: @user)
+
+    get project_path(project, search: "zeb", show_completed: false)
+    assert_response :success
+    assert_equal "zeb", session[:projects_search][project.id.to_s]
+
+    # Simulate clicking the show_completed toggle, which does not itself pass search
+    toggle_link = css_select("a[href*='show_completed=true']").first
+    assert toggle_link.present?, "Expected a show_completed toggle link"
+    assert_includes toggle_link['href'], "search=zeb", "Toggle link should carry the active search forward"
+
+    get toggle_link['href']
+    assert_response :success
+
+    assert_select ".task-item", count: 1
+    assert_select ".task-item", text: /Zebra Task/
+  end
+
+  test "search persists in session on the project page and applies to a later request that omits it" do
+    project = Project.create!(title: "Search Session Persistence Project", user: @user)
+    Task.create!(title: "Zebra Task", project: project, user: @user)
+    Task.create!(title: "Regular Task", project: project, user: @user)
+
+    get project_path(project, search: "zeb", show_completed: false)
+    assert_response :success
+    assert_equal "zeb", session[:projects_search][project.id.to_s]
+
+    get project_path(project, show_completed: false)
+    assert_response :success
+    assert_equal "zeb", session[:projects_search][project.id.to_s]
+
+    search_field = css_select("input[name='search']").first
+    assert_equal "zeb", search_field['value']
+
+    assert_select ".task-item", count: 1
+    assert_select ".task-item", text: /Zebra Task/
+  end
+
+  test "explicitly clearing search on the project page persists the cleared state" do
+    project = Project.create!(title: "Clear Search Persistence Project", user: @user)
+    Task.create!(title: "Zebra Task", project: project, user: @user)
+    Task.create!(title: "Regular Task", project: project, user: @user)
+
+    get project_path(project, search: "zeb", show_completed: false)
+    assert_response :success
+    assert_equal "zeb", session[:projects_search][project.id.to_s]
+
+    get project_path(project, show_completed: false, search: '')
+    assert_response :success
+    assert_nil session[:projects_search][project.id.to_s]
+
+    get project_path(project, show_completed: false)
+    assert_response :success
+    assert_nil session[:projects_search][project.id.to_s]
+
+    assert_select ".task-item", count: 2
+  end
 end 
