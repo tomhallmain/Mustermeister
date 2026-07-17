@@ -564,6 +564,26 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Ready to Test", @task.status.name
   end
 
+  test "switching a task's project via update remaps a stale status from the old project" do
+    @task.update!(status: @project.status_by_key(:in_progress))
+    other_project = projects(:two)
+    other_project.create_default_statuses!
+    stale_status_id = @task.status_id # still belongs to @project, the old one
+
+    patch task_path(@task), params: {
+      task: {
+        project_id: other_project.id,
+        status_id: stale_status_id
+      }
+    }
+
+    assert_response :redirect
+    @task.reload
+    assert_equal other_project, @task.project
+    assert_equal other_project, @task.status.project
+    assert_equal "In Progress", @task.status.name
+  end
+
   test "should maintain status when updating other fields" do
     original_status = @task.status
     patch task_path(@task), params: {

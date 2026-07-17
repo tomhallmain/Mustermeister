@@ -59,6 +59,27 @@ class TaskTest < ActiveSupport::TestCase
     assert_includes @task.errors[:status], "must belong to the same project"
   end
 
+  test "switching project remaps a default-named status to the equivalent status in the new project" do
+    @task.status = statuses(:project_one_in_progress)
+    @task.save!
+    other_project = projects(:two)
+
+    @task.project = other_project
+    assert @task.valid?
+    assert_equal other_project, @task.status.project
+    assert_equal "In Progress", @task.status.name
+  end
+
+  test "switching project does not remap when no same-named status exists in the new project" do
+    @task.status = Status.create!(name: "Custom Status", project: @project)
+    @task.save!
+    other_project = projects(:two)
+
+    @task.project = other_project
+    assert_not @task.valid?
+    assert_includes @task.errors[:status], "must belong to the same project"
+  end
+
   test "status helper methods work correctly" do
     Status.default_statuses.each do |key, name|
       @task.status = Status.new(name: name, project: @project)

@@ -24,6 +24,7 @@ class Task < ApplicationRecord
   validate :status_belongs_to_project
   
   before_validation :set_defaults
+  before_validation :remap_status_to_new_project
   before_destroy :ensure_no_active_dependencies
   after_save :update_project_activity
   after_save :handle_status_completion
@@ -214,7 +215,24 @@ class Task < ApplicationRecord
     self.archived ||= false
     self.status ||= project&.status_by_key(:not_started)
   end
-  
+
+  # Statuses are scoped to a single project. If a task's project has changed
+  # (e.g. switching project on the edit form) and the currently assigned
+  # status no longer belongs to that project, remap it to the equivalent
+  # status by name in the new project - every project gets the same default
+  # status set, so this keeps the task's status conceptually the same
+  # ("In Progress" stays "In Progress") instead of failing validation.
+  # Only remaps when a same-named status actually exists in the new project;
+  # otherwise leaves it as-is so status_belongs_to_project still catches a
+  # genuinely bogus assignment (e.g. a custom status from an unrelated project).
+  def remap_status_to_new_project
+    return unless project && status
+    return if status.project_id == project_id
+
+    matching_status = project.statuses.find_by(name: status.name)
+    self.status = matching_status if matching_status
+  end
+
   def handle_status_completion
     if saved_change_to_status_id?
       # Ignore changes if current status is 'Closed'
