@@ -1,1 +1,1 @@
-<%= link_to_unless page.current?, page, url_for(page: page), class: 'px-3 py-1 border rounded hover:bg-gray-100' %> 
+<%= link_to_unless page.current?, page, url_for(request.query_parameters.symbolize_keys.merge(page: page)), class: 'px-3 py-1 border rounded hover:bg-gray-100' %> 

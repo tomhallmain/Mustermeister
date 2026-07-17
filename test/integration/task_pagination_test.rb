@@ -118,4 +118,30 @@ class TaskPaginationTest < ActionDispatch::IntegrationTest
     # Verify preference is maintained
     assert_equal true, session[:tasks_show_completed]
   end
-end 
+
+  test "pagination links preserve the search filter" do
+    # sign_in_as in setup makes an HTTP request, which clears the request-scoped
+    # PaperTrail controller_info set by setup_paper_trail; re-establish it before
+    # creating records directly here.
+    setup_paper_trail
+    (TASKS_PER_PAGE + 1).times do |i|
+      @user.tasks.create!(title: "Findable Task #{i}", description: "desc", project: @project)
+    end
+
+    get tasks_path(search: "Findable", show_completed: false)
+    assert_response :success
+
+    page_two_link = css_select("a[href*='page=2']").first
+    assert page_two_link.present?, "Expected a page 2 pagination link when search results span multiple pages"
+    assert_includes page_two_link['href'], "search=Findable", "Page 2 link should preserve the search filter"
+    assert_includes page_two_link['href'], "show_completed=false", "Page 2 link should preserve the show_completed preference"
+
+    get page_two_link['href']
+    assert_response :success
+
+    task_titles = css_select(".task-item h3").map { |el| el.text.strip }
+    assert task_titles.any?, "Expected at least one task on page 2"
+    assert task_titles.all? { |title| title.include?("Findable") },
+      "Page 2 should still be filtered by the search term, got: #{task_titles.join(', ')}"
+  end
+end

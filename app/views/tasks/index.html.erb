@@ -122,7 +122,7 @@
   </div>
   
   <div class="mt-8">
-    <%= paginate @tasks, window: 2, outer_window: 1, views_prefix: 'shared', params: { show_completed: params[:show_completed] }, data: { turbo: false } %>
+    <%= paginate @tasks, window: 2, outer_window: 1, views_prefix: 'shared', data: { turbo: false } %>
   </div>
 </div>
 
