@@ -304,7 +304,7 @@ class TasksController < ApplicationController
     Rails.logger.debug "Kanban tasks request - Project: #{@current_project&.id}, Sort: #{@sort_by}, Page: #{@page}, Show All Completed: #{@show_all_completed}, Priority: #{@priority_filter}, Updated Within Days: #{@updated_within_days}"
 
     tasks = current_user.tasks
-      .includes(:project, :status, :user)
+      .includes(:project, :status, :user, :task_category)
       .where(archived: false)
       .order(@sort_by => :desc)
 
@@ -363,7 +363,8 @@ class TasksController < ApplicationController
                 project_color: task.project.color,
                 user: task.user.name,
                 updated_at: task.updated_at,
-                priority: task.priority
+                priority: task.priority,
+                category: task.task_category&.display_name
               }
             }
           },

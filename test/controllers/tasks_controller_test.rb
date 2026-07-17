@@ -176,6 +176,32 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "kanban_tasks should include the task's category display name in JSON response" do
+    @task.update!(task_category: task_categories(:feature))
+
+    get kanban_tasks_path, as: :json
+    assert_response :success
+
+    json_response = JSON.parse(response.body)
+    categorized_task = json_response['tasks'].values.flatten.find { |task| task['id'] == @task.id }
+
+    assert_not_nil categorized_task, "Expected the updated task to appear in the kanban JSON response"
+    assert_equal 'Feature', categorized_task['category']
+  end
+
+  test "kanban_tasks should return a nil category for tasks without one" do
+    @task.update!(task_category: nil)
+
+    get kanban_tasks_path, as: :json
+    assert_response :success
+
+    json_response = JSON.parse(response.body)
+    task = json_response['tasks'].values.flatten.find { |t| t['id'] == @task.id }
+
+    assert_not_nil task
+    assert_nil task['category']
+  end
+
   # Kanban UI: dragging to Complete opens the result modal; cancel skips PATCH. The board then
   # calls GET /kanban/tasks (loadTasks) to repaint from server state — this response must still
   # list the task under its prior status column when no update was persisted.

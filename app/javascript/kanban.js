@@ -322,17 +322,24 @@ document.addEventListener("DOMContentLoaded", function () {
           <h4 class="font-medium text-sm text-gray-900">
             <a href="/tasks/${task.id}" class="hover:text-blue-600 hover:underline">${truncateText(task.title, 20, 20, 4)}</a>
           </h4>
-          <span class="px-1.5 py-0.5 text-xs rounded-full ${
-            task.priority === "high"
-              ? "bg-red-100 text-red-800"
-              : task.priority === "medium"
-                ? "bg-yellow-100 text-yellow-800"
-                : task.priority === "leisure"
-                  ? "bg-purple-100 text-purple-800"
-                  : "bg-green-100 text-green-800"
-          }">
-            ${translatedPriority}
-          </span>
+          <div class="flex flex-col items-end gap-0.5">
+            <span class="px-1.5 py-0.5 text-xs rounded-full ${
+              task.priority === "high"
+                ? "bg-red-100 text-red-800"
+                : task.priority === "medium"
+                  ? "bg-yellow-100 text-yellow-800"
+                  : task.priority === "leisure"
+                    ? "bg-purple-100 text-purple-800"
+                    : "bg-green-100 text-green-800"
+            }">
+              ${translatedPriority}
+            </span>
+            ${
+              task.category
+                ? `<span class="px-1.5 py-0.5 text-xs rounded-full bg-teal-100 text-teal-800">${escapeHtmlAttr(task.category)}</span>`
+                : ""
+            }
+          </div>
         </div>
         <p class="text-xs text-gray-600 mb-1 whitespace-pre-line">${truncateText(task.description, 40, 40, 10)}</p>
         <div class="flex justify-between items-center text-xs text-gray-500">
