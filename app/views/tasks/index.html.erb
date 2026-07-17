@@ -82,6 +82,7 @@
                 </span>
               <% end %>
               <%= render 'shared/priority_badge', priority: task.priority %>
+              <%= render 'shared/category_badge', task_category: task.task_category %>
               <span class="text-xs px-2 py-1 rounded-full
                 <%= case task.status.name
                     when 'Not Started' then 'bg-gray-100 text-gray-800'

@@ -89,7 +89,7 @@ class ProjectsController < ApplicationController
     current_preference = params[:show_completed] == 'true'
     
     # Now load the tasks based on the current preference
-    @tasks = @tasks.includes(:tags, :user)
+    @tasks = @tasks.includes(:tags, :user, :task_category)
     @tasks = @tasks.not_completed unless current_preference
     @tasks = @tasks.order(Arel.sql('COALESCE(updated_at, created_at) DESC, created_at DESC'))
                    .page(params[:page]).per(TASKS_PER_PAGE)

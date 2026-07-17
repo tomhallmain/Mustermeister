@@ -128,8 +128,12 @@
                   <%= t('views.tasks.show.due_date') %>: <%= task.due_date.strftime("%b %d, %Y") %>
                 </span>
               <% end %>
-              <%= render 'shared/priority_badge', 
-                  priority: task.priority, 
+              <%= render 'shared/priority_badge',
+                  priority: task.priority,
+                  size: 'text-sm',
+                  additional_classes: 'px-2 py-1' %>
+              <%= render 'shared/category_badge',
+                  task_category: task.task_category,
                   size: 'text-sm',
                   additional_classes: 'px-2 py-1' %>
               <span class="text-sm px-2 py-1 rounded-full

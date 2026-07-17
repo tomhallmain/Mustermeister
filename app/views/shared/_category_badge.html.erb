@@ -1,0 +1,12 @@
+<%# Category badge partial %>
+<%# Usage: render 'shared/category_badge', task_category: task.task_category, size: 'text-xs', additional_classes: 'mt-1' %>
+<% if task_category %>
+  <%
+    size ||= 'text-xs'
+    all_classes = [size, 'px-2 py-1 rounded-full', 'bg-teal-100 text-teal-800']
+    all_classes << additional_classes if defined?(additional_classes)
+  %>
+  <span class="<%= all_classes.join(' ') %>">
+    <%= task_category.display_name %>
+  </span>
+<% end %>

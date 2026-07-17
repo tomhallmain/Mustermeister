@@ -13,6 +13,7 @@ en:
         project: "Project"
         priority: "Priority"
         status: "Status"
+        category: "Category"
         due_date: "Due Date"
         description: "Description"
         created_at: "Created"

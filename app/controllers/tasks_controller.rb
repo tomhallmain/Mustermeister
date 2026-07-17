@@ -29,7 +29,7 @@ class TasksController < ApplicationController
     current_preference = params[:show_completed] == 'true'
     
     # Now load the tasks based on the current preference
-    @tasks = current_user.tasks.not_archived.includes(:project, :tags)
+    @tasks = current_user.tasks.not_archived.includes(:project, :tags, :task_category)
     @tasks = @tasks.not_completed unless current_preference
 
     if params[:search].present?

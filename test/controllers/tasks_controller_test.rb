@@ -32,6 +32,15 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", "Tasks"
   end
 
+  test "tasks index displays a task's category badge" do
+    @task.update!(task_category: task_categories(:feature))
+
+    get tasks_path(show_completed: false)
+    assert_response :success
+
+    assert_match "Feature", response.body
+  end
+
   test "should redirect to tasks when trying to create task without project" do
     get new_task_path
     assert_redirected_to tasks_path(show_completed: false)
@@ -95,6 +104,25 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
   test "should show task" do
     get task_path(@task)
     assert_response :success
+  end
+
+  test "task show displays the task's category badge" do
+    @task.update!(task_category: task_categories(:feature))
+
+    get task_path(@task)
+    assert_response :success
+
+    assert_select "h3", text: "Category"
+    assert_match "Feature", response.body
+  end
+
+  test "task show omits the category block when the task has no category" do
+    @task.update!(task_category: nil)
+
+    get task_path(@task)
+    assert_response :success
+
+    assert_select "h3", text: "Category", count: 0
   end
 
   test "task show displays status change history" do

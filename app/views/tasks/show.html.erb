@@ -54,6 +54,16 @@
               </span>
             </div>
 
+            <% if @task.task_category %>
+              <div>
+                <h3 class="text-sm font-medium text-gray-500"><%= t('views.tasks.show.category') %></h3>
+                <%= render 'shared/category_badge',
+                    task_category: @task.task_category,
+                    size: 'text-sm',
+                    additional_classes: 'mt-1 inline-block px-2 py-1' %>
+              </div>
+            <% end %>
+
             <% if @task.task_result %>
               <div>
                 <h3 class="text-sm font-medium text-gray-500"><%= t('views.tasks.result_modal.result_label') %></h3>

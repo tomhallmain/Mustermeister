@@ -28,6 +28,15 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "project show displays a task's category badge" do
+    tasks(:one).update!(task_category: task_categories(:feature))
+
+    get project_path(@project, show_completed: false)
+    assert_response :success
+
+    assert_match "Feature", response.body
+  end
+
   test "should create project with default priority" do
     assert_difference('Project.count') do
       post projects_path, params: {

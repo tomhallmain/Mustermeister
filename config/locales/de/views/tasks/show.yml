@@ -13,6 +13,7 @@ de:
         project: "Projekt"
         priority: "Priorität"
         status: "Status"
+        category: "Kategorie"
         due_date: "Fälligkeitsdatum"
         description: "Beschreibung"
         created_at: "Erstellt am"
