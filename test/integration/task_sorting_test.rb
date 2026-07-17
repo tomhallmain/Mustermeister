@@ -242,4 +242,51 @@ class TaskSortingTest < ActionDispatch::IntegrationTest
     assert page_two_link.present?, "Expected a page 2 pagination link once task count exceeds a page"
     assert_includes page_two_link['href'], "sort_by=active_oldest_completed_newest"
   end
+
+  test "sort_by persists in session and applies to a later request that omits it" do
+    get tasks_path(show_completed: false, sort_by: 'active_oldest_completed_newest')
+    assert_response :success
+    assert_equal 'active_oldest_completed_newest', session[:tasks_sort_by]
+
+    get tasks_path(show_completed: false)
+    assert_response :success
+    assert_equal 'active_oldest_completed_newest', session[:tasks_sort_by]
+
+    selected_option = css_select("select[name='sort_by'] option[selected]").first
+    assert_equal 'active_oldest_completed_newest', selected_option['value']
+  end
+
+  test "search persists in session and applies to a later request that omits it" do
+    get tasks_path(show_completed: false, search: 'Task 1')
+    assert_response :success
+    assert_equal 'Task 1', session[:tasks_search]
+
+    get tasks_path(show_completed: false)
+    assert_response :success
+    assert_equal 'Task 1', session[:tasks_search]
+
+    search_field = css_select("input[name='search']").first
+    assert_equal 'Task 1', search_field['value']
+
+    task_items = css_select(".task-item")
+    task_titles = task_items.map { |item| item.at_css("h3").text.strip }
+    assert_equal ["Task 1"], task_titles
+  end
+
+  test "explicitly clearing search persists the cleared state" do
+    get tasks_path(show_completed: false, search: 'Task 1')
+    assert_response :success
+    assert_equal 'Task 1', session[:tasks_search]
+
+    get tasks_path(show_completed: false, search: '')
+    assert_response :success
+    assert_nil session[:tasks_search]
+
+    get tasks_path(show_completed: false)
+    assert_response :success
+    assert_nil session[:tasks_search]
+
+    task_items = css_select(".task-item")
+    assert_equal 5, task_items.size
+  end
 end 

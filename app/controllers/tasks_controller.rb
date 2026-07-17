@@ -24,35 +24,49 @@ class TasksController < ApplicationController
   def index
     # Add headers to disable Turbo for this response to prevent double requests
     response.headers["Turbo-Frame"] = "_top"
-    
+
     # If show_completed param is present, update the session preference
     if params[:show_completed].present?
       show_completed = params[:show_completed] == 'true'
       session[:tasks_show_completed] = show_completed
     end
-    
+
     # Get the current stored preference (default to false if nil)
     stored_preference = session[:tasks_show_completed]
     stored_preference = false if stored_preference.nil?
-    
+
     # If no param and we have a stored preference, redirect to include it
     if params[:show_completed].nil?
       redirect_to tasks_path(show_completed: stored_preference, page: params[:page])
       return
     end
-    
+
     # Current preference is from params (already stored in session above)
     current_preference = params[:show_completed] == 'true'
-    
+
     # Now load the tasks based on the current preference
     @tasks = current_user.tasks.not_archived.includes(:project, :tags, :task_category)
     @tasks = @tasks.not_completed unless current_preference
 
-    @sort_by = TASK_INDEX_SORT_OPTIONS.include?(params[:sort_by]) ? params[:sort_by] : TASK_INDEX_DEFAULT_SORT
+    # Remember sort_by/search whenever explicitly provided, and fall back to the
+    # remembered value - without forcing a redirect the way show_completed does,
+    # so a bare tasks_path(show_completed: ...) call still resolves directly.
+    if params[:sort_by].present?
+      session[:tasks_sort_by] = params[:sort_by]
+    end
+    requested_sort_by = params[:sort_by].presence || session[:tasks_sort_by] || TASK_INDEX_DEFAULT_SORT
+    @sort_by = TASK_INDEX_SORT_OPTIONS.include?(requested_sort_by) ? requested_sort_by : TASK_INDEX_DEFAULT_SORT
     sort_sql = task_index_sort_sql(@sort_by)
 
-    if params[:search].present?
-      search_term = params[:search]
+    # search has no meaningful "default" - remember it (including an explicit
+    # clear) whenever the key is present at all, distinct from it being absent.
+    if params.key?(:search)
+      session[:tasks_search] = params[:search].presence
+    end
+    @search = params.key?(:search) ? params[:search] : session[:tasks_search]
+
+    if @search.present?
+      search_term = @search
       @tasks = @tasks.where("title ILIKE ? OR description ILIKE ?",
                            "%#{search_term}%",
                            "%#{search_term}%")
