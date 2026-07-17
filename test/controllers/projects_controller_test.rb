@@ -37,6 +37,15 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Feature", response.body
   end
 
+  test "project show task row includes a quick-copy link" do
+    task = tasks(:one)
+
+    get project_path(@project, show_completed: false)
+    assert_response :success
+
+    assert_select "a[href=?]", new_project_task_path(task.project, source_task_id: task.id, show_completed: 'false')
+  end
+
   test "should create project with default priority" do
     assert_difference('Project.count') do
       post projects_path, params: {

@@ -17,6 +17,15 @@
           <% end %>
         </div>
       </div>
+      <% if @last_created_task %>
+        <%= link_to new_project_task_path(@last_created_task.project, source_task_id: @last_created_task.id, show_completed: params[:show_completed]),
+            class: 'flex items-center space-x-2 px-4 py-2 rounded-md bg-gray-100 text-gray-700 hover:bg-opacity-80' do %>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+          </svg>
+          <span><%= t('views.tasks.index.duplicate_last_task') %></span>
+        <% end %>
+      <% end %>
       <%= link_to params[:show_completed] == 'true' ? tasks_path(show_completed: false) : tasks_path(show_completed: true),
           class: "flex items-center space-x-2 px-4 py-2 rounded-md #{params[:show_completed] == 'true' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'} hover:bg-opacity-80",
           data: { turbo: false } do %>
@@ -110,8 +119,15 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
             </svg>
           <% end %>
-          
-          <%= button_to archive_task_path(task, show_completed: params[:show_completed]), method: :post, class: "text-gray-600 hover:text-gray-800", 
+
+          <%= link_to new_project_task_path(task.project, source_task_id: task.id, show_completed: params[:show_completed]),
+              class: "text-indigo-600 hover:text-indigo-800", title: t('views.tasks.index.duplicate_task') do %>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+          <% end %>
+
+          <%= button_to archive_task_path(task, show_completed: params[:show_completed]), method: :post, class: "text-gray-600 hover:text-gray-800",
               data: { confirm: t('views.tasks.index.archive_confirm') } do %>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>

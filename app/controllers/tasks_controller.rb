@@ -49,6 +49,8 @@ class TasksController < ApplicationController
     end
     
     @tasks = @tasks.page(params[:page]).per(TASKS_PER_PAGE)
+
+    @last_created_task = current_user.tasks.order(created_at: :desc).first
   end
 
   def show

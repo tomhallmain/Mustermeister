@@ -5,6 +5,8 @@ en:
         title: "Tasks"
         new_task: "New Task"
         manage_categories: "Manage Categories"
+        duplicate_task: "Duplicate"
+        duplicate_last_task: "Duplicate Last Task"
         select_project: "Select a project:"
         show_completed: "Show Completed"
         hide_completed: "Hide Completed"

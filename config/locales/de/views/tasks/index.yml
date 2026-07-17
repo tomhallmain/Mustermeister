@@ -5,6 +5,8 @@ de:
         title: "Aufgaben"
         new_task: "Neue Aufgabe"
         manage_categories: "Kategorien verwalten"
+        duplicate_task: "Duplizieren"
+        duplicate_last_task: "Letzte Aufgabe duplizieren"
         select_project: "Wählen Sie ein Projekt aus:"
         show_completed: "Fertiggestellt anzeigen"
         hide_completed: "Fertiggestellt ausblenden"

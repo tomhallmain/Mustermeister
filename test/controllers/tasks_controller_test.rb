@@ -41,6 +41,42 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_match "Feature", response.body
   end
 
+  test "tasks index task row includes a quick-copy link" do
+    get tasks_path(show_completed: false)
+    assert_response :success
+
+    assert_select "a[href=?]", new_project_task_path(@task.project, source_task_id: @task.id, show_completed: 'false')
+  end
+
+  test "tasks index shows a duplicate last task button pointing at the most recently created task" do
+    # Relative to @task (tasks(:one), created_at: Time.current from fixtures) rather than
+    # to "now" directly, since @task is otherwise the most recently created task in play here.
+    @project.create_task!(title: "Older Task", user: @user, created_at: @task.created_at - 2.days)
+    newer_task = @project.create_task!(title: "Newer Task", user: @user, created_at: @task.created_at + 1.hour)
+
+    get tasks_path(show_completed: false)
+    assert_response :success
+
+    # Every row also has its own quick-copy link, so this must be scoped to the
+    # header button specifically (identified by its text) rather than just
+    # asserting on the href, which legitimately appears once per row too.
+    assert_select "a[href=?]", new_project_task_path(newer_task.project, source_task_id: newer_task.id, show_completed: 'false'),
+      text: /Duplicate Last Task/
+  end
+
+  test "tasks index does not show a duplicate last task button when the user has no tasks" do
+    # Reassign rather than switching signed-in users mid-test: signing in a
+    # second time within one test flips Devise's response format to HTML
+    # (see Users::SessionsController#set_request_format) and redirects instead
+    # of the JSON response sign_in_as expects.
+    @user.tasks.update_all(user_id: users(:two).id)
+
+    get tasks_path(show_completed: false)
+    assert_response :success
+
+    assert_select "a", text: /Duplicate Last Task/, count: 0
+  end
+
   test "should redirect to tasks when trying to create task without project" do
     get new_task_path
     assert_redirected_to tasks_path(show_completed: false)

@@ -5,6 +5,8 @@ es:
         title: "Tareas"
         new_task: "Nueva tarea"
         manage_categories: "Gestionar categorías"
+        duplicate_task: "Duplicar"
+        duplicate_last_task: "Duplicar última tarea"
         select_project: "Selecciona un proyecto:"
         show_completed: "Mostrar completadas"
         hide_completed: "Ocultar completadas"
