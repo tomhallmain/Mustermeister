@@ -8,7 +8,7 @@ es:
           auto: "Automático (día/noche según la hora)"
           day: "Tema «Siempre día»"
           night: "Tema Siempre Noche"
-        theme_auto_help: "El modo automático cambia entre los temas diurno y nocturno según la hora local (noche: 7 p. m. - 7 a. m.)."
+        theme_auto_help: "El modo automático cambia entre los temas diurno y nocturno según la hora local (noche: 7 p. m. - 7 a. m.)"
         data_export_import: "Exportación e importación de datos"
         export_your_data: "Exportar tus datos"
         export_intro: "Descarga tus datos en formato JSON o como un archivo ZIP cifrado por motivos de seguridad."

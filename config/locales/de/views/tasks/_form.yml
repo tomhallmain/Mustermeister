@@ -84,7 +84,7 @@ de:
         title_placeholder: "Aufgabentitel eingeben"
         description_placeholder: "Aufgabenbeschreibung eingeben"
         due_date_placeholder: "Fälligkeitsdatum auswählen"
-        priority_label: "Prioridad"
+        priority_label: "Priorität"
         status_label: "Status"
         project_label: "Projekt"
         due_date_label: "Fälligkeitsdatum"

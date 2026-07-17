@@ -2,18 +2,18 @@ de:
   views:
     users:
       profile:
-        update_profile: "Mettre à jour le profil"
+        update_profile: "Profil aktualisieren"
         theme_preference: "Themenpräferenz"
         theme_options:
           auto: "Auto (Tag/Nacht basierend auf der Uhrzeit)"
           day: "Immer Tag-Thema"
           night: "Immer Nacht-Thema"
-        theme_auto_help: "Der Auto-Modus wechselt je nach Ortszeit zwischen Tag- und Nachtdesign (Nacht: 19:00 bis 7:00 Uhr)."
+        theme_auto_help: "Der Auto-Modus wechselt je nach Ortszeit zwischen Tag- und Nachtdesign (Nacht: 19:00 bis 7:00 Uhr)"
         data_export_import: "Datenexport und -import"
         export_your_data: "Exportieren Sie Ihre Daten"
         export_intro: "Laden Sie Ihre Daten im JSON-Format oder als verschlüsselte ZIP-Datei aus Sicherheitsgründen herunter."
         json_export: "JSON-Export"
-        json_export_help: "Für Menschen lesbares Format, gut für die Datenportabilität"
+        json_export_help: "Menschenlesbares Format, gut für die Datenportabilität"
         download_json: "JSON herunterladen"
         encrypted_zip_export: "Verschlüsselter ZIP-Export"
         encrypted_zip_help: "Komprimiert und verschlüsselt, kleinere Dateigröße"

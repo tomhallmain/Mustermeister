@@ -9,7 +9,7 @@ de:
           last_updated: "Aktualisiert am"
           oldest_updated: "Zuerst aktualisiert"
           created_at: "Erstellungsdatum"
-          priority: "Prioridad"
+          priority: "Priorität"
         all_time: "Alle Zeiten"
         updated_within:
           last_1_day: "Letzter Tag"

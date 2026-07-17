@@ -9,6 +9,6 @@ fr:
         bulk_reschedule_title: "Reprogrammer en bloc les tâches sélectionnées"
         new_due_date: "Nouvelle date d'échéance"
         reschedule_selected: "Reprogrammer les tâches sélectionnées"
-        reschedule_confirm: "¿Está seguro de que desea reprogramar las tareas seleccionadas?"
+        reschedule_confirm: "Êtes-vous sûr de vouloir reprogrammer les tâches sélectionnées ?"
         project_label: "Projet"
         due_label: "Échéance"

@@ -10,7 +10,7 @@ fr:
         project_search_no_results: "Aucun projet ne correspond à votre recherche."
         select_all: "Tout sélectionner"
         stats_label: "Stats à inclure"
-        stat_total_tasks: "Total des tâches"
+        stat_total_tasks: "Nombre total de tâches"
         stat_complete_incomplete: "Complet contre non complété (comptages et rapport)"
         stat_status_breakdown: "Statut breakdown (comptes par statut)"
         view_analysis: "Aperçu de l'analyse"

@@ -9,6 +9,6 @@ es:
         bulk_reschedule_title: "Reorganizar tareas seleccionadas de forma masiva"
         new_due_date: "Nueva fecha de vencimiento"
         reschedule_selected: "Reprogramar tareas seleccionadas"
-        reschedule_confirm: "Êtes-vous sûr de vouloir reprogrammer les tâches sélectionnées ?"
+        reschedule_confirm: "¿Está seguro de que desea reprogramar las tareas seleccionadas?"
         project_label: "Proyecto"
         due_label: "Vencido"

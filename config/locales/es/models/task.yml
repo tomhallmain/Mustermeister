@@ -23,7 +23,7 @@ es:
           attributes:
             title:
               blank: "El título no puede estar en blanco"
-              too_short: "El título es demasiado corto (el mínimo es %{count} caracteres)."
+              too_short: "El título es demasiado corto (el mínimo es %{count} caracteres)"
             priority:
               inclusion: "debe ser un nivel de prioridad válido"
             status:

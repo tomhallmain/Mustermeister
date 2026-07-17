@@ -55,11 +55,11 @@ de:
       unlocked: "Ihr Konto wurde erfolgreich entsperrt. Bitte melden Sie sich an, um fortzufahren."
   errors:
     messages:
-      already_confirmed: "wurde bereits bestätigt, bitte versuchen Sie sich anzumelden"
-      confirmation_period_expired: "muss innerhalb von %{period} bestätigt werden, bitte beantragen Sie eine neue"
-      expired: "ist abgelaufen, bitte beantragen Sie ein neues"
+      already_confirmed: "wurde bereits bestätigt, bitte melden Sie sich erneut an"
+      confirmation_period_expired: "muss innerhalb von %{period} bestätigt werden, bitte beantragen Sie eine neue Bestätigung"
+      expired: "ist abgelaufen, bitte beantragen Sie eine neue Bestätigung"
       not_found: "nicht gefunden"
-      not_locked: "war nicht verschlossen"
+      not_locked: "war nicht gesperrt"
       not_saved:
         one: "1 Fehler hat das Speichern dieser %{resource} verhindert:"
         other: "%{count} Fehler haben das Speichern dieser %{resource} verhindert:"

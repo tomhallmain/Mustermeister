@@ -37,7 +37,7 @@ de:
       open: "Öffnen"
       add: "Hinzufügen"
       remove: "Entfernen"
-      update: "Aktualisierung"
+      update: "Aktualisieren"
       submit: "Einreichen"
       reset: "Zurücksetzen"
       confirm: "Bestätigen"
@@ -61,7 +61,7 @@ de:
       unsaved_changes: "Sie haben ungespeicherte Änderungen. Möchten Sie wirklich gehen?"
       destroyed: "%{resource} wurde erfolgreich gelöscht."
       archived: "%{resource} wurde erfolgreich archiviert."
-      unarchived: "%{resource} wurde erfolgreich entpackt."
+      unarchived: "%{resource} wurde erfolgreich aus dem Archiv wiederhergestellt."
     time:
       ago: "vor %{time}"
       from_now: "%{time} ab jetzt"
@@ -81,7 +81,7 @@ de:
     pagination:
       previous: "&lsaquo; Zurück"
       next: "Weiter &rsaquo;"
-      first: "&laquo; Zuerst"
+      first: "&laquo; Erste"
       last: "Letzte &raquo;"
       page: "Seite"
       of: "von"

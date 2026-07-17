@@ -2,10 +2,10 @@ de:
   views:
     reports:
       index:
-        title: "Berichtseinstellung"
+        title: "Berichtseinstellungen"
         subtitle: "Wählen Sie Projekte und Statistiken aus,schließen Sie dann die Analyse an oder herunterladen Sie einen PDF-Bericht."
         projects_label: "Projekte einzubeziehen"
-        projects_hint: "lassen Sie alle nicht abgehakt, um alle Projekte einzubeziehen"
+        projects_hint: "lassen Sie alle nicht abgehakt, um alle Projekte einzubeziehen."
         project_search_placeholder: "Projekte suchen..."
         project_search_no_results: "Keine Projekte finden Ihr Suchbegriff."
         select_all: "Alles auswählen"
@@ -17,7 +17,7 @@ de:
         download_pdf: "PDF herunterladen"
         back_to_projects: "Zurück zu den Projekten"
         deselect_all: "Alles abwählen"
-        saved_section_title: "Gespeicherte Parameter Setze"
+        saved_section_title: "Gespeicherte Parameter-Sätze"
         saved_section_hint: "Speicher das aktuelle Projekt und die ausgewählten Statistiken mit einem Namen ab, oder lade eine gespeicherte Auswahl hoch, um es oben anzuwenden."
         save_current_as: "Aktuelle Auswahl speichern unter"
         save_name_placeholder: "Berichtname"
@@ -27,5 +27,5 @@ de:
         saved_success: "Parameterset gespeichert."
         loaded_success: "„%{name}“ wurde geladen."
         deleted_success: "„%{name}“ wurde gelöscht."
-        no_saved_reports: "Keine gespeicherten Parameter Sets existieren"
+        no_saved_reports: "Keine gespeicherten Parametersätze vorhanden."
         confirm_delete: "Diesen gespeicherten Parametersatz löschen?"

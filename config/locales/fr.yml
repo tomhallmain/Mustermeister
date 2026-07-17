@@ -105,13 +105,13 @@ fr:
 
   task_results:
     values:
-      complete: "Terminee"
+      complete: "Terminée"
       incomplete: "Incomplet"
     reason_suggestions:
       unneeded: "Inutile"
       too_challenging: "Trop difficile"
-      blocked: "Bloque"
-      out_of_scope: "Hors perimetre"
+      blocked: "Bloqué"
+      out_of_scope: "Hors périmètre"
       waiting_on_input: "En attente d'informations"
 
   # Error messages
@@ -150,16 +150,16 @@ fr:
   views:
     tasks:
       result_modal:
-        context_task_label: "Tache"
+        context_task_label: "Tâche"
         context_project_label: "Projet"
-        title: "Definir le resultat de la tache"
-        description: "Comment cette tache s'est-elle terminee ?"
-        result_label: "Resultat"
+        title: "Définir le résultat de la tâche"
+        description: "Comment cette tâche s'est‑elle terminée ?"
+        result_label: "Résultat"
         reason_label: "Raison"
-        reason_placeholder: "Selectionnez ou saisissez une raison"
-        reason_help: "La raison est requise uniquement pour les taches incompletes."
+        reason_placeholder: "Sélectionnez ou saisissez une raison"
+        reason_help: "La raison est requise uniquement pour les tâches incomplètes."
         cancel: "Annuler"
-        confirm: "Enregistrer le resultat"
+        confirm: "Enregistrer le résultat"
       show:
         refresh: "Actualiser"
         comments: "Commentaires"
@@ -221,7 +221,7 @@ fr:
         bulk_reschedule_title: "Reprogrammer en bloc les tâches sélectionnées"
         new_due_date: "Nouvelle date d'échéance"
         reschedule_selected: "Reprogrammer les tâches sélectionnées"
-        reschedule_confirm: "¿Está seguro de que desea reprogramar las tareas seleccionadas?"
+        reschedule_confirm: "Êtes-vous sûr de vouloir reprogrammer les tâches sélectionnées ?"
         project_label: "Projet"
         due_label: "Échéance"
     projects:
@@ -240,7 +240,7 @@ fr:
           auto: "Auto (jour/nuit en fonction de l'heure)"
           day: "Thème « Toujours le jour »"
           night: "Thème « Toujours la nuit »"
-        theme_auto_help: "Le mode automatique bascule entre les thèmes jour et nuit en fonction de votre heure locale (nuit : 19 h - 7 h)."
+        theme_auto_help: "Le mode automatique bascule entre les thèmes jour et nuit en fonction de votre heure locale (nuit : 19 h - 7 h)"
         data_export_import: "Exportation et importation de données"
         export_your_data: "Exporter vos données"
         export_intro: "Téléchargez vos données au format JSON ou sous forme de fichier ZIP crypté pour plus de sécurité."
