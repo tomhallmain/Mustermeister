@@ -1,0 +1,11 @@
+de:
+  views:
+    task_categories:
+      index:
+        title: "Aufgabenkategorien"
+        new_category: "Neue Kategorie"
+        defaults_title: "Standardkategorien"
+        defaults_help: "Für jedes Projekt verfügbar und können nicht bearbeitet oder entfernt werden."
+        custom_title: "Eigene Kategorien"
+        no_custom_categories: "Sie haben noch keine eigenen Kategorien erstellt."
+        delete_confirm: "Sind Sie sicher?"

@@ -1,0 +1,17 @@
+de:
+  activerecord:
+    models:
+      task_category:
+        one: "Aufgabenkategorie"
+        other: "Aufgabenkategorien"
+    attributes:
+      task_category:
+        name: "Name"
+
+  task_categories:
+    defaults:
+      feature: "Funktion"
+      fix: "Behebung"
+      tech_debt: "Technische Schulden"
+      chore: "Routineaufgabe"
+      documentation: "Dokumentation"

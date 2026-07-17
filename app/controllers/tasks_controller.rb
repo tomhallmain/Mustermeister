@@ -394,11 +394,13 @@ class TasksController < ApplicationController
   def load_projects_and_tags
     @projects = current_user.projects
     @tags = Tag.all
+    TaskCategory.ensure_default_categories!
+    @task_categories = TaskCategory.default_categories.order(:name) + current_user.task_categories.order(:name)
   end
 
   def task_params
-    params.require(:task).permit(:title, :description, :completed, :due_date, 
-                               :priority, :project_id, :status_id, :status_name, tag_ids: [])
+    params.require(:task).permit(:title, :description, :completed, :due_date,
+                               :priority, :project_id, :status_id, :status_name, :task_category_id, tag_ids: [])
   end
 
   def task_result_params

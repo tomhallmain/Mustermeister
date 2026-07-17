@@ -258,4 +258,42 @@ class TaskCreationTest < ActionDispatch::IntegrationTest
       old_task_project.title   # last task updated 3 days ago
     ], relevant_titles
   end
+
+  test "new task form includes default and the current user's own custom categories, but not another user's" do
+    other_user = users(:two)
+    other_custom = TaskCategory.create!(name: "Not Mine", user: other_user)
+
+    get new_project_task_path(@project)
+    assert_response :success
+
+    category_options = css_select("select[name='task[task_category_id]'] option").map { |opt| opt.text.strip }
+
+    TaskCategory.default_category_names.each do |name|
+      assert_includes category_options, name
+    end
+    assert_includes category_options, task_categories(:custom_for_user_one).name
+    assert_not_includes category_options, other_custom.name
+  end
+
+  test "creating a task persists the selected category" do
+    assert_difference('Task.count') do
+      post tasks_path, params: {
+        task: {
+          title: "Categorized Task",
+          project_id: @project.id,
+          task_category_id: task_categories(:fix).id
+        }
+      }
+    end
+
+    task = Task.find_by(title: "Categorized Task")
+    assert_equal task_categories(:fix), task.task_category
+  end
+
+  test "tasks index links to the task category management page" do
+    get tasks_path(show_completed: false)
+    assert_response :success
+
+    assert_select "a[href=?]", task_categories_path
+  end
 end

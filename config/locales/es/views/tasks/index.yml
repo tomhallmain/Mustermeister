@@ -4,6 +4,7 @@ es:
       index:
         title: "Tareas"
         new_task: "Nueva tarea"
+        manage_categories: "Gestionar categorías"
         select_project: "Selecciona un proyecto:"
         show_completed: "Mostrar completadas"
         hide_completed: "Ocultar completadas"

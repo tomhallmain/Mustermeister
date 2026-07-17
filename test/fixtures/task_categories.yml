@@ -1,0 +1,33 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# Default categories have no owning user (user_id is nil).
+
+feature:
+  name: "Feature"
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+fix:
+  name: "Fix"
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+tech_debt:
+  name: "Tech Debt"
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+chore:
+  name: "Chore"
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+documentation:
+  name: "Documentation"
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+custom_for_user_one:
+  name: "Spike"
+  user: one
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

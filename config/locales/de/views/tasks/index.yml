@@ -4,6 +4,7 @@ de:
       index:
         title: "Aufgaben"
         new_task: "Neue Aufgabe"
+        manage_categories: "Kategorien verwalten"
         select_project: "Wählen Sie ein Projekt aus:"
         show_completed: "Fertiggestellt anzeigen"
         hide_completed: "Fertiggestellt ausblenden"

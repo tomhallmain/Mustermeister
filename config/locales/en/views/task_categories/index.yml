@@ -1,0 +1,11 @@
+en:
+  views:
+    task_categories:
+      index:
+        title: "Task Categories"
+        new_category: "New Category"
+        defaults_title: "Default Categories"
+        defaults_help: "Available to every project and cannot be edited or removed."
+        custom_title: "Custom Categories"
+        no_custom_categories: "You haven't created any custom categories yet."
+        delete_confirm: "Are you sure?"

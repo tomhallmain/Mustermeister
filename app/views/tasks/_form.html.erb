@@ -49,6 +49,17 @@
     </div>
 
     <div>
+      <%= f.label :task_category_id, t('views.tasks.form.category'), class: "block text-sm font-medium text-gray-700" %>
+      <%
+        category_options = @task_categories.map { |c| [c.display_name, c.id] }
+      %>
+      <%= f.select :task_category_id,
+          options_for_select(category_options, task.task_category_id),
+          { include_blank: t('views.tasks.form.select_category') },
+          { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" } %>
+    </div>
+
+    <div>
       <%= f.label :project_id, t('views.tasks.form.project'), class: "block text-sm font-medium text-gray-700" %>
       <%= f.collection_select :project_id, @projects, :id, :title,
           { prompt: t('views.tasks.form.select_project') },

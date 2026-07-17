@@ -55,6 +55,8 @@ Rails.application.routes.draw do
 
   resources :tags, except: [:show]
 
+  resources :task_categories, except: [:show]
+
   # User profile
   get 'profile', to: 'users#profile', as: :profile
   patch 'profile', to: 'users#update'

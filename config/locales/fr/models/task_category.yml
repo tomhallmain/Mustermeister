@@ -1,0 +1,17 @@
+fr:
+  activerecord:
+    models:
+      task_category:
+        one: "Catégorie de tâche"
+        other: "Catégories de tâche"
+    attributes:
+      task_category:
+        name: "Nom"
+
+  task_categories:
+    defaults:
+      feature: "Fonctionnalité"
+      fix: "Résolution"
+      tech_debt: "Dette technique"
+      chore: "Tâche routinière"
+      documentation: "Documentation"

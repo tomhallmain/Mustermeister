@@ -1,0 +1,17 @@
+es:
+  activerecord:
+    models:
+      task_category:
+        one: "Categoría de tarea"
+        other: "Categorías de tarea"
+    attributes:
+      task_category:
+        name: "Nombre"
+
+  task_categories:
+    defaults:
+      feature: "Función"
+      fix: "Resolución"
+      tech_debt: "Deuda técnica"
+      chore: "Tarea rutinaria"
+      documentation: "Documentación"

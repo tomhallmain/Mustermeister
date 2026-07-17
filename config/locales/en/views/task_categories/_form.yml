@@ -1,0 +1,12 @@
+en:
+  views:
+    task_categories:
+      form:
+        name: "Name"
+        new_category: "New Task Category"
+        edit_category: "Edit Task Category"
+        cancel: "Cancel"
+        submit: "Save Category"
+        error: "error"
+        errors: "errors"
+        prohibited_save: "prohibited this category from being saved:"

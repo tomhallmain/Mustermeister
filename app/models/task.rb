@@ -13,6 +13,7 @@ class Task < ApplicationRecord
   belongs_to :user
   belongs_to :archived_by_user, class_name: 'User', foreign_key: 'archived_by', optional: true
   belongs_to :status
+  belongs_to :task_category, optional: true
   has_one :task_result, dependent: :destroy
   has_and_belongs_to_many :tags
   has_many :comments, dependent: :destroy

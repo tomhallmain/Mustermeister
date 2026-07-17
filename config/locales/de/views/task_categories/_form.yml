@@ -1,0 +1,12 @@
+de:
+  views:
+    task_categories:
+      form:
+        name: "Name"
+        new_category: "Neue Aufgabenkategorie"
+        edit_category: "Aufgabenkategorie bearbeiten"
+        cancel: "Abbrechen"
+        submit: "Kategorie speichern"
+        error: "Fehler"
+        errors: "Fehler"
+        prohibited_save: "verbot, diese Kategorie zu speichern:"

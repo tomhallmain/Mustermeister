@@ -1,0 +1,12 @@
+fr:
+  views:
+    task_categories:
+      form:
+        name: "Nom"
+        new_category: "Nouvelle catégorie de tâche"
+        edit_category: "Modifier la catégorie de tâche"
+        cancel: "Annuler"
+        submit: "Enregistrer la catégorie"
+        error: "erreur"
+        errors: "erreurs"
+        prohibited_save: "a interdit l'enregistrement de cette catégorie :"

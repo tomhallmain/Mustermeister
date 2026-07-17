@@ -4,6 +4,7 @@ en:
       index:
         title: "Tasks"
         new_task: "New Task"
+        manage_categories: "Manage Categories"
         select_project: "Select a project:"
         show_completed: "Show Completed"
         hide_completed: "Hide Completed"

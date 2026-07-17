@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_04_30_211100) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_17_002020) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -64,6 +64,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_30_211100) do
     t.index ["task_id", "tag_id"], name: "index_tags_tasks_on_task_id_and_tag_id"
   end
 
+  create_table "task_categories", force: :cascade do |t|
+    t.string "name", null: false
+    t.bigint "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "name"], name: "index_task_categories_on_user_id_and_name", unique: true
+    t.index ["user_id"], name: "index_task_categories_on_user_id"
+  end
+
   create_table "task_insights_conversations", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "title", null: false
@@ -111,12 +120,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_30_211100) do
     t.datetime "archived_at"
     t.integer "archived_by"
     t.bigint "status_id", null: false
+    t.bigint "task_category_id"
     t.index ["archived"], name: "index_tasks_on_archived"
     t.index ["completed", "due_date"], name: "index_tasks_on_completed_and_due_date"
     t.index ["completed_by"], name: "index_tasks_on_completed_by"
     t.index ["project_id", "completed"], name: "index_tasks_on_project_id_and_completed"
     t.index ["project_id"], name: "index_tasks_on_project_id"
     t.index ["status_id"], name: "index_tasks_on_status_id"
+    t.index ["task_category_id"], name: "index_tasks_on_task_category_id"
     t.index ["user_id"], name: "index_tasks_on_user_id"
   end
 
@@ -158,11 +169,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_30_211100) do
   add_foreign_key "comments", "users"
   add_foreign_key "projects", "users"
   add_foreign_key "statuses", "projects"
+  add_foreign_key "task_categories", "users"
   add_foreign_key "task_insights_conversations", "users"
   add_foreign_key "task_insights_messages", "task_insights_conversations"
   add_foreign_key "task_results", "tasks"
   add_foreign_key "tasks", "projects"
   add_foreign_key "tasks", "statuses"
+  add_foreign_key "tasks", "task_categories"
   add_foreign_key "tasks", "users"
   add_foreign_key "tasks", "users", column: "archived_by"
   add_foreign_key "tasks", "users", column: "completed_by", validate: false

@@ -1,0 +1,11 @@
+fr:
+  views:
+    task_categories:
+      index:
+        title: "Catégories de tâche"
+        new_category: "Nouvelle catégorie"
+        defaults_title: "Catégories par défaut"
+        defaults_help: "Disponibles pour tous les projets et ne peuvent pas être modifiées ni supprimées."
+        custom_title: "Catégories personnalisées"
+        no_custom_categories: "Vous n'avez pas encore créé de catégorie personnalisée."
+        delete_confirm: "Tu es sûr ?"

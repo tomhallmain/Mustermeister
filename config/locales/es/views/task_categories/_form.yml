@@ -1,0 +1,12 @@
+es:
+  views:
+    task_categories:
+      form:
+        name: "Nombre"
+        new_category: "Nueva categoría de tarea"
+        edit_category: "Editar categoría de tarea"
+        cancel: "Cancelar"
+        submit: "Guardar categoría"
+        error: "error"
+        errors: "errores"
+        prohibited_save: "prohibió que se guardara esta categoría:"
