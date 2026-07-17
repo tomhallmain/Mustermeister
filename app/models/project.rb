@@ -62,31 +62,6 @@ class Project < ApplicationRecord
     end
   end
 
-  def color_badge_classes
-    return '' unless color.present?
-    
-    case color
-    when 'red'
-      'bg-red-100 text-red-800 border-red-200'
-    when 'orange'
-      'bg-orange-100 text-orange-800 border-orange-200'
-    when 'yellow'
-      'bg-yellow-100 text-yellow-800 border-yellow-200'
-    when 'green'
-      'bg-green-100 text-green-800 border-green-200'
-    when 'blue'
-      'bg-blue-100 text-blue-800 border-blue-200'
-    when 'purple'
-      'bg-purple-100 text-purple-800 border-purple-200'
-    when 'pink'
-      'bg-pink-100 text-pink-800 border-pink-200'
-    when 'gray'
-      'bg-gray-100 text-gray-800 border-gray-200'
-    else
-      ''
-    end
-  end
-
   def completion_percentage
     return 0 if tasks.empty?
     ((tasks.where(completed: true).count.to_f / tasks.count) * 100).round

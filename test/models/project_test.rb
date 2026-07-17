@@ -272,20 +272,6 @@ class ProjectTest < ActiveSupport::TestCase
     assert_equal '', @project.color_classes
   end
 
-  test "color_badge_classes should return correct CSS classes" do
-    @project.color = 'green'
-    assert_equal 'bg-green-100 text-green-800 border-green-200', @project.color_badge_classes
-    
-    @project.color = 'purple'
-    assert_equal 'bg-purple-100 text-purple-800 border-purple-200', @project.color_badge_classes
-    
-    @project.color = nil
-    assert_equal '', @project.color_badge_classes
-    
-    @project.color = ''
-    assert_equal '', @project.color_badge_classes
-  end
-
   test "color_display should return human readable color name" do
     @project.color = 'red'
     assert_equal 'Red', @project.color_display

@@ -40,11 +40,6 @@
                 <%= t("views.projects.index.status.#{project.status}") %>
               </span>
               <%= render 'shared/priority_badge', priority: project.default_priority %>
-              <% if project.color.present? %>
-                <span class="px-2 py-0.5 text-xs rounded-full border <%= project.color_badge_classes %>">
-                  <%= project.color.titleize %>
-                </span>
-              <% end %>
             </div>
           </div>
           
