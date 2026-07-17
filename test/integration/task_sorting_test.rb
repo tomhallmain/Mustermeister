@@ -198,4 +198,48 @@ class TaskSortingTest < ActionDispatch::IntegrationTest
       debug "  updated_at: #{task.updated_at}"
     end
   end
+
+  test "tasks index falls back to the default sort for an unrecognized sort_by value" do
+    get tasks_path(show_completed: false, sort_by: 'not_a_real_option')
+    assert_response :success
+
+    task_items = css_select(".task-item")
+    task_titles = task_items.map { |item| item.at_css("h3").text.strip }
+
+    assert_equal ["Task 3", "Task 2", "Task 5", "Task 4", "Task 1"], task_titles
+  end
+
+  test "tasks index sorts active tasks oldest-first then completed tasks newest-first" do
+    # update_column bypasses callbacks/timestamps so the carefully-crafted
+    # updated_at values from setup are preserved exactly.
+    @task2.update_column(:completed, true)
+    @task4.update_column(:completed, true)
+
+    get tasks_path(show_completed: true, sort_by: 'active_oldest_completed_newest')
+    assert_response :success
+
+    task_items = css_select(".task-item")
+    task_titles = task_items.map { |item| item.at_css("h3").text.strip }
+
+    # Active (1, 3, 5): oldest updated_at first -> 1 (-2d), 5 (-1d), 3 (base_time)
+    # Completed (2, 4): newest updated_at first -> 2 (base_time), 4 (-1d)
+    assert_equal ["Task 1", "Task 5", "Task 3", "Task 2", "Task 4"], task_titles
+  end
+
+  test "sort_by persists across pagination links" do
+    # setup calls setup_paper_trail before sign_in_as, so the sign-in request
+    # clears the request-scoped PaperTrail context; re-establish it before
+    # creating records directly here.
+    setup_paper_trail
+    (TasksController::TASKS_PER_PAGE + 1).times do |i|
+      @project.create_task!(title: "Extra Task #{i}", user: @user)
+    end
+
+    get tasks_path(show_completed: false, sort_by: 'active_oldest_completed_newest')
+    assert_response :success
+
+    page_two_link = css_select("a[href*='page=2']").first
+    assert page_two_link.present?, "Expected a page 2 pagination link once task count exceeds a page"
+    assert_includes page_two_link['href'], "sort_by=active_oldest_completed_newest"
+  end
 end 

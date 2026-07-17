@@ -375,6 +375,7 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_select "select#project-filter"
     assert_select "select#priority-filter"
     assert_select "select#sort-by"
+    assert_select "select#sort-by option[value='updated_at_asc']"
   end
 
   test "kanban board json format returns projects and statuses" do
@@ -407,6 +408,17 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
 
     ids = JSON.parse(response.body)['tasks']['not_started'].map { |t| t['id'] }
     assert_operator ids.index(newer.id), :<, ids.index(older.id)
+  end
+
+  test "kanban_tasks sorts by updated_at ascending when sort_by=updated_at_asc" do
+    older = @project.tasks.create!(title: "Older Update", user: @user, status: @project.status_by_key(:not_started), updated_at: 2.days.ago)
+    newer = @project.tasks.create!(title: "Newer Update", user: @user, status: @project.status_by_key(:not_started), updated_at: 1.hour.ago)
+
+    get kanban_tasks_path(sort_by: 'updated_at_asc'), as: :json
+    assert_response :success
+
+    ids = JSON.parse(response.body)['tasks']['not_started'].map { |t| t['id'] }
+    assert_operator ids.index(older.id), :<, ids.index(newer.id)
   end
 
   test "kanban_tasks sorts by priority using severity rank, not alphabetically" do

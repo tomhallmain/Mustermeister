@@ -26,7 +26,7 @@
           <span><%= t('views.tasks.index.duplicate_last_task') %></span>
         <% end %>
       <% end %>
-      <%= link_to params[:show_completed] == 'true' ? tasks_path(show_completed: false) : tasks_path(show_completed: true),
+      <%= link_to params[:show_completed] == 'true' ? tasks_path(show_completed: false, sort_by: params[:sort_by]) : tasks_path(show_completed: true, sort_by: params[:sort_by]),
           class: "flex items-center space-x-2 px-4 py-2 rounded-md #{params[:show_completed] == 'true' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'} hover:bg-opacity-80",
           data: { turbo: false } do %>
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,17 +45,25 @@
   </div>
 
   <%= form_with url: tasks_path, method: :get, class: "mb-6", data: { turbo: false } do |f| %>
-    <div class="flex gap-4">
+    <div class="flex gap-4 items-center">
       <div class="flex-grow">
-        <%= f.text_field :search, 
-            placeholder: t('views.tasks.index.search_placeholder'), 
+        <%= f.text_field :search,
+            placeholder: t('views.tasks.index.search_placeholder'),
             value: params[:search],
             class: "w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
       </div>
+      <%= f.label :sort_by, t('views.tasks.index.sort_by'), class: "text-sm font-medium text-gray-700 whitespace-nowrap" %>
+      <%= f.select :sort_by,
+          [
+            [t('views.tasks.index.sort.updated_desc'), 'updated_desc'],
+            [t('views.tasks.index.sort.active_oldest_completed_newest'), 'active_oldest_completed_newest']
+          ],
+          { selected: @sort_by },
+          { class: "px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500", onchange: "this.form.requestSubmit()" } %>
       <%= f.hidden_field :show_completed, value: params[:show_completed] %>
       <%= f.submit t('views.tasks.index.search'), class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" %>
       <% if params[:search].present? %>
-        <%= link_to t('views.tasks.index.clear'), tasks_path(show_completed: params[:show_completed]), class: "bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" %>
+        <%= link_to t('views.tasks.index.clear'), tasks_path(show_completed: params[:show_completed], sort_by: params[:sort_by]), class: "bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" %>
       <% end %>
     </div>
   <% end %>

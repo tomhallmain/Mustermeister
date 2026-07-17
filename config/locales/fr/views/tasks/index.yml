@@ -23,6 +23,9 @@ fr:
         filter_by_status: "Filtrer par statut"
         filter_by_project: "Filtrer par projet"
         sort_by: "Trier par"
+        sort:
+          updated_desc: "Mis à jour récemment"
+          active_oldest_completed_newest: "Actives anciennes, Terminées récentes"
         sort_title: "Titre"
         sort_priority: "Priorité"
         sort_status: "Statut"

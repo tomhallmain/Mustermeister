@@ -32,12 +32,6 @@
         <option value="leisure" <%= 'selected' if @priority_filter == 'leisure' %>><%= t('priorities.leisure') %></option>
       </select>
 
-      <select id="sort-by" class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-        <option value="updated_at" <%= 'selected' if @sort_by == 'updated_at' %>><%= t('views.tasks.kanban.sort.last_updated') %></option>
-        <option value="created_at" <%= 'selected' if @sort_by == 'created_at' %>><%= t('views.tasks.kanban.sort.created_at') %></option>
-        <option value="priority" <%= 'selected' if @sort_by == 'priority' %>><%= t('views.tasks.kanban.sort.priority') %></option>
-      </select>
-
       <select id="updated-within-days" class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
         <option value=""><%= t('views.tasks.kanban.all_time') %></option>
         <option value="1"><%= t('views.tasks.kanban.updated_within.last_1_day') %></option>
@@ -62,6 +56,13 @@
           </svg>
         </div>
       </div>
+
+      <select id="sort-by" class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+        <option value="updated_at" <%= 'selected' if @sort_by == 'updated_at' %>><%= t('views.tasks.kanban.sort.last_updated') %></option>
+        <option value="updated_at_asc" <%= 'selected' if @sort_by == 'updated_at_asc' %>><%= t('views.tasks.kanban.sort.oldest_updated') %></option>
+        <option value="created_at" <%= 'selected' if @sort_by == 'created_at' %>><%= t('views.tasks.kanban.sort.created_at') %></option>
+        <option value="priority" <%= 'selected' if @sort_by == 'priority' %>><%= t('views.tasks.kanban.sort.priority') %></option>
+      </select>
     </div>
 
     <button type="button" id="show-all-completed-btn" 

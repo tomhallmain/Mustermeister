@@ -7,6 +7,7 @@ fr:
         all_priorities: "Toutes les priorités"
         sort:
           last_updated: "Mis à jour le"
+          oldest_updated: "Mis à jour le plus anciennement"
           created_at: "Date de création"
           priority: "Priorité"
         all_time: "Tout le temps"

@@ -2,6 +2,21 @@ class TasksController < ApplicationController
   TASKS_PER_PAGE = 15
   PRIORITY_RANK_SQL = "CASE tasks.priority WHEN 'high' THEN 4 WHEN 'medium' THEN 3 WHEN 'low' THEN 2 ELSE 1 END DESC"
 
+  TASK_INDEX_DEFAULT_SORT = 'updated_desc'
+  # Active (not completed) tasks oldest-first, then completed tasks newest-first -
+  # deliberately the reverse of the kanban board's "most recently active first" logic,
+  # surfacing neglected active tasks while keeping a normal recency log of completed ones.
+  TASK_INDEX_ACTIVE_OLDEST_SORT = 'active_oldest_completed_newest'
+  TASK_INDEX_SORT_OPTIONS = [TASK_INDEX_DEFAULT_SORT, TASK_INDEX_ACTIVE_OLDEST_SORT].freeze
+
+  ACTIVE_OLDEST_COMPLETED_NEWEST_SQL = <<~SQL.squish
+    CASE WHEN tasks.completed THEN 1 ELSE 0 END ASC,
+    CASE WHEN tasks.completed
+      THEN -EXTRACT(EPOCH FROM COALESCE(tasks.updated_at, tasks.created_at))
+      ELSE EXTRACT(EPOCH FROM COALESCE(tasks.updated_at, tasks.created_at))
+    END ASC
+  SQL
+
   before_action :initialize_show_completed_prefs
   before_action :set_task, only: [:show, :edit, :update, :destroy, :toggle, :archive, :refresh]
   before_action :load_projects_and_tags, only: [:new, :edit, :create, :update]
@@ -33,22 +48,25 @@ class TasksController < ApplicationController
     @tasks = current_user.tasks.not_archived.includes(:project, :tags, :task_category)
     @tasks = @tasks.not_completed unless current_preference
 
+    @sort_by = TASK_INDEX_SORT_OPTIONS.include?(params[:sort_by]) ? params[:sort_by] : TASK_INDEX_DEFAULT_SORT
+    sort_sql = task_index_sort_sql(@sort_by)
+
     if params[:search].present?
       search_term = params[:search]
-      @tasks = @tasks.where("title ILIKE ? OR description ILIKE ?", 
-                           "%#{search_term}%", 
+      @tasks = @tasks.where("title ILIKE ? OR description ILIKE ?",
+                           "%#{search_term}%",
                            "%#{search_term}%")
                      .order(Arel.sql("
-                       CASE 
+                       CASE
                          WHEN title ILIKE '#{search_term}%' THEN 1
                          WHEN title ILIKE '% #{search_term}%' THEN 2
                          ELSE 3
                        END,
-                       COALESCE(updated_at, created_at) DESC, created_at DESC"))
+                       #{sort_sql}"))
     else
-      @tasks = @tasks.order(Arel.sql('COALESCE(updated_at, created_at) DESC, created_at DESC'))
+      @tasks = @tasks.order(Arel.sql(sort_sql))
     end
-    
+
     @tasks = @tasks.page(params[:page]).per(TASKS_PER_PAGE)
 
     @last_created_task = current_user.tasks.order(created_at: :desc).first
@@ -314,10 +332,13 @@ class TasksController < ApplicationController
       .includes(:project, :status, :user, :task_category)
       .where(archived: false)
 
-    tasks = if @sort_by == 'priority'
+    tasks = case @sort_by
+    when 'priority'
       # priority is a plain string column ('low'/'medium'/'high'/'leisure'), so a
       # normal order-by would sort alphabetically instead of by severity.
       tasks.order(Arel.sql(PRIORITY_RANK_SQL))
+    when 'updated_at_asc'
+      tasks.order(updated_at: :asc)
     else
       tasks.order(@sort_by => :desc)
     end
@@ -394,6 +415,15 @@ class TasksController < ApplicationController
   def initialize_show_completed_prefs
     session[:projects_show_completed] ||= {}
     session[:tasks_show_completed] = false if session[:tasks_show_completed].nil?
+  end
+
+  def task_index_sort_sql(sort_by)
+    case sort_by
+    when TASK_INDEX_ACTIVE_OLDEST_SORT
+      ACTIVE_OLDEST_COMPLETED_NEWEST_SQL
+    else
+      'COALESCE(updated_at, created_at) DESC, created_at DESC'
+    end
   end
 
   def set_task
