@@ -369,6 +369,141 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert old_task_found, "Old task should be included when no filter is applied"
   end
 
+  test "should get the kanban board page" do
+    get kanban_path
+    assert_response :success
+    assert_select "select#project-filter"
+    assert_select "select#priority-filter"
+    assert_select "select#sort-by"
+  end
+
+  test "kanban board json format returns projects and statuses" do
+    get kanban_path, as: :json
+    assert_response :success
+
+    json_response = JSON.parse(response.body)
+    assert_includes json_response.keys, 'projects'
+    assert_includes json_response.keys, 'statuses'
+    assert_includes json_response['projects'].map { |p| p['id'] }, @project.id
+  end
+
+  test "kanban_tasks sorts by updated_at descending by default" do
+    older = @project.tasks.create!(title: "Older Update", user: @user, status: @project.status_by_key(:not_started), updated_at: 2.days.ago)
+    newer = @project.tasks.create!(title: "Newer Update", user: @user, status: @project.status_by_key(:not_started), updated_at: 1.hour.ago)
+
+    get kanban_tasks_path, as: :json
+    assert_response :success
+
+    ids = JSON.parse(response.body)['tasks']['not_started'].map { |t| t['id'] }
+    assert_operator ids.index(newer.id), :<, ids.index(older.id)
+  end
+
+  test "kanban_tasks sorts by created_at when requested" do
+    older = @project.tasks.create!(title: "Older Created", user: @user, status: @project.status_by_key(:not_started), created_at: 2.days.ago)
+    newer = @project.tasks.create!(title: "Newer Created", user: @user, status: @project.status_by_key(:not_started), created_at: 1.hour.ago)
+
+    get kanban_tasks_path(sort_by: 'created_at'), as: :json
+    assert_response :success
+
+    ids = JSON.parse(response.body)['tasks']['not_started'].map { |t| t['id'] }
+    assert_operator ids.index(newer.id), :<, ids.index(older.id)
+  end
+
+  test "kanban_tasks sorts by priority using severity rank, not alphabetically" do
+    not_started = @project.status_by_key(:not_started)
+    high = @project.tasks.create!(title: "High Prio", user: @user, status: not_started, priority: 'high')
+    medium = @project.tasks.create!(title: "Medium Prio", user: @user, status: not_started, priority: 'medium')
+    low = @project.tasks.create!(title: "Low Prio", user: @user, status: not_started, priority: 'low')
+    leisure = @project.tasks.create!(title: "Leisure Prio", user: @user, status: not_started, priority: 'leisure')
+
+    get kanban_tasks_path(sort_by: 'priority'), as: :json
+    assert_response :success
+
+    ids = JSON.parse(response.body)['tasks']['not_started'].map { |t| t['id'] }
+    relevant_ids = ids & [high.id, medium.id, low.id, leisure.id]
+    assert_equal [high.id, medium.id, low.id, leisure.id], relevant_ids
+  end
+
+  test "kanban_tasks filters by priority" do
+    not_started = @project.status_by_key(:not_started)
+    high_task = @project.tasks.create!(title: "High Prio Task", user: @user, status: not_started, priority: 'high')
+    low_task = @project.tasks.create!(title: "Low Prio Task", user: @user, status: not_started, priority: 'low')
+
+    get kanban_tasks_path(priority: 'high'), as: :json
+    assert_response :success
+
+    ids = JSON.parse(response.body)['tasks'].values.flatten.map { |t| t['id'] }
+    assert_includes ids, high_task.id
+    assert_not_includes ids, low_task.id
+  end
+
+  test "kanban_tasks filters by project_id" do
+    other_project = @user.projects.create!(title: "Second Project")
+    matching_task = @project.tasks.create!(title: "In Filtered Project", user: @user, status: @project.status_by_key(:not_started))
+    other_task = other_project.tasks.create!(title: "In Other Project", user: @user, status: other_project.status_by_key(:not_started))
+
+    get kanban_tasks_path(project_id: @project.id), as: :json
+    assert_response :success
+
+    ids = JSON.parse(response.body)['tasks'].values.flatten.map { |t| t['id'] }
+    assert_includes ids, matching_task.id
+    assert_not_includes ids, other_task.id
+  end
+
+  test "kanban_tasks returns not found for a project_id belonging to another user" do
+    other_user = users(:two)
+    foreign_project = Project.create!(title: "Not Mine", user: other_user)
+
+    get kanban_tasks_path(project_id: foreign_project.id), as: :json
+    assert_response :not_found
+  end
+
+  test "kanban_tasks show_all_completed defaults to only the last 7 days of completed tasks" do
+    complete_status = @project.status_by_key(:complete)
+    old_completed = @project.tasks.create!(title: "Old Completed", user: @user, status: complete_status)
+    old_completed.update_column(:updated_at, 10.days.ago)
+
+    get kanban_tasks_path, as: :json
+    assert_response :success
+
+    ids = JSON.parse(response.body)['tasks']['complete'].map { |t| t['id'] }
+    assert_not_includes ids, old_completed.id
+  end
+
+  test "kanban_tasks show_all_completed=true includes older completed tasks" do
+    complete_status = @project.status_by_key(:complete)
+    old_completed = @project.tasks.create!(title: "Old Completed", user: @user, status: complete_status)
+    old_completed.update_column(:updated_at, 10.days.ago)
+
+    get kanban_tasks_path(show_all_completed: 'true'), as: :json
+    assert_response :success
+
+    ids = JSON.parse(response.body)['tasks']['complete'].map { |t| t['id'] }
+    assert_includes ids, old_completed.id
+  end
+
+  test "kanban_tasks paginates within a status bucket and reports has_more" do
+    not_started = @project.status_by_key(:not_started)
+    101.times { |i| @project.tasks.create!(title: "Bulk Task #{i}", user: @user, status: not_started) }
+    total = @user.tasks.not_archived.joins(:status).where(statuses: { name: 'Not Started' }).count
+
+    get kanban_tasks_path, as: :json
+    assert_response :success
+    page_one = JSON.parse(response.body)
+
+    assert_equal [total, 100].min, page_one['tasks']['not_started'].size
+    assert_equal total > 100, page_one['has_more']
+
+    get kanban_tasks_path(page: 2), as: :json
+    assert_response :success
+    page_two = JSON.parse(response.body)
+
+    assert_equal [total - 100, 0].max, page_two['tasks']['not_started'].size
+    page_one_ids = page_one['tasks']['not_started'].map { |t| t['id'] }
+    page_two_ids = page_two['tasks']['not_started'].map { |t| t['id'] }
+    assert_empty page_one_ids & page_two_ids, "Page 2 should not repeat tasks already shown on page 1"
+  end
+
   test "kanban task update should redirect to login when session expired" do
     # Simulate an expired session by manipulating the session cookie expiration
     # The session store is configured with expire_after: 1.hours

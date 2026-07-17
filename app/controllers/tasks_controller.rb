@@ -1,5 +1,6 @@
 class TasksController < ApplicationController
   TASKS_PER_PAGE = 15
+  PRIORITY_RANK_SQL = "CASE tasks.priority WHEN 'high' THEN 4 WHEN 'medium' THEN 3 WHEN 'low' THEN 2 ELSE 1 END DESC"
 
   before_action :initialize_show_completed_prefs
   before_action :set_task, only: [:show, :edit, :update, :destroy, :toggle, :archive, :refresh]
@@ -312,7 +313,14 @@ class TasksController < ApplicationController
     tasks = current_user.tasks
       .includes(:project, :status, :user, :task_category)
       .where(archived: false)
-      .order(@sort_by => :desc)
+
+    tasks = if @sort_by == 'priority'
+      # priority is a plain string column ('low'/'medium'/'high'/'leisure'), so a
+      # normal order-by would sort alphabetically instead of by severity.
+      tasks.order(Arel.sql(PRIORITY_RANK_SQL))
+    else
+      tasks.order(@sort_by => :desc)
+    end
 
     if @current_project
       tasks = tasks.where(project: @current_project)
