@@ -119,6 +119,18 @@ class ActionDispatch::IntegrationTest
 end
 
 # Configure Capybara to use rack_test driver
+#
+# rack_test executes no JavaScript and performs no real CSS layout (no
+# flexbox/grid computation, getBoundingClientRect always returns zeros) -
+# it's an HTTP+DOM-only driver. That means anything depending on actual
+# rendering or pointer events - the kanban board's SortableJS drag-and-drop
+# in particular - cannot be genuinely covered by the test suite as
+# configured today; see the kanban column layout test in
+# tasks_controller_test.rb for what a regression guard looks like within
+# that limitation (markup/class assertions only). Real coverage of drag-and-
+# drop would need Capybara.javascript_driver pointed at a JS-capable driver
+# backed by a real (likely headless) browser - selenium-webdriver is
+# already in the Gemfile but isn't currently wired up as one.
 Capybara.default_driver = :rack_test
 Capybara.javascript_driver = :rack_test
 

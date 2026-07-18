@@ -378,6 +378,32 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_select "select#sort-by option[value='updated_at_asc']"
   end
 
+  # Regression guard for a bug where dropping a card into a short or empty
+  # column silently failed whenever a sibling column was much taller (e.g. a
+  # large backlog): #kanban-board is a flex row, so every .kanban-column
+  # stretches to match the tallest sibling by default, but .kanban-tasks
+  # never grew to fill that stretched height - leaving a region that was
+  # visually inside the column but outside any Sortable-managed list, so no
+  # drag-and-drop configuration could ever make it droppable. The fix makes
+  # .kanban-column a flex column and .kanban-tasks flex-1 so it always fills
+  # the column's full (stretched) height.
+  #
+  # This only asserts the markup carries the classes the fix depends on -
+  # it can't verify the resulting layout/geometry or an actual drag
+  # gesture, since Capybara here runs on the :rack_test driver (see
+  # test/test_helper.rb), which does no CSS layout and executes no
+  # JavaScript. Confirming this class of bug (and SortableJS drag-and-drop
+  # behavior generally) end-to-end would need a JS-capable Capybara driver
+  # (e.g. selenium-webdriver, already in the Gemfile but not wired up as
+  # Capybara.javascript_driver) driving a real headless browser.
+  test "kanban columns stretch their task list to fill the full column height" do
+    get kanban_path
+    assert_response :success
+
+    assert_select ".kanban-column.flex.flex-col"
+    assert_select ".kanban-column .kanban-tasks.flex-1"
+  end
+
   test "kanban board json format returns projects and statuses" do
     get kanban_path, as: :json
     assert_response :success

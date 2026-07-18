@@ -77,13 +77,13 @@
 
   <div id="kanban-board" class="flex space-x-2 overflow-x-auto pb-4">
     <% { not_started: 'Not Started', investigations: 'To Investigate', in_progress: 'In Progress', ready_to_test: 'Ready to Test', complete: 'Complete' }.each do |key, db_name| %>
-      <div class="kanban-column flex-shrink-0 w-64 rounded-lg p-2" 
+      <div class="kanban-column flex-shrink-0 w-64 rounded-lg p-2 flex flex-col"
            data-status="<%= key %>"
            data-status-id="<%= Status.find_by(name: db_name)&.id %>">
         <h3 class="text-sm font-semibold text-gray-900 mb-2">
           <%= t("views.tasks.kanban.columns.#{key}") %>
         </h3>
-        <div class="kanban-tasks space-y-2 min-h-[200px]" data-status="<%= key %>">
+        <div class="kanban-tasks space-y-2 min-h-[200px] flex-1" data-status="<%= key %>">
           <!-- Tasks will be loaded here via JavaScript -->
         </div>
       </div>

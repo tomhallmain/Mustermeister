@@ -86,25 +86,54 @@ document.addEventListener("DOMContentLoaded", function () {
     window.location.reload();
   }
 
+  // Plain (non-Sortable) dragover/drop handler covering the whole board, so
+  // the browser shows a valid drop cursor everywhere within it - including
+  // .kanban-column's own padding and header, which .kanban-tasks doesn't
+  // visually cover. This is native HTML5 DnD's actual requirement: an
+  // element with dragover.preventDefault() somewhere in the hovered
+  // ancestor chain. It does NOT register as a Sortable/group participant,
+  // so it can't steal a drop or duplicate a card the way a second Sortable
+  // instance did (see below) - it only affects cursor/drop-acceptance, not
+  // list membership, which is still governed solely by the one Sortable
+  // instance on .kanban-tasks.
+  const kanbanBoard = document.getElementById("kanban-board");
+  if (kanbanBoard) {
+    kanbanBoard.addEventListener("dragover", (e) => e.preventDefault());
+    kanbanBoard.addEventListener("drop", (e) => e.preventDefault());
+  }
+
   document.querySelectorAll(".kanban-column").forEach(function (column) {
+    // Only one Sortable root per column, on .kanban-tasks itself. A second
+    // instance used to also be rooted on the parent .kanban-column, sharing
+    // the same group: "tasks" with one nested inside the other - SortableJS
+    // would occasionally let the outer instance win the drop and insert the
+    // card as a sibling of .kanban-tasks instead of inside it, a stray card
+    // the innerHTML re-render in loadTasks() never touches, so it persisted
+    // until a full page reload.
+    //
+    // Native HTML5 DnD (SortableJS's default) is used here rather than
+    // forceFallback: forceFallback's own pointer-based hit-testing turned
+    // out to unreliably resolve evt.to to the wrong (source) list when
+    // dragging across columns - confirmed via diagnostic logging, evt.to
+    // kept reporting the origin column instead of the drop target. Native
+    // mode's evt.to was already proven correct (this is how status changes
+    // worked, pre-stray-card-fix); the dragover listener above is what
+    // makes native mode viable with only one Sortable instance per column.
     new Sortable(column.querySelector(".kanban-tasks"), {
       group: "tasks",
       animation: 150,
       ghostClass: "bg-gray-200",
+      // Default (5px) only treats a thin margin around an EMPTY list's edge
+      // as a valid drop target, not its whole box. .kanban-tasks now has
+      // flex-1 (kanban.html.erb) so it stretches to match the tallest
+      // column - which can be arbitrarily tall for a large backlog - so
+      // this needs to be generously large rather than tied to a fixed
+      // min-height, to keep the whole empty column droppable regardless of
+      // how tall its stretched siblings make it.
+      emptyInsertThreshold: 5000,
       onEnd: function (evt) {
         const taskId = evt.item.dataset.taskId;
         const newStatus = evt.to.closest(".kanban-column").dataset.status;
-        updateTaskStatus(taskId, newStatus);
-      }
-    });
-    new Sortable(column, {
-      group: "tasks",
-      animation: 150,
-      ghostClass: "bg-gray-200",
-      draggable: ".kanban-tasks > *",
-      onEnd: function (evt) {
-        const taskId = evt.item.dataset.taskId;
-        const newStatus = column.dataset.status;
         updateTaskStatus(taskId, newStatus);
       }
     });
@@ -114,9 +143,13 @@ document.addEventListener("DOMContentLoaded", function () {
     if (isLoading) return;
     isLoading = true;
 
+    // Defensive backstop: sweep out any card that ended up outside its
+    // .kanban-tasks container (e.g. dropped directly into the column). Cards
+    // are identified by [data-task-id] (set in createTaskCard below) rather
+    // than a style class, since class names are more likely to drift.
     document.querySelectorAll(".kanban-column").forEach((column) => {
       const tasksContainer = column.querySelector(".kanban-tasks");
-      const allCards = column.querySelectorAll(".bg-white");
+      const allCards = column.querySelectorAll("[data-task-id]");
       allCards.forEach((card) => {
         if (!tasksContainer.contains(card)) {
           card.remove();
@@ -340,7 +373,7 @@ document.addEventListener("DOMContentLoaded", function () {
       kanbanI18n?.priorities?.[task.priority] || task.priority;
 
     return `
-      <div class="surface rounded-lg shadow p-2 cursor-move ${getProjectColorClasses(task.project_color)}" data-task-id="${task.id}" data-task-title="${escapeHtmlAttr(task.title)}" data-project-name="${escapeHtmlAttr(task.project)}">
+      <div class="surface rounded-lg shadow p-2 cursor-move select-none ${getProjectColorClasses(task.project_color)}" data-task-id="${task.id}" data-task-title="${escapeHtmlAttr(task.title)}" data-project-name="${escapeHtmlAttr(task.project)}">
         <div class="flex justify-between items-start mb-1">
           <h4 class="font-medium text-sm text-gray-900">
             <a href="/tasks/${task.id}" class="hover:text-blue-600 hover:underline">${truncateText(task.title, 20, 20, 4)}</a>
