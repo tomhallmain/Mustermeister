@@ -1,6 +1,14 @@
 require "test_helper"
 
 class TaskInsightsChatServiceTest < ActiveSupport::TestCase
+  def setup
+    setup_paper_trail(users(:one))
+  end
+
+  def teardown
+    teardown_paper_trail
+  end
+
   test "rejects final step when answer is structured JSON instead of a string" do
     service = TaskInsightsChatService.new(user: users(:one), locale: :en, progress: nil)
     data = { "type" => "final", "answer" => { "project_totals" => { "A" => 1 } } }
@@ -396,5 +404,120 @@ class TaskInsightsChatServiceTest < ActiveSupport::TestCase
     assert_includes captured_prompt, "USER: Earlier question"
     assert_includes captured_prompt, "ASSISTANT: Earlier answer"
     assert_includes captured_prompt, "USER: New question"
+  end
+
+  # --- exclusion: the literal prompt sent to the LLM, not just tool output ---
+
+  test "prompt sent to the LLM never contains an excluded project's task data" do
+    user = users(:one)
+    excluded_project = Project.create!(title: "Confidential Project", user: user)
+    excluded_project.create_task!(title: "Top Secret Task", user: user)
+    included_project = projects(:one)
+    included_project.create_task!(title: "Visible Task", user: user)
+
+    captured_prompts = []
+    responses = [
+      OllamaLlmService::Result.new(response: '{"type":"tool_call","tool":"recent_tasks","arguments":{"limit":200,"days":3650}}'),
+      OllamaLlmService::Result.new(response: '{"type":"final","answer":"Done."}')
+    ]
+    fake_llm = Class.new do
+      def initialize(responses, capture)
+        @responses = responses
+        @capture = capture
+      end
+
+      def generate_response(prompt, system_prompt:)
+        @capture.call(prompt)
+        @responses.shift
+      end
+    end.new(responses, ->(prompt) { captured_prompts << prompt })
+
+    OllamaLlmService.stub :new, fake_llm do
+      TaskInsightsChatService.call(
+        user: user,
+        question: "What have I worked on recently?",
+        excluded_project_ids: [excluded_project.id]
+      )
+    end
+
+    prompt_after_tool_call = captured_prompts.last
+    assert_includes prompt_after_tool_call, "Visible Task"
+    assert_not_includes prompt_after_tool_call, "Top Secret Task"
+    assert_not_includes prompt_after_tool_call, "Confidential Project"
+  end
+
+  test "a model-supplied project_ids argument targeting an excluded project is still filtered out" do
+    user = users(:one)
+    excluded_project = Project.create!(title: "Confidential Project", user: user)
+    excluded_project.create_task!(title: "Top Secret Task", user: user)
+
+    service = TaskInsightsChatService.new(user: user, locale: :en, excluded_project_ids: [excluded_project.id])
+    # The model explicitly asks for the excluded project by id - simulating an
+    # attempt to route around exclusion via tool arguments rather than it
+    # simply never being mentioned.
+    payload = service.send(:recent_tasks, { "project_ids" => [excluded_project.id], "days" => 3650, "limit" => 200 })
+
+    assert_equal 0, payload[:returned_count]
+    assert_equal [], payload[:items]
+  end
+
+  test "project_summary omits excluded projects entirely" do
+    user = users(:one)
+    excluded_project = Project.create!(title: "Confidential Project", user: user)
+    excluded_project.create_task!(title: "Top Secret Task", user: user)
+
+    service = TaskInsightsChatService.new(user: user, locale: :en, excluded_project_ids: [excluded_project.id])
+    rows = service.send(:project_summary, {})
+
+    assert_not_includes rows.map { |r| r[:project] }, "Confidential Project"
+  end
+
+  test "overdue_tasks excludes tasks from excluded projects" do
+    user = users(:one)
+    excluded_project = Project.create!(title: "Confidential Project", user: user)
+    excluded_project.create_task!(title: "Overdue Secret Task", user: user, completed: false, due_date: 3.days.ago)
+
+    service = TaskInsightsChatService.new(user: user, locale: :en, excluded_project_ids: [excluded_project.id])
+    payload = service.send(:overdue_tasks, { "limit" => 200 })
+
+    assert_not_includes payload[:items].map { |t| t[:title] }, "Overdue Secret Task"
+  end
+
+  test "high_priority_open_tasks excludes tasks from excluded projects" do
+    user = users(:one)
+    excluded_project = Project.create!(title: "Confidential Project", user: user)
+    excluded_project.create_task!(title: "High Priority Secret Task", user: user, completed: false, priority: "high")
+
+    service = TaskInsightsChatService.new(user: user, locale: :en, excluded_project_ids: [excluded_project.id])
+    payload = service.send(:high_priority_open_tasks, { "limit" => 200 })
+
+    assert_not_includes payload[:items].map { |t| t[:title] }, "High Priority Secret Task"
+  end
+
+  test "search_tasks excludes matches from excluded projects" do
+    user = users(:one)
+    excluded_project = Project.create!(title: "Confidential Project", user: user)
+    excluded_project.create_task!(title: "Zephyr Secret Task", user: user)
+    included_project = projects(:one)
+    included_project.create_task!(title: "Zephyr Visible Task", user: user)
+
+    service = TaskInsightsChatService.new(user: user, locale: :en, excluded_project_ids: [excluded_project.id])
+    payload = service.send(:search_tasks, { "keyword" => "zephyr", "limit" => 200 })
+
+    titles = payload[:items].map { |t| t[:title] }
+    assert_includes titles, "Zephyr Visible Task"
+    assert_not_includes titles, "Zephyr Secret Task"
+  end
+
+  test "status_breakdown counts exclude tasks from excluded projects" do
+    user = users(:one)
+    excluded_project = Project.create!(title: "Confidential Project", user: user)
+    excluded_project.create_task!(title: "Secret Task", user: user)
+
+    with_exclusion = TaskInsightsChatService.new(user: user, locale: :en, excluded_project_ids: [excluded_project.id])
+      .send(:status_breakdown, {})
+    without_exclusion = TaskInsightsChatService.new(user: user, locale: :en).send(:status_breakdown, {})
+
+    assert_operator with_exclusion.values.sum, :<, without_exclusion.values.sum
   end
 end

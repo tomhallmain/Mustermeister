@@ -84,4 +84,15 @@ class UserTest < ActiveSupport::TestCase
     assert_respond_to @user, :comments
     assert_instance_of Comment, @user.comments.build
   end
+
+  test "task_insights_excluded_project_ids defaults to an empty array" do
+    @user.save!
+    assert_equal [], @user.reload.task_insights_excluded_project_ids
+  end
+
+  test "task_insights_excluded_project_ids can be persisted" do
+    @user.save!
+    @user.update!(task_insights_excluded_project_ids: [42, 7])
+    assert_equal [42, 7], @user.reload.task_insights_excluded_project_ids
+  end
 end

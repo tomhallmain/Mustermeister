@@ -87,8 +87,21 @@ class ReportsController < ApplicationController
             ai_summary_locale: @ai_locale,
             ai_summary_model: @ai_model
           )
+
+          # @result (used to render the page itself) intentionally still
+          # includes every selected project - task_insights_excluded_project_ids
+          # only means "never sent to an LLM", not "hidden from my own
+          # reports". Re-scope a separate result just for the AI summary so
+          # excluded projects' task data never reaches ReportLlmSummaryService.
+          # project_ids: [] would be misread by ReportStatsService as "no
+          # filter" (i.e. all projects) rather than "none", so force an
+          # empty scope explicitly when everything is excluded.
+          ai_project_ids = @result.project_ids - current_user.task_insights_excluded_project_ids
+          ai_projects_scope = ai_project_ids.empty? ? @projects_scope.none : @projects_scope
+          ai_result = ReportStatsService.call(ai_projects_scope, project_ids: ai_project_ids.presence)
+
           @llm_summary = ReportLlmSummaryService.call(
-            result: @result,
+            result: ai_result,
             locale: @ai_locale,
             model_name: @ai_model
           )
