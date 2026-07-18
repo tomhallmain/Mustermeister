@@ -1,0 +1,42 @@
+es:
+  views:
+    recurring_task_templates:
+      index:
+        title: "Tareas Recurrentes"
+        new_schedule: "Nueva Programación"
+        help_text: "Cada programación crea automáticamente una nueva tarea al inicio de cada período. Si %{count} o más de las tareas generadas por una programación siguen sin completarse, se pausa y recibirás una notificación en lugar de que se acumulen más tareas."
+        no_schedules: "Todavía no has configurado ninguna programación recurrente."
+        project_label: "Proyecto"
+        next_due: "Próximo vencimiento"
+        pending_count:
+          one: "%{count} tarea generada pendiente"
+          other: "%{count} tareas generadas pendientes"
+        status:
+          active: "Activa"
+          paused: "Pausada (acumulación)"
+          inactive: "Inactiva"
+        frequencies:
+          every_day:
+            one: "Cada día"
+            other: "Cada %{count} días"
+          every_week:
+            one: "Cada semana"
+            other: "Cada %{count} semanas"
+          every_month:
+            one: "Cada mes"
+            other: "Cada %{count} meses"
+          every_year:
+            one: "Cada año"
+            other: "Cada %{count} años"
+          twice_per_week: "Dos veces por semana"
+          twice_per_month: "Dos veces al mes"
+          twice_per_year: "Dos veces al año"
+        pause: "Pausar"
+        resume: "Reanudar"
+        edit: "Editar"
+        delete: "Eliminar"
+        delete_confirm: "¿Estás seguro? Esto no eliminará las tareas que ya generó."
+        created: "La programación recurrente se ha creado correctamente."
+        updated: "La programación recurrente se ha actualizado correctamente."
+        deleted: "La programación recurrente se ha eliminado correctamente."
+        not_found: "Programación recurrente no encontrada."

@@ -12,6 +12,7 @@ class Project < ApplicationRecord
   has_many :tasks, dependent: :destroy
   has_many :comments, dependent: :destroy
   has_many :statuses, dependent: :destroy
+  has_many :recurring_task_templates, dependent: :destroy
   belongs_to :user
 
   validates :title, presence: true

@@ -15,6 +15,7 @@ de:
       kanban: "Kanban"
       archived_tasks: "Archivierte Aufgaben"
       reschedule_tasks: "Aufgaben neu planen"
+      recurring_tasks: "Wiederkehrende Aufgaben"
       sign_out: "Abmelden"
       sign_in: "Anmelden"
       sign_up: "Registrieren"

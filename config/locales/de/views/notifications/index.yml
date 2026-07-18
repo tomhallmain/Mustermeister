@@ -1,0 +1,10 @@
+de:
+  views:
+    notifications:
+      index:
+        title: "Benachrichtigungen"
+        mark_all_read: "Alle als gelesen markieren"
+        mark_read: "Als gelesen markieren"
+        no_notifications: "Sie haben keine Benachrichtigungen."
+        view: "Ansehen"
+        not_found: "Benachrichtigung nicht gefunden."

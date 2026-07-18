@@ -1,0 +1,42 @@
+en:
+  views:
+    recurring_task_templates:
+      index:
+        title: "Recurring Tasks"
+        new_schedule: "New Schedule"
+        help_text: "Each schedule automatically creates a new task at the start of every period. If %{count} or more of a schedule's generated tasks are still unfinished, it pauses and you'll get a notification instead of more tasks piling up."
+        no_schedules: "You haven't set up any recurring schedules yet."
+        project_label: "Project"
+        next_due: "Next due"
+        pending_count:
+          one: "%{count} pending generated task"
+          other: "%{count} pending generated tasks"
+        status:
+          active: "Active"
+          paused: "Paused (backlog)"
+          inactive: "Inactive"
+        frequencies:
+          every_day:
+            one: "Every day"
+            other: "Every %{count} days"
+          every_week:
+            one: "Every week"
+            other: "Every %{count} weeks"
+          every_month:
+            one: "Every month"
+            other: "Every %{count} months"
+          every_year:
+            one: "Every year"
+            other: "Every %{count} years"
+          twice_per_week: "Twice a week"
+          twice_per_month: "Twice a month"
+          twice_per_year: "Twice a year"
+        pause: "Pause"
+        resume: "Resume"
+        edit: "Edit"
+        delete: "Delete"
+        delete_confirm: "Are you sure? This won't delete tasks it already generated."
+        created: "Recurring schedule was successfully created."
+        updated: "Recurring schedule was successfully updated."
+        deleted: "Recurring schedule was successfully deleted."
+        not_found: "Recurring schedule not found."

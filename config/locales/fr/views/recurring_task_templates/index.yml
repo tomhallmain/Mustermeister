@@ -1,0 +1,42 @@
+fr:
+  views:
+    recurring_task_templates:
+      index:
+        title: "Tâches Récurrentes"
+        new_schedule: "Nouvelle Planification"
+        help_text: "Chaque planification crée automatiquement une nouvelle tâche au début de chaque période. Si %{count} tâches générées par une planification ou plus ne sont pas encore terminées, elle est mise en pause et vous recevrez une notification plutôt que de voir les tâches s'accumuler."
+        no_schedules: "Vous n'avez pas encore configuré de planification récurrente."
+        project_label: "Projet"
+        next_due: "Prochaine échéance"
+        pending_count:
+          one: "%{count} tâche générée en attente"
+          other: "%{count} tâches générées en attente"
+        status:
+          active: "Active"
+          paused: "En pause (accumulation)"
+          inactive: "Inactive"
+        frequencies:
+          every_day:
+            one: "Chaque jour"
+            other: "Tous les %{count} jours"
+          every_week:
+            one: "Chaque semaine"
+            other: "Toutes les %{count} semaines"
+          every_month:
+            one: "Chaque mois"
+            other: "Tous les %{count} mois"
+          every_year:
+            one: "Chaque année"
+            other: "Tous les %{count} ans"
+          twice_per_week: "Deux fois par semaine"
+          twice_per_month: "Deux fois par mois"
+          twice_per_year: "Deux fois par an"
+        pause: "Mettre en pause"
+        resume: "Reprendre"
+        edit: "Modifier"
+        delete: "Supprimer"
+        delete_confirm: "Êtes-vous sûr ? Cela ne supprimera pas les tâches déjà générées."
+        created: "La planification récurrente a été créée avec succès."
+        updated: "La planification récurrente a été mise à jour avec succès."
+        deleted: "La planification récurrente a été supprimée avec succès."
+        not_found: "Planification récurrente introuvable."

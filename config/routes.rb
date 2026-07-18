@@ -57,6 +57,21 @@ Rails.application.routes.draw do
 
   resources :task_categories, except: [:show]
 
+  resources :recurring_task_templates, path: 'recurring_tasks' do
+    member do
+      patch :toggle
+    end
+  end
+
+  resources :notifications, only: [:index] do
+    member do
+      patch :mark_read
+    end
+    collection do
+      patch :mark_all_read
+    end
+  end
+
   # User profile
   get 'profile', to: 'users#profile', as: :profile
   patch 'profile', to: 'users#update'

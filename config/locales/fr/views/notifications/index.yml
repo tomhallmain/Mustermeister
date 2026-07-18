@@ -1,0 +1,10 @@
+fr:
+  views:
+    notifications:
+      index:
+        title: "Notifications"
+        mark_all_read: "Tout Marquer comme Lu"
+        mark_read: "Marquer comme Lu"
+        no_notifications: "Vous n'avez aucune notification."
+        view: "Voir"
+        not_found: "Notification introuvable."

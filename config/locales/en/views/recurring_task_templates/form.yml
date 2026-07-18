@@ -1,0 +1,29 @@
+en:
+  views:
+    recurring_task_templates:
+      form:
+        new_schedule: "New Recurring Schedule"
+        edit_schedule: "Edit Recurring Schedule"
+        title: "Task Title"
+        description: "Description"
+        project: "Project"
+        select_project: "Select a project"
+        repeat: "Repeat"
+        every: "Every"
+        interval_help: "Use 0.5 for twice per period (e.g. 0.5 Month(s) = twice a month, on the 1st and the middle of the month). Not available for Day(s)."
+        base_units:
+          day: "Day(s)"
+          week: "Week(s)"
+          month: "Month(s)"
+          year: "Year(s)"
+        start_date: "Start Date"
+        start_date_help: "Anchors which day of the week/month/year the schedule fires on."
+        priority: "Priority"
+        category: "Category"
+        select_category: "None"
+        active: "Active"
+        cancel: "Cancel"
+        submit: "Save Schedule"
+        error: "error"
+        errors: "errors"
+        prohibited_save: "prohibited this schedule from being saved:"

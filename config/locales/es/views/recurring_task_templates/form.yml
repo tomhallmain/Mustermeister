@@ -1,0 +1,29 @@
+es:
+  views:
+    recurring_task_templates:
+      form:
+        new_schedule: "Nueva Programación Recurrente"
+        edit_schedule: "Editar Programación Recurrente"
+        title: "Título de la Tarea"
+        description: "Descripción"
+        project: "Proyecto"
+        select_project: "Selecciona un proyecto"
+        repeat: "Repetir"
+        every: "Cada"
+        interval_help: "Usa 0.5 para dos veces por período (p. ej. 0.5 Mes(es) = dos veces al mes, el día 1 y a mitad de mes). No disponible para Día(s)."
+        base_units:
+          day: "Día(s)"
+          week: "Semana(s)"
+          month: "Mes(es)"
+          year: "Año(s)"
+        start_date: "Fecha de Inicio"
+        start_date_help: "Determina el día de la semana/mes/año en que se activa la programación."
+        priority: "Prioridad"
+        category: "Categoría"
+        select_category: "Ninguna"
+        active: "Activa"
+        cancel: "Cancelar"
+        submit: "Guardar Programación"
+        error: "error"
+        errors: "errores"
+        prohibited_save: "impidió que se guardara esta programación:"

@@ -1,0 +1,42 @@
+de:
+  views:
+    recurring_task_templates:
+      index:
+        title: "Wiederkehrende Aufgaben"
+        new_schedule: "Neuer Zeitplan"
+        help_text: "Jeder Zeitplan erstellt automatisch zu Beginn jeder Periode eine neue Aufgabe. Wenn %{count} oder mehr der von einem Zeitplan erstellten Aufgaben noch offen sind, wird er pausiert und Sie erhalten eine Benachrichtigung, anstatt dass sich weitere Aufgaben ansammeln."
+        no_schedules: "Sie haben noch keine wiederkehrenden Zeitpläne eingerichtet."
+        project_label: "Projekt"
+        next_due: "Nächste Fälligkeit"
+        pending_count:
+          one: "%{count} ausstehende erstellte Aufgabe"
+          other: "%{count} ausstehende erstellte Aufgaben"
+        status:
+          active: "Aktiv"
+          paused: "Pausiert (Rückstau)"
+          inactive: "Inaktiv"
+        frequencies:
+          every_day:
+            one: "Jeden Tag"
+            other: "Alle %{count} Tage"
+          every_week:
+            one: "Jede Woche"
+            other: "Alle %{count} Wochen"
+          every_month:
+            one: "Jeden Monat"
+            other: "Alle %{count} Monate"
+          every_year:
+            one: "Jedes Jahr"
+            other: "Alle %{count} Jahre"
+          twice_per_week: "Zweimal pro Woche"
+          twice_per_month: "Zweimal im Monat"
+          twice_per_year: "Zweimal im Jahr"
+        pause: "Pausieren"
+        resume: "Fortsetzen"
+        edit: "Bearbeiten"
+        delete: "Löschen"
+        delete_confirm: "Sind Sie sicher? Bereits erstellte Aufgaben werden dadurch nicht gelöscht."
+        created: "Der wiederkehrende Zeitplan wurde erfolgreich erstellt."
+        updated: "Der wiederkehrende Zeitplan wurde erfolgreich aktualisiert."
+        deleted: "Der wiederkehrende Zeitplan wurde erfolgreich gelöscht."
+        not_found: "Wiederkehrender Zeitplan nicht gefunden."

@@ -1,0 +1,10 @@
+es:
+  views:
+    notifications:
+      index:
+        title: "Notificaciones"
+        mark_all_read: "Marcar Todo como Leído"
+        mark_read: "Marcar como Leído"
+        no_notifications: "No tienes notificaciones."
+        view: "Ver"
+        not_found: "Notificación no encontrada."

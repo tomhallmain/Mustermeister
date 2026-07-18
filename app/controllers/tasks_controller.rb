@@ -20,6 +20,7 @@ class TasksController < ApplicationController
   before_action :initialize_show_completed_prefs
   before_action :set_task, only: [:show, :edit, :update, :destroy, :toggle, :archive, :refresh]
   before_action :load_projects_and_tags, only: [:new, :edit, :create, :update]
+  before_action :run_recurring_task_generation_check, only: [:index]
 
   def index
     # Add headers to disable Turbo for this response to prevent double requests
@@ -429,6 +430,10 @@ class TasksController < ApplicationController
   def initialize_show_completed_prefs
     session[:projects_show_completed] ||= {}
     session[:tasks_show_completed] = false if session[:tasks_show_completed].nil?
+  end
+
+  def run_recurring_task_generation_check
+    RecurringTaskGenerationCheck.run_if_due!
   end
 
   def task_index_sort_sql(sort_by)

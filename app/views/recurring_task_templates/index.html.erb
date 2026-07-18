@@ -1,0 +1,52 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-900"><%= t('views.recurring_task_templates.index.title') %></h1>
+    <%= link_to t('views.recurring_task_templates.index.new_schedule'), new_recurring_task_template_path,
+        class: 'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' %>
+  </div>
+
+  <p class="text-sm text-gray-500 mb-6"><%= t('views.recurring_task_templates.index.help_text', count: RecurringTaskTemplate::MAX_PENDING_GENERATED_TASKS) %></p>
+
+  <% if @recurring_task_templates.empty? %>
+    <div class="surface shadow rounded-lg p-6 text-center text-gray-500">
+      <%= t('views.recurring_task_templates.index.no_schedules') %>
+    </div>
+  <% else %>
+    <div class="surface shadow rounded-lg divide-y divide-gray-200">
+      <% @recurring_task_templates.each do |template| %>
+        <div class="p-6" style="background-color: var(--color-surface);">
+          <div class="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-lg font-medium text-gray-900"><%= template.title %></h3>
+                <span class="px-2 py-1 rounded-full text-xs font-medium <%= template.status_badge_classes %>">
+                  <%= t("views.recurring_task_templates.index.status.#{template.status_key}") %>
+                </span>
+              </div>
+              <div class="mt-1 text-sm text-gray-500">
+                <%= t('views.recurring_task_templates.index.project_label') %>: <%= template.project.title %>
+                &middot;
+                <%= template.frequency_display %>
+              </div>
+              <div class="mt-1 text-sm text-gray-500">
+                <%= t('views.recurring_task_templates.index.next_due') %>: <%= template.upcoming_period_start.strftime("%Y-%m-%d") %>
+                &middot;
+                <%= t('views.recurring_task_templates.index.pending_count', count: template.pending_generated_tasks_count) %>
+              </div>
+            </div>
+            <div class="flex items-center space-x-4">
+              <%= button_to t("views.recurring_task_templates.index.#{template.active? ? 'pause' : 'resume'}"),
+                  toggle_recurring_task_template_path(template), method: :patch,
+                  class: "text-sm text-gray-600 hover:text-gray-900", data: { turbo: false } %>
+              <%= link_to t('views.recurring_task_templates.index.edit'), edit_recurring_task_template_path(template),
+                  class: "text-sm text-blue-600 hover:text-blue-800" %>
+              <%= button_to t('views.recurring_task_templates.index.delete'), recurring_task_template_path(template), method: :delete,
+                  class: "text-sm text-red-600 hover:text-red-800",
+                  data: { turbo: false, confirm: t('views.recurring_task_templates.index.delete_confirm') } %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

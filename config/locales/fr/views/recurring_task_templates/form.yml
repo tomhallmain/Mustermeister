@@ -1,0 +1,29 @@
+fr:
+  views:
+    recurring_task_templates:
+      form:
+        new_schedule: "Nouvelle Planification Récurrente"
+        edit_schedule: "Modifier la Planification Récurrente"
+        title: "Titre de la Tâche"
+        description: "Description"
+        project: "Projet"
+        select_project: "Sélectionnez un projet"
+        repeat: "Répéter"
+        every: "Tous les"
+        interval_help: "Utilisez 0,5 pour deux fois par période (par ex. 0,5 Mois = deux fois par mois, le 1er et au milieu du mois). Non disponible pour Jour(s)."
+        base_units:
+          day: "Jour(s)"
+          week: "Semaine(s)"
+          month: "Mois"
+          year: "Année(s)"
+        start_date: "Date de Début"
+        start_date_help: "Détermine le jour de la semaine/du mois/de l'année où la planification se déclenche."
+        priority: "Priorité"
+        category: "Catégorie"
+        select_category: "Aucune"
+        active: "Active"
+        cancel: "Annuler"
+        submit: "Enregistrer la Planification"
+        error: "erreur"
+        errors: "erreurs"
+        prohibited_save: "a empêché l'enregistrement de cette planification :"

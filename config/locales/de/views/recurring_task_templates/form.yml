@@ -1,0 +1,29 @@
+de:
+  views:
+    recurring_task_templates:
+      form:
+        new_schedule: "Neuer wiederkehrender Zeitplan"
+        edit_schedule: "Wiederkehrenden Zeitplan bearbeiten"
+        title: "Aufgabentitel"
+        description: "Beschreibung"
+        project: "Projekt"
+        select_project: "Wählen Sie ein Projekt aus"
+        repeat: "Wiederholen"
+        every: "Alle"
+        interval_help: "Verwenden Sie 0,5 für zweimal pro Periode (z. B. 0,5 Monat(e) = zweimal im Monat, am 1. und in der Monatsmitte). Nicht verfügbar für Tag(e)."
+        base_units:
+          day: "Tag(e)"
+          week: "Woche(n)"
+          month: "Monat(e)"
+          year: "Jahr(e)"
+        start_date: "Startdatum"
+        start_date_help: "Legt fest, an welchem Wochentag/Monatstag/Jahrestag der Zeitplan ausgelöst wird."
+        priority: "Priorität"
+        category: "Kategorie"
+        select_category: "Keine"
+        active: "Aktiv"
+        cancel: "Abbrechen"
+        submit: "Zeitplan speichern"
+        error: "Fehler"
+        errors: "Fehler"
+        prohibited_save: "verhinderten das Speichern dieses Zeitplans:"

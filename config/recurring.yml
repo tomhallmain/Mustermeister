@@ -8,3 +8,15 @@
 #     command: "SoftDeletedRecord.due.delete_all"
 #     priority: 2
 #     schedule: at 5am every day
+
+production:
+  recurring_task_generation:
+    class: RecurringTaskGenerationJob
+    queue: default
+    schedule: every hour
+
+development:
+  recurring_task_generation:
+    class: RecurringTaskGenerationJob
+    queue: default
+    schedule: every hour

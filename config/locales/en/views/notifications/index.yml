@@ -1,0 +1,10 @@
+en:
+  views:
+    notifications:
+      index:
+        title: "Notifications"
+        mark_all_read: "Mark All Read"
+        mark_read: "Mark Read"
+        no_notifications: "You have no notifications."
+        view: "View"
+        not_found: "Notification not found."
