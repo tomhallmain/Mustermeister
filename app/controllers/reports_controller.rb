@@ -9,7 +9,7 @@ class ReportsController < ApplicationController
     status_breakdown
   ].freeze
 
-  SORT_BY_OPTIONS = %w[total_tasks completion_ratio name].freeze
+  SORT_BY_OPTIONS = %w[total_tasks completion_ratio weighted_progress name].freeze
   SORT_DIRECTIONS = %w[asc desc].freeze
 
   def index
@@ -165,6 +165,7 @@ class ReportsController < ApplicationController
     case sort_by
     when "total_tasks" then pb.total_tasks
     when "completion_ratio" then pb.completion_ratio
+    when "weighted_progress" then pb.weighted_completed_amount
     when "name" then pb.project.title.to_s.downcase
     else pb.total_tasks
     end

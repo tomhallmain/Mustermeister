@@ -121,6 +121,7 @@
           <select name="sort_by" id="analysis-sort-by" class="rounded-md border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500" data-submit-on-change>
             <option value="total_tasks" <%= 'selected' if @sort_by == 'total_tasks' %>><%= t('views.reports.analysis.sort_total_tasks') %></option>
             <option value="completion_ratio" <%= 'selected' if @sort_by == 'completion_ratio' %>><%= t('views.reports.analysis.sort_completion_ratio') %></option>
+            <option value="weighted_progress" <%= 'selected' if @sort_by == 'weighted_progress' %>><%= t('views.reports.analysis.sort_weighted_progress') %></option>
             <option value="name" <%= 'selected' if @sort_by == 'name' %>><%= t('views.reports.analysis.sort_name') %></option>
           </select>
           <label class="sr-only"><%= t('views.reports.analysis.sort_direction') %></label>

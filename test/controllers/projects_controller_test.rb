@@ -28,6 +28,67 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index defaults to sorting by last activity" do
+    get projects_path
+    assert_response :success
+    assert_select "option[value=?][selected]", "last_activity_desc"
+  end
+
+  test "index sorts by title A-Z when sort_by=title_asc" do
+    Project.create!(title: "Zebra Project", user: @user)
+    Project.create!(title: "Alpha Project", user: @user)
+
+    get projects_path(sort_by: "title_asc")
+    assert_response :success
+
+    body = response.body
+    assert body.index("Alpha Project") < body.index("Zebra Project")
+  end
+
+  test "index sorts by completion percentage when sort_by=completion_desc" do
+    low = Project.create!(title: "Low Completion Project", user: @user)
+    low.create_task!(title: "Task", completed: false, user: @user)
+
+    high = Project.create!(title: "High Completion Project", user: @user)
+    high.create_task!(title: "Task", completed: true, user: @user)
+
+    get projects_path(sort_by: "completion_desc")
+    assert_response :success
+
+    body = response.body
+    assert body.index("High Completion Project") < body.index("Low Completion Project")
+  end
+
+  test "index sorts by weighted progress when sort_by=weighted_progress_desc" do
+    small = Project.create!(title: "Small Done Project", user: @user)
+    small.create_task!(title: "One task", completed: true, priority: "leisure", user: @user)
+
+    big = Project.create!(title: "Big Mostly Done Project", user: @user)
+    5.times { |i| big.create_task!(title: "Task #{i}", completed: true, priority: "high", user: @user) }
+    big.create_task!(title: "Still open", completed: false, priority: "leisure", user: @user)
+
+    get projects_path(sort_by: "weighted_progress_desc")
+    assert_response :success
+
+    body = response.body
+    assert body.index("Big Mostly Done Project") < body.index("Small Done Project")
+  end
+
+  test "index falls back to the default sort for an invalid sort_by" do
+    get projects_path(sort_by: "nonsense")
+    assert_response :success
+    assert_select "option[value=?][selected]", "last_activity_desc"
+  end
+
+  test "index remembers sort_by in the session across requests" do
+    get projects_path(sort_by: "title_asc")
+    assert_equal "title_asc", session[:projects_sort_by]
+
+    get projects_path
+    assert_response :success
+    assert_select "option[value=?][selected]", "title_asc"
+  end
+
   test "project show displays a task's category badge" do
     tasks(:one).update!(task_category: task_categories(:feature))
 

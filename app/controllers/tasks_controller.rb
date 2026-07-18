@@ -1,6 +1,5 @@
 class TasksController < ApplicationController
   TASKS_PER_PAGE = 15
-  PRIORITY_RANK_SQL = "CASE tasks.priority WHEN 'high' THEN 4 WHEN 'medium' THEN 3 WHEN 'low' THEN 2 ELSE 1 END DESC"
 
   TASK_INDEX_DEFAULT_SORT = 'updated_desc'
   # Active (not completed) tasks oldest-first, then completed tasks newest-first -
@@ -351,7 +350,7 @@ class TasksController < ApplicationController
     when 'priority'
       # priority is a plain string column ('low'/'medium'/'high'/'leisure'), so a
       # normal order-by would sort alphabetically instead of by severity.
-      tasks.order(Arel.sql(PRIORITY_RANK_SQL))
+      tasks.order(Arel.sql("#{Task::PRIORITY_WEIGHT_SQL} DESC"))
     when 'updated_at_asc'
       tasks.order(updated_at: :asc)
     else

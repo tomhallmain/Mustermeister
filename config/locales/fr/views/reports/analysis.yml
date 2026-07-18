@@ -21,6 +21,7 @@ fr:
         sort_direction: "Direction"
         sort_total_tasks: "Nombre total de tâches"
         sort_completion_ratio: "Complétion %"
+        sort_weighted_progress: "Progression pondérée"
         sort_name: "Nom"
         direction_asc: "Croissant"
         direction_desc: "Descendant"

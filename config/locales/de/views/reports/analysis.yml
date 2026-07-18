@@ -21,6 +21,7 @@ de:
         sort_direction: "Richtung"
         sort_total_tasks: "Gesamte Aufgaben"
         sort_completion_ratio: "Fertigstellungsgrad (in %)"
+        sort_weighted_progress: "Gewichteter Fortschritt"
         sort_name: "Name"
         direction_asc: "Heraufsteigend"
         direction_desc: "Absteigend"

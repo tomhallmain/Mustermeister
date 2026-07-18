@@ -16,6 +16,12 @@ en:
         complete: "Complete"
         delete_confirm: "Are you sure?"
         no_projects: "No projects found"
+        sort_by: "Sort by"
+        sort:
+          last_activity_desc: "Last Activity"
+          title_asc: "Title (A-Z)"
+          completion_desc: "Completion %"
+          weighted_progress_desc: "Weighted Progress"
         status:
           not_started: "Not Started"
           completed: "Completed"

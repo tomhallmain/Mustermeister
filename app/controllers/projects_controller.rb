@@ -2,28 +2,38 @@ class ProjectsController < ApplicationController
   PROJECTS_PER_PAGE = 12
   TASKS_PER_PAGE = 15
 
+  PROJECT_INDEX_DEFAULT_SORT = 'last_activity_desc'
+  PROJECT_INDEX_SORT_OPTIONS = %w[last_activity_desc title_asc completion_desc weighted_progress_desc].freeze
+
   before_action :initialize_show_completed_prefs
   before_action :set_project, only: [:show, :edit, :update, :destroy, :report, :reprioritize]
 
   def index
     @projects = current_user.projects.includes(:tasks)
-    
+
+    if params[:sort_by].present?
+      session[:projects_sort_by] = params[:sort_by]
+    end
+    requested_sort_by = params[:sort_by].presence || session[:projects_sort_by] || PROJECT_INDEX_DEFAULT_SORT
+    @sort_by = PROJECT_INDEX_SORT_OPTIONS.include?(requested_sort_by) ? requested_sort_by : PROJECT_INDEX_DEFAULT_SORT
+    sort_sql = project_index_sort_sql(@sort_by)
+
     if params[:search].present?
       search_term = params[:search]
-      @projects = @projects.where("title ILIKE ? OR description ILIKE ?", 
-                                "%#{search_term}%", 
+      @projects = @projects.where("title ILIKE ? OR description ILIKE ?",
+                                "%#{search_term}%",
                                 "%#{search_term}%")
                           .order(Arel.sql("
-                            CASE 
+                            CASE
                               WHEN title ILIKE '#{search_term}%' THEN 1
                               WHEN title ILIKE '% #{search_term}%' THEN 2
                               ELSE 3
                             END,
-                            last_activity_at DESC"))
+                            #{sort_sql}"))
     else
-      @projects = @projects.order(last_activity_at: :desc)
+      @projects = @projects.order(Arel.sql(sort_sql))
     end
-    
+
     @projects = @projects.page(params[:page]).per(PROJECTS_PER_PAGE)
   end
 
@@ -181,6 +191,19 @@ class ProjectsController < ApplicationController
 
   def initialize_show_completed_prefs
     session[:projects_show_completed] ||= {}
+  end
+
+  def project_index_sort_sql(sort_by)
+    case sort_by
+    when 'title_asc'
+      'LOWER(projects.title) ASC'
+    when 'completion_desc'
+      "#{Project.priority_weighted_completion_ratio_sql} DESC, last_activity_at DESC"
+    when 'weighted_progress_desc'
+      "#{Project.priority_weighted_completed_amount_sql} DESC, last_activity_at DESC"
+    else
+      'last_activity_at DESC'
+    end
   end
 
   def set_project

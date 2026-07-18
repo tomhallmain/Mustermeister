@@ -21,6 +21,7 @@ en:
         sort_direction: "Direction"
         sort_total_tasks: "Total tasks"
         sort_completion_ratio: "Completion %"
+        sort_weighted_progress: "Weighted Progress"
         sort_name: "Name"
         direction_asc: "Ascending"
         direction_desc: "Descending"

@@ -1,4 +1,10 @@
 class Task < ApplicationRecord
+  # Single source of truth for priority-weighted progress calculations
+  # (Project#completion_percentage, ReportStatsService). Reuses the same
+  # ordinal scale already used elsewhere for priority sorting.
+  PRIORITY_WEIGHTS = { "leisure" => 1, "low" => 2, "medium" => 3, "high" => 4 }.freeze
+  PRIORITY_WEIGHT_SQL = "CASE tasks.priority WHEN 'high' THEN 4 WHEN 'medium' THEN 3 WHEN 'low' THEN 2 ELSE 1 END"
+
   # Enable version tracking
   has_paper_trail versions: {
     scope: -> { order("id desc") }

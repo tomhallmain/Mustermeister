@@ -195,7 +195,7 @@ class ReportLlmSummaryService
     now = Time.current
 
     risk_candidates = open_tasks
-      .order(priority_rank_sql => :desc, updated_at: :asc)
+      .order(Arel.sql(Task::PRIORITY_WEIGHT_SQL) => :desc, updated_at: :asc)
       .limit(8)
     stale_7d_scope = open_tasks.where("tasks.updated_at < ?", 7.days.ago)
     stale_14d_scope = open_tasks.where("tasks.updated_at < ?", 14.days.ago)
@@ -219,10 +219,6 @@ class ReportLlmSummaryService
       ready_to_test_examples: format_task_examples(ready_scope.order(updated_at: :asc).limit(TASKS_PER_BUCKET)),
       to_investigate_examples: format_task_examples(investigate_scope.order(updated_at: :asc).limit(TASKS_PER_BUCKET))
     }
-  end
-
-  def priority_rank_sql
-    Arel.sql("CASE tasks.priority WHEN 'high' THEN 4 WHEN 'medium' THEN 3 WHEN 'low' THEN 2 ELSE 1 END")
   end
 
   def format_risk_task(task, now)

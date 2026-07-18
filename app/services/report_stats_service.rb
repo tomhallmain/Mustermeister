@@ -34,6 +34,7 @@ class ReportStatsService
     :completed_count,
     :incomplete_count,
     :completion_ratio,
+    :weighted_completed_amount,
     :status_breakdown,
     keyword_init: true
   )
@@ -98,11 +99,37 @@ class ReportStatsService
     )
   end
 
+  # Priority-weighted completion ratio (0-100) and "weighted progress" amount
+  # for a set of tasks:
+  # - ratio: completed_weight / total_weight * 100 (a completed high-priority
+  #   task counts more than a completed leisure one - see Task::PRIORITY_WEIGHT_SQL)
+  # - amount: completion_fraction * task_count^SIZE_EXPONENT * avg_priority_weight^PRIORITY_EXPONENT
+  #   (see Project::WEIGHTED_PROGRESS_SIZE_EXPONENT / PRIORITY_EXPONENT) - task
+  #   count and priority mix are independently tunable rather than both
+  #   riding on one combined total_weight term
+  def weighted_progress_stats(tasks_scope)
+    total_weight = tasks_scope.sum(Arel.sql(Task::PRIORITY_WEIGHT_SQL)).to_f
+    return [0, 0] unless total_weight.positive?
+
+    task_count = tasks_scope.count.to_f
+    completed_weight = tasks_scope.completed.sum(Arel.sql(Task::PRIORITY_WEIGHT_SQL)).to_f
+    completion_fraction = completed_weight / total_weight
+    avg_priority_weight = total_weight / task_count
+
+    ratio = (completion_fraction * 100).round(1)
+    amount = (
+      completion_fraction *
+      (task_count**Project::WEIGHTED_PROGRESS_SIZE_EXPONENT) *
+      (avg_priority_weight**Project::WEIGHTED_PROGRESS_PRIORITY_EXPONENT)
+    ).round(1)
+    [ratio, amount]
+  end
+
   def build_summary(tasks_scope)
     total = tasks_scope.count
     completed = tasks_scope.completed.count
     incomplete = total - completed
-    ratio = total.positive? ? (completed.to_f / total * 100).round(1) : 0
+    ratio, = weighted_progress_stats(tasks_scope)
     status_breakdown = tasks_scope.joins(:status).group("statuses.name").count
 
     Summary.new(
@@ -119,7 +146,7 @@ class ReportStatsService
     total = tasks.count
     completed = tasks.completed.count
     incomplete = total - completed
-    ratio = total.positive? ? (completed.to_f / total * 100).round(1) : 0
+    ratio, weighted_completed_amount = weighted_progress_stats(tasks)
     status_breakdown = tasks.joins(:status).group("statuses.name").count
 
     ProjectBreakdown.new(
@@ -128,6 +155,7 @@ class ReportStatsService
       completed_count: completed,
       incomplete_count: incomplete,
       completion_ratio: ratio,
+      weighted_completed_amount: weighted_completed_amount,
       status_breakdown: status_breakdown
     )
   end

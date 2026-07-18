@@ -16,6 +16,12 @@ de:
         complete: "Vollständig"
         delete_confirm: "Sind Sie sicher?"
         no_projects: "Keine Projekte gefunden"
+        sort_by: "Sortieren nach"
+        sort:
+          last_activity_desc: "Letzte Aktivität"
+          title_asc: "Titel (A-Z)"
+          completion_desc: "Fertigstellungsgrad (in %)"
+          weighted_progress_desc: "Gewichteter Fortschritt"
         status:
           not_started: "Nicht begonnen"
           completed: "Abgeschlossen"

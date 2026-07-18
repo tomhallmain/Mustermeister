@@ -70,9 +70,97 @@ class Project < ApplicationRecord
     end
   end
 
+  SEGMENT_PRIORITIES = %w[high medium low leisure].freeze
+
+  # The "weighted progress" score (see priority_weighted_completed_amount_sql)
+  # is: completion_fraction * task_count^SIZE_EXPONENT * avg_priority_weight^PRIORITY_EXPONENT
+  # - task count and priority mix are deliberately separate exponents so
+  # each can be tuned independently instead of both riding on one combined
+  # total_weight term:
+  # - SIZE_EXPONENT dampens how much raw task count matters, so a finished
+  #   small project isn't dominated by a barely-started huge one (1.0 would
+  #   weight count linearly; 0.0 would ignore it).
+  # - PRIORITY_EXPONENT amplifies how much the project's average task
+  #   priority matters (1.0 = linear, e.g. an all-medium project scores 3x
+  #   an otherwise-identical all-leisure one; >1.0 compounds faster).
+  WEIGHTED_PROGRESS_SIZE_EXPONENT = 0.75
+  WEIGHTED_PROGRESS_PRIORITY_EXPONENT = 1.5
+
+  # Priority-weighted: a completed high-priority task counts more toward
+  # progress than a completed leisure one (see Task::PRIORITY_WEIGHT_SQL).
+  # Archived tasks are excluded, matching ReportStatsService.
   def completion_percentage
-    return 0 if tasks.empty?
-    ((tasks.where(completed: true).count.to_f / tasks.count) * 100).round
+    scope = tasks.not_archived
+    return 0 if scope.empty?
+
+    total_weight = scope.sum(Arel.sql(Task::PRIORITY_WEIGHT_SQL))
+    return 0 if total_weight.zero?
+
+    completed_weight = scope.where(completed: true).sum(Arel.sql(Task::PRIORITY_WEIGHT_SQL))
+    ((completed_weight.to_f / total_weight) * 100).round
+  end
+
+  # Correlated-subquery SQL (not GROUP BY) so it can be used to ORDER BY on
+  # the (paginated) projects index without breaking Kaminari's count query.
+  def self.priority_weighted_completion_ratio_sql
+    weight = Task::PRIORITY_WEIGHT_SQL
+    "COALESCE((SELECT SUM(CASE WHEN tasks.completed THEN #{weight} ELSE 0 END)::float / NULLIF(SUM(#{weight}), 0) " \
+    "FROM tasks WHERE tasks.project_id = projects.id AND tasks.archived = false), 0)"
+  end
+
+  # completion_fraction * task_count^SIZE_EXPONENT * avg_priority_weight^PRIORITY_EXPONENT
+  # - see WEIGHTED_PROGRESS_SIZE_EXPONENT / WEIGHTED_PROGRESS_PRIORITY_EXPONENT.
+  # Used to sort "substantial, mostly-done, high-priority-heavy projects"
+  # above trivially-small or low-priority ones, without letting raw size
+  # alone dominate completion rate or priority mix.
+  def self.priority_weighted_completed_amount_sql
+    weight = Task::PRIORITY_WEIGHT_SQL
+    size_exponent = WEIGHTED_PROGRESS_SIZE_EXPONENT
+    priority_exponent = WEIGHTED_PROGRESS_PRIORITY_EXPONENT
+    "COALESCE((SELECT " \
+    "(SUM(CASE WHEN tasks.completed THEN #{weight} ELSE 0 END)::float / NULLIF(SUM(#{weight}), 0)) " \
+    "* POWER(COUNT(*)::float, #{size_exponent}) " \
+    "* POWER(SUM(#{weight})::float / NULLIF(COUNT(*), 0), #{priority_exponent}) " \
+    "FROM tasks WHERE tasks.project_id = projects.id AND tasks.archived = false), 0)"
+  end
+
+  # Segments for the completed portion of the progress bar, one per priority
+  # among the *completed* tasks (skipped when zero), each as a percent of
+  # the project's total weight. These always sum to completion_percentage -
+  # the remainder of the bar is left uncolored, matching the plain number
+  # shown underneath - while making which priorities that progress came from
+  # visible (e.g. a mostly-red fill means the completed work skewed
+  # high-priority).
+  def progress_bar_segments
+    scope = tasks.not_archived
+    total_weight = scope.sum(Arel.sql(Task::PRIORITY_WEIGHT_SQL)).to_f
+    return [] if total_weight.zero?
+
+    raw_completed_weights = scope.where(completed: true).group(:priority).sum(Arel.sql(Task::PRIORITY_WEIGHT_SQL))
+
+    completed_weights = Hash.new(0)
+    raw_completed_weights.each do |priority, weight|
+      key = SEGMENT_PRIORITIES.include?(priority) ? priority : "low"
+      completed_weights[key] += weight
+    end
+
+    SEGMENT_PRIORITIES.each_with_object([]) do |priority, segments|
+      weight = completed_weights[priority]
+      next if weight.zero?
+
+      segments << { priority: priority, percent: (weight.to_f / total_weight * 100).round(1) }
+    end
+  end
+
+  # Mirrors shared/_priority_badge's color mapping (high/medium/leisure get
+  # their own hue, everything else - "low" included - falls back to green).
+  def self.progress_segment_color_class(priority)
+    case priority
+    when "high" then "bg-red-500"
+    when "medium" then "bg-yellow-500"
+    when "leisure" then "bg-purple-500"
+    else "bg-green-500"
+    end
   end
 
   def status

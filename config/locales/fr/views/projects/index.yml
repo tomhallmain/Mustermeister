@@ -16,6 +16,12 @@ fr:
         complete: "Complète"
         delete_confirm: "Tu es sûr ?"
         no_projects: "Aucun projet trouvé"
+        sort_by: "Trier par"
+        sort:
+          last_activity_desc: "Dernière activité"
+          title_asc: "Titre (A-Z)"
+          completion_desc: "Complétion %"
+          weighted_progress_desc: "Progression pondérée"
         status:
           not_started: "Non commencé"
           completed: "Terminé"

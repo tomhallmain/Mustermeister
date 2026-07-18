@@ -190,6 +190,67 @@ class ProjectTest < ActiveSupport::TestCase
     assert_equal 50, project.reload.completion_percentage
   end
 
+  test "completion percentage weights completed tasks by priority" do
+    project = Project.create!(title: "Test Project", user: @user)
+    project.create_task!(title: "High done", completed: true, priority: "high", user: @user)
+    project.create_task!(title: "Leisure open", completed: false, priority: "leisure", user: @user)
+
+    # weight: high=4, leisure=1 -> 4 / (4 + 1) = 80%, not the unweighted 50%
+    assert_equal 80, project.reload.completion_percentage
+  end
+
+  test "completion percentage weights incomplete high-priority tasks down the score" do
+    project = Project.create!(title: "Test Project", user: @user)
+    project.create_task!(title: "Leisure done", completed: true, priority: "leisure", user: @user)
+    project.create_task!(title: "High open", completed: false, priority: "high", user: @user)
+
+    # weight: leisure=1, high=4 -> 1 / (1 + 4) = 20%
+    assert_equal 20, project.reload.completion_percentage
+  end
+
+  test "completion percentage excludes archived tasks" do
+    project = Project.create!(title: "Test Project", user: @user)
+    project.create_task!(title: "Done", completed: true, user: @user)
+    stale = project.create_task!(title: "Archived but incomplete", completed: false, user: @user)
+    stale.archive!(@user)
+
+    assert_equal 100, project.reload.completion_percentage
+  end
+
+  test "progress_bar_segments breaks down the completed portion by priority and sums to completion_percentage" do
+    project = Project.create!(title: "Test Project", user: @user)
+    project.create_task!(title: "High done", completed: true, priority: "high", user: @user)
+    project.create_task!(title: "Medium done", completed: true, priority: "medium", user: @user)
+    project.create_task!(title: "Leisure open", completed: false, priority: "leisure", user: @user)
+
+    # total weight = 4 (high) + 3 (medium) + 1 (leisure) = 8
+    project.reload
+    segments = project.progress_bar_segments
+    by_priority = segments.index_by { |s| s[:priority] }
+
+    assert_equal 50.0, by_priority["high"][:percent]   # 4/8
+    assert_equal 37.5, by_priority["medium"][:percent] # 3/8
+    assert_not_includes by_priority.keys, "leisure" # the leisure task isn't completed
+    assert_not_includes by_priority.keys, "low"
+
+    total_segment_percent = segments.sum { |s| s[:percent] }
+    assert_equal project.completion_percentage, total_segment_percent.round
+  end
+
+  test "progress_bar_segments buckets low-priority (and unrecognized) completed tasks under the same color as the badge's fallback" do
+    project = Project.create!(title: "Test Project", user: @user)
+    project.create_task!(title: "Low done", completed: true, priority: "low", user: @user)
+
+    segments = project.reload.progress_bar_segments
+    assert_equal [{ priority: "low", percent: 100.0 }], segments
+    assert_equal "bg-green-500", Project.progress_segment_color_class("low")
+  end
+
+  test "progress_bar_segments is empty for a project with no tasks" do
+    project = Project.create!(title: "Empty Project", user: @user)
+    assert_equal [], project.progress_bar_segments
+  end
+
   test "status should be completed when all tasks are completed" do
     project = Project.create!(title: "Test Project", user: @user)
     assert_equal "not_started", project.status
