@@ -12,13 +12,15 @@ class ProjectPaginationTest < ActionDispatch::IntegrationTest
     setup_paper_trail
     
     # Create enough tasks to test pagination (one more than the per_page limit)
-    (TASKS_PER_PAGE + 1).times do |i|
-      @project.tasks.create!(
-        title: "Task #{i + 1}",
-        description: "Description for task #{i + 1}",
-        user: @user,
-        completed: i.even? # Alternate between completed and not completed
-      )
+    without_duplicate_title_check do
+      (TASKS_PER_PAGE + 1).times do |i|
+        @project.tasks.create!(
+          title: "Task #{i + 1}",
+          description: "Description for task #{i + 1}",
+          user: @user,
+          completed: i.even? # Alternate between completed and not completed
+        )
+      end
     end
     
     # Debug: Print task counts
@@ -160,8 +162,10 @@ class ProjectPaginationTest < ActionDispatch::IntegrationTest
     # PaperTrail controller_info set by setup_paper_trail; re-establish it before
     # creating records directly here.
     setup_paper_trail
-    (PROJECTS_PER_PAGE + 1).times do |i|
-      Project.create!(title: "Searchable Project #{i}", user: @user)
+    without_duplicate_title_check do
+      (PROJECTS_PER_PAGE + 1).times do |i|
+        Project.create!(title: "Searchable Project #{i}", user: @user)
+      end
     end
 
     get projects_path(search: "Searchable")
@@ -182,8 +186,10 @@ class ProjectPaginationTest < ActionDispatch::IntegrationTest
 
   test "project show pagination links preserve the search filter" do
     setup_paper_trail
-    (TASKS_PER_PAGE + 1).times do |i|
-      @project.tasks.create!(title: "Locatable Task #{i}", description: "desc", user: @user)
+    without_duplicate_title_check do
+      (TASKS_PER_PAGE + 1).times do |i|
+        @project.tasks.create!(title: "Locatable Task #{i}", description: "desc", user: @user)
+      end
     end
 
     get project_path(@project, search: "Locatable", show_completed: false)

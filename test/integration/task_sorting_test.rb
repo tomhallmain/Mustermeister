@@ -231,8 +231,10 @@ class TaskSortingTest < ActionDispatch::IntegrationTest
     # clears the request-scoped PaperTrail context; re-establish it before
     # creating records directly here.
     setup_paper_trail
-    (TasksController::TASKS_PER_PAGE + 1).times do |i|
-      @project.create_task!(title: "Extra Task #{i}", user: @user)
+    without_duplicate_title_check do
+      (TasksController::TASKS_PER_PAGE + 1).times do |i|
+        @project.create_task!(title: "Extra Task #{i}", user: @user)
+      end
     end
 
     get tasks_path(show_completed: false, sort_by: 'active_oldest_completed_newest')

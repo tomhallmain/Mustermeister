@@ -94,7 +94,7 @@ class ProjectTest < ActiveSupport::TestCase
   test "should set medium as default_priority if not specified" do
     # This test verifies that medium is used as a fallback in the Task model
     # when no default_priority is set on the project
-    project = Project.create!(title: "No Priority Project", user: @user)
+    project = Project.create!(title: "No Priority Project", user: @user, confirm_duplicate: true)
     task = project.create_task!(title: "Task with default priority", user: @user)
     
     assert_equal 'medium', task.priority
@@ -112,7 +112,7 @@ class ProjectTest < ActiveSupport::TestCase
 
   test "should calculate completion percentage" do
     # Create a new project to avoid fixture interference
-    project = Project.create!(title: "Test Project", user: @user)
+    project = Project.create!(title: "Test Project", user: @user, confirm_duplicate: true)
     project.create_task!(title: "Task 1", completed: true, user: @user)
     project.create_task!(title: "Task 2", completed: false, user: @user)
     
@@ -120,12 +120,12 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "should return 0 completion percentage with no tasks" do
-    project = Project.create!(title: "Empty Project", user: @user)
+    project = Project.create!(title: "Empty Project", user: @user, confirm_duplicate: true)
     assert_equal 0, project.completion_percentage
   end
 
   test "should return 100 completion percentage with all tasks completed" do
-    project = Project.create!(title: "Completed Project", user: @user)
+    project = Project.create!(title: "Completed Project", user: @user, confirm_duplicate: true)
     project.create_task!(title: "Task 1", completed: true, user: @user)
     project.create_task!(title: "Task 2", completed: true, user: @user)
     
@@ -133,13 +133,13 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "should set last_activity_at on creation" do
-    project = Project.create!(title: "New Project", user: @user)
+    project = Project.create!(title: "New Project", user: @user, confirm_duplicate: true)
     assert_not_nil project.last_activity_at
     assert_in_delta Time.current, project.last_activity_at, 1.second
   end
 
   test "should update last_activity_at when task is updated" do
-    project = Project.create!(title: "Test Project", user: @user)
+    project = Project.create!(title: "Test Project", user: @user, confirm_duplicate: true)
     task = project.create_task!(title: "Test Task", user: @user)
     original_activity = project.last_activity_at
     sleep(1)
@@ -150,7 +150,7 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "should destroy associated tasks when destroyed" do
-    project = Project.create!(title: "Test Project", user: @user)
+    project = Project.create!(title: "Test Project", user: @user, confirm_duplicate: true)
     task = project.create_task!(title: "Task", user: @user)
     initial_task_count = Task.count
     
@@ -161,7 +161,7 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "should destroy associated comments when destroyed" do
-    project = Project.create!(title: "Test Project", user: @user)
+    project = Project.create!(title: "Test Project", user: @user, confirm_duplicate: true)
     comment = project.comments.create!(content: "Comment", user: @user)
     initial_comment_count = Comment.count
     
@@ -182,7 +182,7 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "completion percentage should be calculated correctly" do
-    project = Project.create!(title: "Test Project", user: @user)
+    project = Project.create!(title: "Test Project", user: @user, confirm_duplicate: true)
     assert_equal 0, project.completion_percentage
 
     project.create_task!(title: "Task 1", completed: true, user: @user)
@@ -191,7 +191,7 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "completion percentage weights completed tasks by priority" do
-    project = Project.create!(title: "Test Project", user: @user)
+    project = Project.create!(title: "Test Project", user: @user, confirm_duplicate: true)
     project.create_task!(title: "High done", completed: true, priority: "high", user: @user)
     project.create_task!(title: "Leisure open", completed: false, priority: "leisure", user: @user)
 
@@ -200,7 +200,7 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "completion percentage weights incomplete high-priority tasks down the score" do
-    project = Project.create!(title: "Test Project", user: @user)
+    project = Project.create!(title: "Test Project", user: @user, confirm_duplicate: true)
     project.create_task!(title: "Leisure done", completed: true, priority: "leisure", user: @user)
     project.create_task!(title: "High open", completed: false, priority: "high", user: @user)
 
@@ -209,7 +209,7 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "completion percentage excludes archived tasks" do
-    project = Project.create!(title: "Test Project", user: @user)
+    project = Project.create!(title: "Test Project", user: @user, confirm_duplicate: true)
     project.create_task!(title: "Done", completed: true, user: @user)
     stale = project.create_task!(title: "Archived but incomplete", completed: false, user: @user)
     stale.archive!(@user)
@@ -218,7 +218,7 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "progress_bar_segments breaks down the completed portion by priority and sums to completion_percentage" do
-    project = Project.create!(title: "Test Project", user: @user)
+    project = Project.create!(title: "Test Project", user: @user, confirm_duplicate: true)
     project.create_task!(title: "High done", completed: true, priority: "high", user: @user)
     project.create_task!(title: "Medium done", completed: true, priority: "medium", user: @user)
     project.create_task!(title: "Leisure open", completed: false, priority: "leisure", user: @user)
@@ -238,7 +238,7 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "progress_bar_segments buckets low-priority (and unrecognized) completed tasks under the same color as the badge's fallback" do
-    project = Project.create!(title: "Test Project", user: @user)
+    project = Project.create!(title: "Test Project", user: @user, confirm_duplicate: true)
     project.create_task!(title: "Low done", completed: true, priority: "low", user: @user)
 
     segments = project.reload.progress_bar_segments
@@ -247,12 +247,12 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "progress_bar_segments is empty for a project with no tasks" do
-    project = Project.create!(title: "Empty Project", user: @user)
+    project = Project.create!(title: "Empty Project", user: @user, confirm_duplicate: true)
     assert_equal [], project.progress_bar_segments
   end
 
   test "status should be completed when all tasks are completed" do
-    project = Project.create!(title: "Test Project", user: @user)
+    project = Project.create!(title: "Test Project", user: @user, confirm_duplicate: true)
     assert_equal "not_started", project.status
 
     project.create_task!(title: "Task 1", completed: true, user: @user)
@@ -261,7 +261,7 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "status should be in_progress when project has incomplete tasks with status other than Not Started" do
-    project = Project.create!(title: "Test Project", user: @user)
+    project = Project.create!(title: "Test Project", user: @user, confirm_duplicate: true)
     in_progress_status = project.status_by_key(:in_progress)
     assert in_progress_status, "Project should have In Progress status from default_statuses"
 
@@ -271,14 +271,14 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "status should be not_started when all incomplete tasks are Not Started and none completed" do
-    project = Project.create!(title: "Test Project", user: @user)
+    project = Project.create!(title: "Test Project", user: @user, confirm_duplicate: true)
     project.create_task!(title: "Task 1", completed: false, user: @user)
     project.create_task!(title: "Task 2", completed: false, user: @user)
     assert_equal "not_started", project.reload.status
   end
 
   test "should update last_activity_at when task is created" do
-    project = Project.create!(title: "Test Project", user: @user)
+    project = Project.create!(title: "Test Project", user: @user, confirm_duplicate: true)
     initial_activity = project.last_activity_at
 
     travel 1.hour do
@@ -288,7 +288,7 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "archiving a task does not update last_activity_at" do
-    project = Project.create!(title: "Test Project", user: @user)
+    project = Project.create!(title: "Test Project", user: @user, confirm_duplicate: true)
     task = project.create_task!(title: "Test Task", user: @user)
     activity_before_archive = project.reload.last_activity_at
 
@@ -299,7 +299,7 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "un-archiving a task still updates last_activity_at" do
-    project = Project.create!(title: "Test Project", user: @user)
+    project = Project.create!(title: "Test Project", user: @user, confirm_duplicate: true)
     task = project.create_task!(title: "Test Task", user: @user)
     task.archive!(@user)
     activity_after_archive = project.reload.last_activity_at
@@ -311,10 +311,10 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "ordered_by_last_task_update orders by most recently updated task, falling back to project's own updated_at" do
-    project_no_tasks = Project.create!(title: "No Tasks Project", user: @user, updated_at: 2.days.ago)
-    project_old_task = Project.create!(title: "Old Task Project", user: @user)
+    project_no_tasks = Project.create!(title: "No Tasks Project", user: @user, updated_at: 2.days.ago, confirm_duplicate: true)
+    project_old_task = Project.create!(title: "Old Task Project", user: @user, confirm_duplicate: true)
     project_old_task.create_task!(title: "Old task", user: @user, updated_at: 3.days.ago)
-    project_new_task = Project.create!(title: "New Task Project", user: @user)
+    project_new_task = Project.create!(title: "New Task Project", user: @user, confirm_duplicate: true)
     project_new_task.create_task!(title: "New task", user: @user, updated_at: 1.hour.ago)
 
     ordered_titles = Project.where(id: [project_no_tasks.id, project_old_task.id, project_new_task.id])
@@ -329,10 +329,10 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "ordered_by_last_task_update uses the most recently updated task when a project has several" do
-    project = Project.create!(title: "Multi Task Project", user: @user)
+    project = Project.create!(title: "Multi Task Project", user: @user, confirm_duplicate: true)
     project.create_task!(title: "First task", user: @user, updated_at: 5.days.ago)
     project.create_task!(title: "Second task", user: @user, updated_at: 1.hour.ago)
-    other_project = Project.create!(title: "Older Single Task Project", user: @user)
+    other_project = Project.create!(title: "Older Single Task Project", user: @user, confirm_duplicate: true)
     other_project.create_task!(title: "Only task", user: @user, updated_at: 2.days.ago)
 
     ordered_titles = Project.where(id: [project.id, other_project.id])
@@ -343,13 +343,13 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "ordered_by_last_task_update ignores completed tasks when computing recency" do
-    stale_active_project = Project.create!(title: "Stale Active Project", user: @user)
+    stale_active_project = Project.create!(title: "Stale Active Project", user: @user, confirm_duplicate: true)
     stale_active_project.create_task!(title: "Stale active task", user: @user, updated_at: 5.days.ago)
     # Simulates a bulk-archive/cleanup touching an old, already-completed task -
     # this should not make the project look recently active.
     stale_active_project.create_task!(title: "Recently completed task", user: @user, completed: true, updated_at: 1.hour.ago)
 
-    genuinely_recent_project = Project.create!(title: "Genuinely Recent Project", user: @user)
+    genuinely_recent_project = Project.create!(title: "Genuinely Recent Project", user: @user, confirm_duplicate: true)
     genuinely_recent_project.create_task!(title: "Recent active task", user: @user, updated_at: 1.day.ago)
 
     ordered_titles = Project.where(id: [stale_active_project.id, genuinely_recent_project.id])
@@ -360,11 +360,11 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "ordered_by_last_task_update ignores archived tasks when computing recency" do
-    stale_active_project = Project.create!(title: "Stale Active Project", user: @user)
+    stale_active_project = Project.create!(title: "Stale Active Project", user: @user, confirm_duplicate: true)
     stale_active_project.create_task!(title: "Stale active task", user: @user, updated_at: 5.days.ago)
     stale_active_project.create_task!(title: "Recently archived task", user: @user, archived: true, archived_at: 1.hour.ago, updated_at: 1.hour.ago)
 
-    genuinely_recent_project = Project.create!(title: "Genuinely Recent Project", user: @user)
+    genuinely_recent_project = Project.create!(title: "Genuinely Recent Project", user: @user, confirm_duplicate: true)
     genuinely_recent_project.create_task!(title: "Recent active task", user: @user, updated_at: 1.day.ago)
 
     ordered_titles = Project.where(id: [stale_active_project.id, genuinely_recent_project.id])
@@ -375,10 +375,10 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "ordered_by_last_task_update falls back to the project's own updated_at when all tasks are completed or archived" do
-    all_done_project = Project.create!(title: "All Done Project", user: @user, updated_at: 2.days.ago)
+    all_done_project = Project.create!(title: "All Done Project", user: @user, updated_at: 2.days.ago, confirm_duplicate: true)
     all_done_project.create_task!(title: "Completed task", user: @user, completed: true, updated_at: 1.hour.ago)
 
-    older_project = Project.create!(title: "Older Project", user: @user, updated_at: 3.days.ago)
+    older_project = Project.create!(title: "Older Project", user: @user, updated_at: 3.days.ago, confirm_duplicate: true)
 
     ordered_titles = Project.where(id: [all_done_project.id, older_project.id])
                              .ordered_by_last_task_update
@@ -421,7 +421,7 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   test "should save and retrieve color field" do
-    project = Project.new(title: "Color Test Project", user: @user, color: 'green')
+    project = Project.new(title: "Color Test Project", user: @user, color: 'green', confirm_duplicate: true)
     assert project.valid?, "Project should be valid: #{project.errors.full_messages}"
     project.save!
     assert_equal 'green', project.color
@@ -449,5 +449,71 @@ class ProjectTest < ActiveSupport::TestCase
   test "database should have color column" do
     columns = Project.column_names
     assert_includes columns, 'color', "Color column should exist in database. Available columns: #{columns.join(', ')}"
+  end
+
+  test "creating a project with a title very similar to an existing one warns instead of saving" do
+    project = Project.new(title: "Test Project!", user: @user)
+
+    assert_not project.save
+    assert project.errors.where(:title, :similar_exists).any?
+    assert_match(/Test Project/, project.errors[:title].first)
+  end
+
+  test "building via user.projects.build (as the controller does) does not match the record against itself" do
+    # A regression guard for a real bug: user.projects.build appends the new,
+    # not-yet-saved record into user.projects' in-memory association target,
+    # so a naive user.projects.detect { ... } would compare the record's
+    # title against its own and always "match" - blocking every single new
+    # project. Project.new(user: ...) (used by the tests above) doesn't
+    # exercise this association-target path, which is exactly why this bug
+    # slipped past those tests and required a dedicated case here.
+    project = @user.projects.build(title: "Totally Unique Brand New Title")
+
+    assert project.save, project.errors.full_messages.to_sentence
+  end
+
+  test "confirm_duplicate: true allows saving despite a similar title" do
+    project = Project.new(title: "Test Project!", user: @user, confirm_duplicate: true)
+
+    assert project.save
+  end
+
+  test "similar title check is scoped to the current user only" do
+    other_user = users(:two)
+    project = Project.new(title: "Test Project!", user: other_user)
+
+    assert project.save
+  end
+
+  test "a clearly different title is not flagged as a duplicate" do
+    project = Project.new(title: "Completely Unrelated Title", user: @user)
+
+    assert project.save
+  end
+
+  test "editing an existing project's title to something very similar to another warns instead of saving" do
+    other_project = Project.create!(title: "Some Other Project", user: @user, confirm_duplicate: true)
+
+    other_project.title = "Test Project!"
+    assert_not other_project.save
+    assert other_project.errors.where(:title, :similar_exists).any?
+  end
+
+  test "confirm_duplicate: true allows an edited title to save despite being similar to another" do
+    other_project = Project.create!(title: "Some Other Project", user: @user, confirm_duplicate: true)
+
+    other_project.title = "Test Project!"
+    other_project.confirm_duplicate = true
+    assert other_project.save
+  end
+
+  test "updating an unrelated field does not re-check a title that was already similar before this edit" do
+    # Grandfathered in via confirm_duplicate, same as data that predates this
+    # check entirely - saving an unrelated field on it must not be blocked
+    # forever just because its title happens to sit near another one.
+    other_project = Project.create!(title: "Test Project!", user: @user, confirm_duplicate: true)
+
+    other_project.description = "Just changing the description"
+    assert other_project.save
   end
 end

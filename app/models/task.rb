@@ -25,17 +25,39 @@ class Task < ApplicationRecord
   has_and_belongs_to_many :tags
   has_many :comments, dependent: :destroy
 
+  # Not persisted:
+  # - confirm_duplicate: lets the create/edit form warn on a likely-duplicate
+  #   title without hard-blocking - set to bypass the check on a resubmit
+  #   ("Save Anyway"). Permitted from user input via task_params.
+  # - skip_duplicate_check: for system-generated tasks only (see
+  #   RecurringTaskTemplate#generate_task_for_period!, which intentionally
+  #   reuses the same base title every period). Deliberately NOT permitted
+  #   in task_params - only ever set internally, never from a request.
+  attr_accessor :confirm_duplicate, :skip_duplicate_check
+
+  # Process-wide escape hatch for the duplicate-title check, meant only for
+  # test setup that creates bulk/placeholder records incidentally similar to
+  # each other - see ActiveSupport::TestCase#without_duplicate_title_check.
+  class_attribute :duplicate_title_check_disabled, default: false
+
   validates :title, presence: true
   validates :priority, inclusion: { in: %w[low medium high leisure] }, allow_nil: true
   validate :archived_at_presence_if_archived
   validate :status_belongs_to_project
-  
+  validate :warn_if_similar_title_exists_in_project, on: %i[create update]
+
   before_validation :set_defaults
   before_validation :remap_status_to_new_project
   before_destroy :ensure_no_active_dependencies
   after_save :update_project_activity
   after_save :handle_status_completion
   after_save :sync_task_result_with_completion
+  # confirm_duplicate/skip_duplicate_check are meant to authorize exactly one
+  # save - attr_accessors otherwise have no reason to clear themselves, so
+  # without this a record saved twice in-process (a console session, a job,
+  # tests) would silently keep bypassing the check after the first
+  # legitimate use.
+  after_save :reset_duplicate_confirmation
   
   scope :active, -> { where(completed: false, archived: false) }
   scope :completed, -> { where(completed: true) }
@@ -272,6 +294,34 @@ class Task < ApplicationRecord
     if archived? && archived_at.blank?
       errors.add(:archived_at, "must be present when task is archived")
     end
+  end
+
+  def warn_if_similar_title_exists_in_project
+    return if duplicate_title_check_disabled
+    return if ActiveModel::Type::Boolean.new.cast(skip_duplicate_check)
+    return if ActiveModel::Type::Boolean.new.cast(confirm_duplicate)
+    return if title.blank? || project.nil?
+    # On update, only re-check when the title itself was actually edited -
+    # otherwise saving any unrelated field on a task that happens to sit
+    # near another title (e.g. one grandfathered in via skip_duplicate_check,
+    # or created before this check existed) would be blocked forever.
+    # Always true for a new record, so create is unaffected.
+    return unless title_changed?
+
+    # .where.not(id: id) (like .not_archived, a real query rather than
+    # Enumerable#detect on the association's in-memory target) guards against
+    # the same self-match risk fixed in Project#warn_if_similar_title_exists,
+    # in case a future caller builds via project.tasks.build/create instead
+    # of the current current_user.tasks.build(project_id: ...) path.
+    match = project.tasks.not_archived.where.not(id: id).detect { |other| StringSimilarity.similar?(title, other.title) }
+    return unless match
+
+    errors.add(:title, :similar_exists, message: "is very similar to an existing task in this project: \"#{match.title}\"")
+  end
+
+  def reset_duplicate_confirmation
+    self.confirm_duplicate = false
+    self.skip_duplicate_check = false
   end
 
   def status_belongs_to_project

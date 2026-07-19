@@ -313,6 +313,32 @@ class RecurringTaskTemplateTest < ActiveSupport::TestCase
     end
   end
 
+  test "generate_pending_tasks! is not blocked by the duplicate-title check across successive near-identical periods" do
+    # Each generated task's title only differs by its date-based period label
+    # (e.g. "Water the plants (2026-01)" vs "Water the plants (2026-02)"),
+    # which is well above the similarity threshold that would otherwise warn
+    # on a manually-created duplicate. The recurring generation path must
+    # remain completely exempt from that check (see RecurringTaskTemplate#generate_task_for_period!).
+    template = build_template(base_unit: "month", interval: 1, start_date: 6.months.ago.to_date)
+    template.save!
+
+    assert_difference("Task.count", 1) do
+      template.generate_pending_tasks!
+    end
+    first_task = Task.order(created_at: :desc).first
+
+    travel_to(1.month.from_now) do
+      assert_difference("Task.count", 1) do
+        template.generate_pending_tasks!
+      end
+    end
+    second_task = Task.order(created_at: :desc).first
+
+    assert_not_equal first_task.title, second_task.title
+    assert StringSimilarity.similar?(first_task.title, second_task.title),
+      "expected the two generated titles to be near-identical, proving the duplicate check would otherwise have fired"
+  end
+
   test "generate_pending_tasks! for a half-interval schedule produces both halves across successive calls, never both at once" do
     # Anchored so the first half of the current month is already due, but
     # not the second - simulated by pointing start_date far enough in the
@@ -362,7 +388,7 @@ class RecurringTaskTemplateTest < ActiveSupport::TestCase
     template.save!
 
     RecurringTaskTemplate::MAX_PENDING_GENERATED_TASKS.times do |i|
-      @project.create_task!(title: "Backlog #{i}", user: @user, recurring_task_template: template)
+      @project.create_task!(title: "Backlog #{i}", user: @user, recurring_task_template: template, skip_duplicate_check: true)
     end
 
     assert_no_difference("Task.count") do
@@ -389,7 +415,7 @@ class RecurringTaskTemplateTest < ActiveSupport::TestCase
     template.save!
 
     tasks = RecurringTaskTemplate::MAX_PENDING_GENERATED_TASKS.times.map do |i|
-      @project.create_task!(title: "Backlog #{i}", user: @user, recurring_task_template: template)
+      @project.create_task!(title: "Backlog #{i}", user: @user, recurring_task_template: template, skip_duplicate_check: true)
     end
     template.generate_pending_tasks!
     assert template.reload.paused?

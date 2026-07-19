@@ -137,6 +137,75 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal 'low', task.priority
   end
 
+  test "creating a task with a title similar to an existing one in the same project re-renders with a warning instead of saving" do
+    assert_no_difference('Task.count') do
+      post tasks_path, params: {
+        task: {
+          title: "Test Task!",
+          description: "Should be blocked by the duplicate check",
+          project_id: @project.id
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_match(/similar/i, response.body)
+  end
+
+  test "creating a task with confirm_duplicate=1 saves despite a similar title in the same project" do
+    assert_difference('Task.count') do
+      post tasks_path, params: {
+        task: {
+          title: "Test Task!",
+          description: "Confirmed anyway",
+          project_id: @project.id,
+          confirm_duplicate: "1"
+        }
+      }
+    end
+
+    assert Task.exists?(title: "Test Task!", project: @project)
+  end
+
+  test "creating a task with a similar title in a different project is not blocked" do
+    other_project = projects(:reprioritize_test)
+
+    assert_difference('Task.count') do
+      post tasks_path, params: {
+        task: {
+          title: "Test Task!",
+          description: "Different project, should not collide",
+          project_id: other_project.id
+        }
+      }
+    end
+
+    assert Task.exists?(title: "Test Task!", project: other_project)
+  end
+
+  test "editing a task's title to something similar to another in the same project re-renders with a warning instead of saving" do
+    other_task = @project.create_task!(title: "Some Other Task", user: @user, skip_duplicate_check: true)
+
+    patch task_path(other_task), params: {
+      task: { title: "Test Task!" }
+    }
+
+    assert_response :unprocessable_entity
+    assert_match(/similar/i, response.body)
+    assert_equal "Some Other Task", other_task.reload.title
+  end
+
+  test "editing a task's title with confirm_duplicate=1 saves despite a similar title in the same project" do
+    other_task = @project.create_task!(title: "Some Other Task", user: @user, skip_duplicate_check: true)
+
+    patch task_path(other_task), params: {
+      task: { title: "Test Task!", confirm_duplicate: "1" }
+    }
+
+    assert_redirected_to project_path(other_task.project, show_completed: false)
+    assert_equal "Test Task!", other_task.reload.title
+  end
+
   test "should show task" do
     get task_path(@task)
     assert_response :success
@@ -522,7 +591,7 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
 
   test "kanban_tasks paginates within a status bucket and reports has_more" do
     not_started = @project.status_by_key(:not_started)
-    101.times { |i| @project.tasks.create!(title: "Bulk Task #{i}", user: @user, status: not_started) }
+    101.times { |i| @project.tasks.create!(title: "Bulk Task #{i}", user: @user, status: not_started, skip_duplicate_check: true) }
     total = @user.tasks.not_archived.joins(:status).where(statuses: { name: 'Not Started' }).count
 
     get kanban_tasks_path, as: :json

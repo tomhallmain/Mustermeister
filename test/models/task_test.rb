@@ -8,7 +8,8 @@ class TaskTest < ActiveSupport::TestCase
       title: "Test Task",
       description: "Test Description",
       user: @user,
-      project: @project
+      project: @project,
+      skip_duplicate_check: true
     )
     @status = @project.status_by_key(:not_started)
     @task.status = @status
@@ -98,7 +99,8 @@ class TaskTest < ActiveSupport::TestCase
     new_task = Task.new(
       title: "New Task",
       project: @project,
-      user: @user
+      user: @user,
+      skip_duplicate_check: true
     )
     assert_nil new_task.status
     new_task.save!
@@ -130,7 +132,8 @@ class TaskTest < ActiveSupport::TestCase
       title: "Other Task",
       description: "Other Description",
       user: @user,
-      project: @project
+      project: @project,
+      skip_duplicate_check: true
     )
     new_status = Status.new(name: "New Status", project: @project)
     new_status.save!
@@ -152,9 +155,10 @@ class TaskTest < ActiveSupport::TestCase
   test "should override project default priority when explicitly set" do
     # Create a project with high default priority
     project = Project.create!(
-      title: "High Priority Project", 
+      title: "High Priority Project",
       user: @user,
-      default_priority: 'high'
+      default_priority: 'high',
+      confirm_duplicate: true
     )
     
     # Create a task with explicit low priority
@@ -171,7 +175,7 @@ class TaskTest < ActiveSupport::TestCase
 
   test "completion percentage should be calculated correctly" do
     # Create a new project with a single task
-    project = Project.create!(title: "Test Project", user: @user)
+    project = Project.create!(title: "Test Project", user: @user, confirm_duplicate: true)
     assert_equal 0, project.completion_percentage
 
     task = project.create_task!(
@@ -189,7 +193,8 @@ class TaskTest < ActiveSupport::TestCase
     task = Task.create!(
       title: "Test Task",
       user: @user,
-      project: @project
+      project: @project,
+      skip_duplicate_check: true
     )
     comment = task.comments.create!(content: "Test comment", user: @user, status: 'open')
     initial_closed_count = task.comments.where(status: 'closed').count
@@ -209,7 +214,8 @@ class TaskTest < ActiveSupport::TestCase
     task = Task.create!(
       title: "Test Task",
       user: @user,
-      project: @project
+      project: @project,
+      skip_duplicate_check: true
     )
     initial_task_count = Task.count
     
@@ -257,6 +263,74 @@ class TaskTest < ActiveSupport::TestCase
     assert_equal in_progress, latest.to_status
     assert_equal @user, latest.user
     assert_not_nil latest.changed_at
+  end
+
+  test "creating a task with a title very similar to another task in the same project warns instead of saving" do
+    task = Task.new(title: "Test Task!", user: @user, project: @project)
+
+    assert_not task.save
+    assert task.errors.where(:title, :similar_exists).any?
+    assert_match(/Test Task/, task.errors[:title].first)
+  end
+
+  test "building via project.tasks.build (as Project#create_task! does) does not match the record against itself" do
+    # Mirrors the regression guard in project_test.rb: project.tasks.build
+    # appends the new record into project.tasks' in-memory target, which a
+    # naive project.tasks.detect { ... } would then compare against itself.
+    task = @project.build_task(title: "Totally Unique Brand New Title", user: @user)
+
+    assert task.save, task.errors.full_messages.to_sentence
+  end
+
+  test "confirm_duplicate: true allows saving despite a similar task title in the same project" do
+    task = Task.new(title: "Test Task!", user: @user, project: @project, confirm_duplicate: true)
+
+    assert task.save
+  end
+
+  test "skip_duplicate_check: true allows saving despite a similar task title in the same project" do
+    task = Task.new(title: "Test Task!", user: @user, project: @project, skip_duplicate_check: true)
+
+    assert task.save
+  end
+
+  test "similar task title check is scoped to the same project only" do
+    other_project = projects(:reprioritize_test)
+    task = Task.new(title: "Test Task!", user: @user, project: other_project)
+
+    assert task.save
+  end
+
+  test "an archived task with a similar title in the same project does not block creation" do
+    existing = Task.create!(title: "Archivable Task", user: @user, project: @project, skip_duplicate_check: true)
+    existing.archive!(@user)
+
+    task = Task.new(title: "Archivable Task!", user: @user, project: @project)
+
+    assert task.save
+  end
+
+  test "editing an existing task's title to something very similar to another in the same project warns instead of saving" do
+    other_task = Task.create!(title: "Some Other Task", user: @user, project: @project, skip_duplicate_check: true)
+
+    other_task.title = "Test Task!"
+    assert_not other_task.save
+    assert other_task.errors.where(:title, :similar_exists).any?
+  end
+
+  test "confirm_duplicate: true allows an edited task title to save despite being similar to another" do
+    other_task = Task.create!(title: "Some Other Task", user: @user, project: @project, skip_duplicate_check: true)
+
+    other_task.title = "Test Task!"
+    other_task.confirm_duplicate = true
+    assert other_task.save
+  end
+
+  test "updating an unrelated field does not re-check a task title that was already similar before this edit" do
+    other_task = Task.create!(title: "Test Task!", user: @user, project: @project, skip_duplicate_check: true)
+
+    other_task.priority = "high"
+    assert other_task.save
   end
 
   test "should be searchable by title and description" do

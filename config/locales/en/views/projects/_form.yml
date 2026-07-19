@@ -26,6 +26,8 @@ en:
         new_project: "New Project"
         edit_project: "Edit Project"
         submit: "Save Project"
+        create_anyway: "Save Anyway"
+        similar_title_warning_heading: "A similar project already exists"
         color_help: "Choose a color to visually distinguish this project in the kanban board and other views."
         colors:
           red: "Red"

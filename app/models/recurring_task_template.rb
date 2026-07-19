@@ -312,7 +312,12 @@ class RecurringTaskTemplate < ApplicationRecord
       user: user,
       task_category: task_category,
       due_date: period_start,
-      recurring_task_template: self
+      recurring_task_template: self,
+      # Every period intentionally reuses the same base title (only the date
+      # label changes), which the duplicate-title warning would otherwise
+      # flag against the previous period's task - this is system-generated,
+      # not a user submission, so it must bypass that check entirely.
+      skip_duplicate_check: true
     )
     update!(last_generated_period_start: period_start)
   end

@@ -15,14 +15,30 @@ class Project < ApplicationRecord
   has_many :recurring_task_templates, dependent: :destroy
   belongs_to :user
 
+  # Not persisted - lets the create/edit form warn on a likely-duplicate
+  # title without hard-blocking: set to a truthy value to bypass the check
+  # on a resubmit ("Save Anyway").
+  attr_accessor :confirm_duplicate
+
+  # Process-wide escape hatch for the duplicate-title check, meant only for
+  # test setup that creates bulk/placeholder records incidentally similar to
+  # each other - see ActiveSupport::TestCase#without_duplicate_title_check.
+  class_attribute :duplicate_title_check_disabled, default: false
+
   validates :title, presence: true
   validates :default_priority, inclusion: { in: %w[low medium high leisure] }, allow_nil: true
   validates :color, inclusion: { in: %w[red orange yellow green blue purple pink gray], message: "must be a valid color" }, allow_nil: true, allow_blank: true
-  
+  validate :warn_if_similar_title_exists, on: %i[create update]
+
   before_save :update_last_activity
   before_create :set_initial_activity
   after_create :create_default_statuses
-  
+  # confirm_duplicate is meant to authorize exactly one save - an
+  # attr_accessor otherwise has no reason to clear itself, so without this a
+  # record saved twice in-process (a console session, a job, tests) would
+  # silently keep bypassing the check after the first legitimate use.
+  after_save :reset_duplicate_confirmation
+
   scope :not_completed, -> {
     joins(:tasks)
       .where(tasks: { completed: false })
@@ -206,6 +222,31 @@ class Project < ApplicationRecord
   end
 
   private
+
+  def warn_if_similar_title_exists
+    return if duplicate_title_check_disabled
+    return if ActiveModel::Type::Boolean.new.cast(confirm_duplicate)
+    return if title.blank? || user.nil?
+    # On update, only re-check when the title itself was actually edited -
+    # otherwise saving any unrelated field on a record that happens to sit
+    # near another title (e.g. one grandfathered in via confirm_duplicate,
+    # or created before this check existed) would be blocked forever.
+    # Always true for a new record, so create is unaffected.
+    return unless title_changed?
+
+    # .where forces a real query instead of Enumerable#detect reading the
+    # association's in-memory target - important because user.projects.build
+    # (what the controller actually uses) adds this very (unsaved, id-less)
+    # record to that target, which would otherwise match itself every time.
+    match = user.projects.where.not(id: id).detect { |other| StringSimilarity.similar?(title, other.title) }
+    return unless match
+
+    errors.add(:title, :similar_exists, message: "is very similar to an existing project: \"#{match.title}\"")
+  end
+
+  def reset_duplicate_confirmation
+    self.confirm_duplicate = false
+  end
 
   def set_initial_activity
     self.last_activity_at = Time.current

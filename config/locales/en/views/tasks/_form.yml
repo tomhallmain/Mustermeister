@@ -28,6 +28,8 @@ en:
         new_task: "New Task"
         edit_task: "Edit Task"
         submit: "Save Task"
+        create_anyway: "Save Anyway"
+        similar_title_warning_heading: "A similar task already exists in this project"
         error: "error"
         errors: "errors"
         prohibited_save: "prohibited this task from being saved:"

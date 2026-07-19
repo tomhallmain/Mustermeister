@@ -23,7 +23,8 @@ class TaskPaginationTest < ActionDispatch::IntegrationTest
         title: "Task #{i + 1}",
         description: "Description for task #{i + 1}",
         completed: i.even?, # Alternate between completed and not completed
-        project: @project
+        project: @project,
+        skip_duplicate_check: true
       )
     end
     
@@ -125,7 +126,7 @@ class TaskPaginationTest < ActionDispatch::IntegrationTest
     # creating records directly here.
     setup_paper_trail
     (TASKS_PER_PAGE + 1).times do |i|
-      @user.tasks.create!(title: "Findable Task #{i}", description: "desc", project: @project)
+      @user.tasks.create!(title: "Findable Task #{i}", description: "desc", project: @project, skip_duplicate_check: true)
     end
 
     get tasks_path(search: "Findable", show_completed: false)

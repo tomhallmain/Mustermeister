@@ -93,6 +93,8 @@ de:
         new_task: "Neue Aufgabe"
         edit_task: "Aufgabe bearbeiten"
         submit: "Aufgabe speichern"
+        create_anyway: "Trotzdem speichern"
+        similar_title_warning_heading: "In diesem Projekt existiert bereits eine ähnliche Aufgabe"
         error: "Fehler"
         errors: "Fehler"
         prohibited_save: "verbot, diese Aufgabe zu speichern:"

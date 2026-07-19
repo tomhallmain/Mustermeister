@@ -39,6 +39,8 @@ de:
         new_project: "Neues Projekt"
         edit_project: "Projekt bearbeiten"
         submit: "Projekt speichern"
+        create_anyway: "Trotzdem speichern"
+        similar_title_warning_heading: "Ein ähnliches Projekt existiert bereits"
         color_help: "Wählen Sie eine Farbe, um dieses Projekt im Kanban-Board und anderen Ansichten optisch hervorzuheben."
         colors:
           red: "Rot"

@@ -1,12 +1,21 @@
 <%= form_with(model: project, class: "space-y-6") do |f| %>
-  <% if project.errors.any? %>
+  <% similar_title_error = project.errors.where(:title, :similar_exists).first %>
+  <% if similar_title_error %>
+    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
+      <p class="text-sm font-medium text-yellow-800"><%= t('views.projects.form.similar_title_warning_heading') %></p>
+      <p class="text-sm text-yellow-700 mt-1"><%= similar_title_error.message %></p>
+    </div>
+  <% end %>
+
+  <% other_errors = project.errors.reject { |e| e.attribute == :title && e.type == :similar_exists } %>
+  <% if other_errors.any? %>
     <div class="bg-red-50 p-4 rounded-lg">
       <div class="text-red-700 font-medium">
-        <%= pluralize(project.errors.count, "error") %> prohibited this project from being saved:
+        <%= pluralize(other_errors.count, "error") %> prohibited this project from being saved:
       </div>
       <ul class="list-disc list-inside text-red-600">
-        <% project.errors.full_messages.each do |message| %>
-          <li><%= message %></li>
+        <% other_errors.each do |error| %>
+          <li><%= error.full_message %></li>
         <% end %>
       </ul>
     </div>
@@ -69,5 +78,8 @@
   <div class="flex justify-end space-x-3">
     <%= link_to t('views.projects.form.cancel'), projects_path, class: "px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
     <%= f.submit t('views.projects.form.submit'), class: "px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>
+    <% if similar_title_error %>
+      <%= f.submit t('views.projects.form.create_anyway'), name: "project[confirm_duplicate]", value: "1", class: "px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500" %>
+    <% end %>
   </div>
 <% end %> 

@@ -48,6 +48,20 @@ class ActiveSupport::TestCase
     PaperTrail.request.whodunnit = nil
     PaperTrail.request.controller_info = {}
   end
+
+  # Wraps bulk/placeholder record creation (loops, generic fixture-style
+  # titles) that isn't itself testing the duplicate-title warning on Project
+  # or Task, and would otherwise incidentally trip it. Prefer this over
+  # passing confirm_duplicate:/skip_duplicate_check: at every call site,
+  # especially for loops that generate many similarly-named records.
+  def without_duplicate_title_check
+    Project.duplicate_title_check_disabled = true
+    Task.duplicate_title_check_disabled = true
+    yield
+  ensure
+    Project.duplicate_title_check_disabled = false
+    Task.duplicate_title_check_disabled = false
+  end
 end
 
 class ActionDispatch::IntegrationTest

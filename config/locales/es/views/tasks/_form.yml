@@ -92,6 +92,8 @@ es:
         new_task: "Nueva tarea"
         edit_task: "Editar tarea"
         submit: "Guardar tarea"
+        create_anyway: "Guardar de todos modos"
+        similar_title_warning_heading: "Ya existe una tarea similar en este proyecto"
         error: "error"
         errors: "errores"
         prohibited_save: "prohibió que se guardara esta tarea:"

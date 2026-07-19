@@ -161,7 +161,8 @@ class TaskCreationTest < ActionDispatch::IntegrationTest
       project: @project,
       user: @user,
       status: status,
-      priority: 'medium'
+      priority: 'medium',
+      skip_duplicate_check: true
     )
     
     # Update the task's title
@@ -230,12 +231,12 @@ class TaskCreationTest < ActionDispatch::IntegrationTest
   test "new task dropdown on tasks index orders current user's projects by last task update time" do
     other_user = users(:two)
 
-    no_tasks_project = Project.create!(title: "Dropdown No Tasks Project", user: @user, updated_at: 2.days.ago)
+    no_tasks_project = Project.create!(title: "Dropdown No Tasks Project", user: @user, updated_at: 2.days.ago, confirm_duplicate: true)
 
-    old_task_project = Project.create!(title: "Dropdown Old Task Project", user: @user)
+    old_task_project = Project.create!(title: "Dropdown Old Task Project", user: @user, confirm_duplicate: true)
     old_task_project.create_task!(title: "Old task", user: @user, updated_at: 3.days.ago)
 
-    new_task_project = Project.create!(title: "Dropdown New Task Project", user: @user)
+    new_task_project = Project.create!(title: "Dropdown New Task Project", user: @user, confirm_duplicate: true)
     new_task_project.create_task!(title: "New task", user: @user, updated_at: 1.hour.ago)
 
     # A project belonging to another user, with a very recently updated task, should never appear.

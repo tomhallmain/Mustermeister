@@ -92,6 +92,8 @@ fr:
         new_task: "Nouvelle tâche"
         edit_task: "Modifier la tâche"
         submit: "Enregistrer la tâche"
+        create_anyway: "Enregistrer quand même"
+        similar_title_warning_heading: "Une tâche similaire existe déjà dans ce projet"
         error: "erreur"
         errors: "erreurs"
         prohibited_save: "a interdit l'enregistrement de cette tâche :"

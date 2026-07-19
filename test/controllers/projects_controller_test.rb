@@ -161,6 +161,57 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "medium", new_project.default_priority
   end
 
+  test "creating a project with a title similar to an existing one re-renders with a warning instead of saving" do
+    assert_no_difference('Project.count') do
+      post projects_path, params: {
+        project: {
+          title: "Test Project!",
+          description: "Should be blocked by the duplicate check"
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_match(/similar/i, response.body)
+  end
+
+  test "creating a project with confirm_duplicate=1 saves despite a similar title" do
+    assert_difference('Project.count') do
+      post projects_path, params: {
+        project: {
+          title: "Test Project!",
+          description: "Confirmed anyway",
+          confirm_duplicate: "1"
+        }
+      }
+    end
+
+    assert Project.exists?(title: "Test Project!")
+  end
+
+  test "editing a project's title to something similar to another re-renders with a warning instead of saving" do
+    other_project = Project.create!(title: "Some Other Project", user: @user, confirm_duplicate: true)
+
+    patch project_path(other_project), params: {
+      project: { title: "Test Project!" }
+    }
+
+    assert_response :unprocessable_entity
+    assert_match(/similar/i, response.body)
+    assert_equal "Some Other Project", other_project.reload.title
+  end
+
+  test "editing a project's title with confirm_duplicate=1 saves despite a similar title" do
+    other_project = Project.create!(title: "Some Other Project", user: @user, confirm_duplicate: true)
+
+    patch project_path(other_project), params: {
+      project: { title: "Test Project!", confirm_duplicate: "1" }
+    }
+
+    assert_redirected_to project_path(other_project)
+    assert_equal "Test Project!", other_project.reload.title
+  end
+
   test "should update project default priority" do
     patch project_path(@project), params: {
       project: {
@@ -465,20 +516,22 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     )
     
     # Create tasks with different completion states
-    Task.create!(
-      title: "Completed Zebra Task",
-      description: "A completed task about zebras",
-      project: project,
-      user: @user,
-      completed: true
-    )
-    Task.create!(
-      title: "Uncompleted Zebra Task",
-      description: "Another task about zebras",
-      project: project,
-      user: @user,
-      completed: false
-    )
+    without_duplicate_title_check do
+      Task.create!(
+        title: "Completed Zebra Task",
+        description: "A completed task about zebras",
+        project: project,
+        user: @user,
+        completed: true
+      )
+      Task.create!(
+        title: "Uncompleted Zebra Task",
+        description: "Another task about zebras",
+        project: project,
+        user: @user,
+        completed: false
+      )
+    end
     Task.create!(
       title: "Regular Task",
       description: "A task about something else",

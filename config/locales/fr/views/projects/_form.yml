@@ -39,6 +39,8 @@ fr:
         new_project: "Nouveau projet"
         edit_project: "Modifier le projet"
         submit: "Enregistrer le projet"
+        create_anyway: "Enregistrer quand même"
+        similar_title_warning_heading: "Un projet similaire existe déjà"
         color_help: "Choisissez une couleur pour distinguer visuellement ce projet dans le tableau Kanban et les autres vues."
         colors:
           red: "Rouge"
