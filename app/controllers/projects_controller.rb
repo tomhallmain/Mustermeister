@@ -41,6 +41,16 @@ class ProjectsController < ApplicationController
     @tasks = @project.tasks.not_completed
                     .includes(:tags)
                     .order(created_at: :desc)
+
+    respond_to do |format|
+      format.html
+      format.tsv do
+        send_data TaskTsvExportService.call(@tasks),
+                  filename: "#{@project.title.parameterize}-tasks-#{Date.current.iso8601}.tsv",
+                  type: "text/tab-separated-values",
+                  disposition: "attachment"
+      end
+    end
   end
 
   def all_reports

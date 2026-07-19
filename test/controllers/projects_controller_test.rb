@@ -1,4 +1,5 @@
 require "test_helper"
+require "csv"
 
 class ProjectsControllerTest < ActionDispatch::IntegrationTest
   def setup
@@ -21,6 +22,50 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     end
     
     teardown_paper_trail
+  end
+
+  test "should get project report" do
+    get report_project_path(@project)
+    assert_response :success
+  end
+
+  test "report page shows an export link when there are open tasks" do
+    get report_project_path(@project)
+    assert_response :success
+
+    assert_select "a[href=?]", report_project_path(@project, format: :tsv)
+  end
+
+  test "report page omits the export link when there are no open tasks" do
+    @project.tasks.update_all(completed: true)
+
+    get report_project_path(@project)
+    assert_response :success
+
+    assert_select "a[href=?]", report_project_path(@project, format: :tsv), count: 0
+  end
+
+  test "exporting the report as TSV returns a tab-separated file of open tasks" do
+    get report_project_path(@project, format: :tsv)
+
+    assert_response :success
+    assert_equal "text/tab-separated-values", response.media_type
+    assert_match(/attachment/, response.headers["Content-Disposition"])
+    assert_match(/\.tsv"/, response.headers["Content-Disposition"])
+
+    rows = CSV.parse(response.body, col_sep: "\t")
+    assert_equal ["Title", "Priority", "Status", "Due Date", "Category", "Description"], rows.first
+    assert_includes rows.map { |row| row[0] }, tasks(:one).title
+  end
+
+  test "exporting the report as TSV excludes completed tasks" do
+    completed_task = @project.tasks.create!(title: "Already done", user: @user, completed: true)
+
+    get report_project_path(@project, format: :tsv)
+
+    assert_response :success
+    rows = CSV.parse(response.body, col_sep: "\t")
+    assert_not_includes rows.map { |row| row[0] }, completed_task.title
   end
 
   test "should get index" do
