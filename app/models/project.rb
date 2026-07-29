@@ -140,42 +140,34 @@ class Project < ApplicationRecord
     "FROM tasks WHERE tasks.project_id = projects.id AND tasks.archived = false), 0)"
   end
 
-  # Segments for the completed portion of the progress bar, one per priority
-  # among the *completed* tasks (skipped when zero), each as a percent of
-  # the project's total weight. These always sum to completion_percentage -
-  # the remainder of the bar is left uncolored, matching the plain number
-  # shown underneath - while making which priorities that progress came from
-  # visible (e.g. a mostly-red fill means the completed work skewed
-  # high-priority).
+  # Segments for the whole progress bar, one per priority within each
+  # completion state (skipped when zero), each as a percent of the project's
+  # total weight. Completed segments come first and always sum to
+  # completion_percentage, matching the plain number shown underneath;
+  # incomplete segments follow in a lighter shade of the same priority color
+  # (see progress_segment_color_class) to fill the rest of the bar, so the
+  # priority mix of *remaining* work is visible too, not just what's done -
+  # e.g. a mostly-red completed fill means the completed work skewed
+  # high-priority, while a light-green incomplete tail means what's left is
+  # mostly low-priority.
   def progress_bar_segments
     scope = tasks.not_archived
     total_weight = scope.sum(Arel.sql(Task::PRIORITY_WEIGHT_SQL)).to_f
     return [] if total_weight.zero?
 
-    raw_completed_weights = scope.where(completed: true).group(:priority).sum(Arel.sql(Task::PRIORITY_WEIGHT_SQL))
-
-    completed_weights = Hash.new(0)
-    raw_completed_weights.each do |priority, weight|
-      key = SEGMENT_PRIORITIES.include?(priority) ? priority : "low"
-      completed_weights[key] += weight
-    end
-
-    SEGMENT_PRIORITIES.each_with_object([]) do |priority, segments|
-      weight = completed_weights[priority]
-      next if weight.zero?
-
-      segments << { priority: priority, percent: (weight.to_f / total_weight * 100).round(1) }
-    end
+    segments_for(scope.where(completed: true), total_weight, completed: true) +
+      segments_for(scope.where(completed: false), total_weight, completed: false)
   end
 
   # Mirrors shared/_priority_badge's color mapping (high/medium/leisure get
   # their own hue, everything else - "low" included - falls back to green).
-  def self.progress_segment_color_class(priority)
+  # Incomplete segments use a lighter shade of the same hue.
+  def self.progress_segment_color_class(priority, completed: true)
     case priority
-    when "high" then "bg-red-500"
-    when "medium" then "bg-yellow-500"
-    when "leisure" then "bg-purple-500"
-    else "bg-green-500"
+    when "high" then completed ? "bg-red-500" : "bg-red-200"
+    when "medium" then completed ? "bg-yellow-500" : "bg-yellow-200"
+    when "leisure" then completed ? "bg-purple-500" : "bg-purple-200"
+    else completed ? "bg-green-500" : "bg-green-200"
     end
   end
 
@@ -222,6 +214,27 @@ class Project < ApplicationRecord
   end
 
   private
+
+  # Weights for the given (already completed/incomplete-scoped) relation,
+  # bucketed by priority (unrecognized/nil priorities fall back to "low",
+  # same as the badge), as percent-of-total segments. Shared by
+  # progress_bar_segments for both halves of the bar.
+  def segments_for(relation, total_weight, completed:)
+    raw_weights = relation.group(:priority).sum(Arel.sql(Task::PRIORITY_WEIGHT_SQL))
+
+    weights = Hash.new(0)
+    raw_weights.each do |priority, weight|
+      key = SEGMENT_PRIORITIES.include?(priority) ? priority : "low"
+      weights[key] += weight
+    end
+
+    SEGMENT_PRIORITIES.each_with_object([]) do |priority, segments|
+      weight = weights[priority]
+      next if weight.zero?
+
+      segments << { priority: priority, percent: (weight.to_f / total_weight * 100).round(1), completed: completed }
+    end
+  end
 
   def warn_if_similar_title_exists
     return if duplicate_title_check_disabled

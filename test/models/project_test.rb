@@ -226,15 +226,33 @@ class ProjectTest < ActiveSupport::TestCase
     # total weight = 4 (high) + 3 (medium) + 1 (leisure) = 8
     project.reload
     segments = project.progress_bar_segments
-    by_priority = segments.index_by { |s| s[:priority] }
+    completed_segments = segments.select { |s| s[:completed] }
+    by_priority = completed_segments.index_by { |s| s[:priority] }
 
     assert_equal 50.0, by_priority["high"][:percent]   # 4/8
     assert_equal 37.5, by_priority["medium"][:percent] # 3/8
     assert_not_includes by_priority.keys, "leisure" # the leisure task isn't completed
     assert_not_includes by_priority.keys, "low"
 
-    total_segment_percent = segments.sum { |s| s[:percent] }
-    assert_equal project.completion_percentage, total_segment_percent.round
+    total_completed_percent = completed_segments.sum { |s| s[:percent] }
+    assert_equal project.completion_percentage, total_completed_percent.round
+  end
+
+  test "progress_bar_segments fills the remainder with incomplete segments by priority" do
+    project = Project.create!(title: "Test Project", user: @user, confirm_duplicate: true)
+    project.create_task!(title: "High done", completed: true, priority: "high", user: @user)
+    project.create_task!(title: "Medium done", completed: true, priority: "medium", user: @user)
+    project.create_task!(title: "Leisure open", completed: false, priority: "leisure", user: @user)
+
+    # total weight = 4 (high) + 3 (medium) + 1 (leisure) = 8
+    project.reload
+    segments = project.progress_bar_segments
+    incomplete_segments = segments.reject { |s| s[:completed] }
+
+    assert_equal [{ priority: "leisure", percent: 12.5, completed: false }], incomplete_segments
+
+    total_percent = segments.sum { |s| s[:percent] }
+    assert_equal 100.0, total_percent
   end
 
   test "progress_bar_segments buckets low-priority (and unrecognized) completed tasks under the same color as the badge's fallback" do
@@ -242,8 +260,18 @@ class ProjectTest < ActiveSupport::TestCase
     project.create_task!(title: "Low done", completed: true, priority: "low", user: @user)
 
     segments = project.reload.progress_bar_segments
-    assert_equal [{ priority: "low", percent: 100.0 }], segments
+    assert_equal [{ priority: "low", percent: 100.0, completed: true }], segments
     assert_equal "bg-green-500", Project.progress_segment_color_class("low")
+  end
+
+  test "progress_bar_segments buckets incomplete tasks the same way, with a lighter color than completed ones" do
+    project = Project.create!(title: "Test Project", user: @user, confirm_duplicate: true)
+    project.create_task!(title: "Low open", completed: false, priority: "low", user: @user)
+
+    segments = project.reload.progress_bar_segments
+    assert_equal [{ priority: "low", percent: 100.0, completed: false }], segments
+    assert_equal "bg-green-200", Project.progress_segment_color_class("low", completed: false)
+    assert_equal "bg-green-500", Project.progress_segment_color_class("low", completed: true)
   end
 
   test "progress_bar_segments is empty for a project with no tasks" do
