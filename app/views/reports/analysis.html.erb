@@ -20,17 +20,14 @@
           <% end %>
         </select>
         <label for="ai_model" class="text-sm text-gray-600"><%= t('views.reports.analysis.ai_model_label', default: 'Model') %></label>
-        <select name="ai_model" id="ai_model" class="rounded-md border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
-          <% @available_ai_models.each do |model_name| %>
-            <option value="<%= model_name %>" <%= 'selected' if model_name == @ai_model %>><%= model_name %></option>
-          <% end %>
-        </select>
-        <button type="submit" id="ai-summary-submit" class="bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2 px-4 rounded" <%= 'disabled' if @available_ai_models.empty? %>>
+        <%= render 'shared/llm_model_field', id: 'ai_model', name: 'ai_model', value: @ai_model,
+            models: @available_ai_models, field_class: 'rounded-md border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500 w-48' %>
+        <button type="submit" id="ai-summary-submit" class="bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2 px-4 rounded">
           <%= t('views.reports.analysis.ai_summary_button', default: 'Generate AI Summary') %>
         </button>
       <% end %>
       <% if @available_ai_models.empty? %>
-        <span class="text-sm text-amber-700"><%= t('views.reports.analysis.ai_no_local_models', default: 'No local Ollama models found') %></span>
+        <span class="text-sm text-amber-700"><%= t('views.reports.analysis.ai_no_local_models', default: 'No known Ollama models yet - you can still type a model name above to try it.') %></span>
       <% end %>
     </div>
   </div>

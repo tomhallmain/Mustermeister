@@ -4,6 +4,16 @@ class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
+  # Target languages offered for TaskTranslationService - deliberately not
+  # tied to I18n.available_locales (the app's own 4 UI locales): this is
+  # "what language should my tasks be translated into", a separate concern
+  # from the UI's own chrome language, so it can offer a broader set.
+  TRANSLATE_LANGUAGES = [
+    "Spanish", "French", "German", "Italian", "Portuguese", "Dutch",
+    "Russian", "Polish", "Turkish", "Arabic", "Hindi",
+    "Chinese (Simplified)", "Japanese", "Korean", "Vietnamese", "Swedish"
+  ].freeze
+
   has_many :projects, dependent: :destroy
   has_many :tasks, dependent: :nullify
   has_many :comments, dependent: :nullify
@@ -18,6 +28,7 @@ class User < ApplicationRecord
                    format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :theme_preference, inclusion: { in: %w[day night auto], allow_blank: true }
   validates :ai_summary_locale, inclusion: { in: I18n.available_locales.map(&:to_s), allow_blank: true }
+  validates :translate_target_language, inclusion: { in: TRANSLATE_LANGUAGES, allow_blank: true }
 
   def assigned_tasks
     tasks.where(completed: false).order(due_date: :asc)

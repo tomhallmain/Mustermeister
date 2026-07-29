@@ -72,12 +72,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const isChecked = showAllCompleted.checked;
     if (isChecked) {
       showAllCompletedBtn.className =
-        "flex items-center space-x-2 px-4 py-2 rounded-md bg-blue-100 text-blue-700 hover:bg-opacity-80 text-xs";
+        "flex items-center space-x-2 px-4 py-2 rounded-md bg-blue-100 text-blue-700 hover:bg-blue-100/80 text-xs";
       showAllCompletedText.textContent =
         kanbanI18n.hide_completed || "Hide Completed";
     } else {
       showAllCompletedBtn.className =
-        "flex items-center space-x-2 px-4 py-2 rounded-md bg-gray-100 text-gray-700 hover:bg-opacity-80 text-xs";
+        "flex items-center space-x-2 px-4 py-2 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-100/80 text-xs";
       showAllCompletedText.textContent =
         kanbanI18n.show_completed || "Show Completed";
     }

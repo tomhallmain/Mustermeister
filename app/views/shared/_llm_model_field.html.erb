@@ -1,0 +1,51 @@
+<%#
+  Shared Ollama model picker: a real <select> of models Ollama already
+  knows about (locally pulled models, plus cloud models the user has used
+  at least once - this list isn't limited to local downloads) paired with a
+  text input that's what actually gets submitted (name:). Picking a select
+  option copies it straight into the text input; typing into the text
+  input directly works for any model name, including one Ollama doesn't
+  know about yet - restricting this to a strict <select> alone would make
+  it impossible to ever specify a new one.
+
+  Deliberately NOT an <input list="..."> + <datalist> combo (an earlier
+  version of this partial was): datalist does not reliably offer a
+  "click to browse all options" affordance in Chromium browsers without
+  first typing a character, which defeats the point of pairing a known-model
+  list with free text entry.
+
+  The caller is responsible for populating/updating the <select>'s options
+  if it wants live suggestions (see task_insights/index.html.erb's
+  refreshModelSelect, or translate_controller.js, for examples) - models:
+  here is just the initial set for a normal (non-JS-refreshed) page load,
+  and may be empty.
+
+  Locals: id:, name:, value:, models: (defaults to []), field_class:
+  (defaults to a block/full-width style; pass a narrower class for
+  inline/compact forms), data: (optional hash of extra data-* attributes
+  for the text input, e.g. for a Stimulus target)
+%>
+<%
+  field_class = local_assigns[:field_class] || 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm'
+  input_options = {
+    type: "text",
+    id: id,
+    name: name,
+    value: value,
+    autocomplete: "off",
+    placeholder: t('views.shared.llm_model_field.placeholder'),
+    class: field_class
+  }
+  input_options[:data] = local_assigns[:data] if local_assigns[:data].present?
+%>
+<div class="space-y-1">
+  <select id="<%= id %>-select"
+          onchange="document.getElementById('<%= id %>').value = this.value"
+          class="<%= field_class %>">
+    <option value=""><%= t('views.shared.llm_model_field.select_placeholder') %></option>
+    <% (local_assigns[:models] || []).each do |model_name| %>
+      <option value="<%= model_name %>" <%= "selected" if model_name == value %>><%= model_name %></option>
+    <% end %>
+  </select>
+  <%= tag.input(**input_options) %>
+</div>

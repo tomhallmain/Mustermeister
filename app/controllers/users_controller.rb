@@ -57,7 +57,7 @@ class UsersController < ApplicationController
   private
 
   def user_params
-    params.require(:user).permit(:name, :email, :theme_preference)
+    params.require(:user).permit(:name, :email, :theme_preference, :translate_target_language)
   end
 
   def get_content_type(format)

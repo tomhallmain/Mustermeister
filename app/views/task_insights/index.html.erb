@@ -36,16 +36,12 @@
         </div>
         <div>
           <label for="ai_model" class="block text-sm font-medium text-gray-700 mb-1"><%= t('views.reports.analysis.ai_model_label', default: 'Model') %></label>
-          <select id="ai_model" name="ai_model" class="w-full rounded-md border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
-            <% @available_ai_models.each do |model_name| %>
-              <option value="<%= model_name %>" <%= "selected" if model_name == @ai_model %>><%= model_name %></option>
-            <% end %>
-          </select>
+          <%= render 'shared/llm_model_field', id: 'ai_model', name: 'ai_model', value: @ai_model, models: @available_ai_models %>
         </div>
       </div>
 
       <p id="task-insights-ollama-msg" class="text-sm text-amber-700 <%= 'hidden' if @available_ai_models.any? %>" role="status">
-        <%= t('views.reports.analysis.ai_no_local_models', default: 'No local Ollama models found') %>
+        <%= t('views.reports.analysis.ai_no_local_models', default: "No known Ollama models yet - you can still type a model name above to try it.") %>
       </p>
 
       <div>
@@ -80,7 +76,7 @@
       </div>
 
       <div>
-        <button type="submit" id="task-insights-submit" class="bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2 px-4 rounded" <%= "disabled" if @available_ai_models.empty? %>>
+        <button type="submit" id="task-insights-submit" class="bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2 px-4 rounded">
           Ask Insights
         </button>
       </div>
@@ -161,7 +157,12 @@
 
     function applySubmitAvailability() {
       if (!submit) return;
-      var canSubmit = ollamaOk && !jobRunning;
+      // Not gated on ollamaOk (at least one model Ollama already knows
+      // about) anymore - the model field accepts any typed model name (see
+      // shared/_llm_model_field), including one Ollama doesn't know about
+      // yet, so "zero known models" is no longer a reason to block
+      // submission.
+      var canSubmit = !jobRunning;
       submit.disabled = !canSubmit;
       submit.classList.toggle('opacity-70', !canSubmit);
       submit.classList.toggle('cursor-not-allowed', !canSubmit);
@@ -173,19 +174,22 @@
     }
 
     function refreshModelSelect(models) {
-      var sel = document.getElementById('ai_model');
-      if (!sel || !models || !models.length) return;
-      var prev = sel.value;
-      sel.innerHTML = '';
+      var input = document.getElementById('ai_model');
+      var select = document.getElementById('ai_model-select');
+      if (!input || !select || !models || !models.length) return;
+      var prev = select.value;
+      select.innerHTML = '';
+      var blank = document.createElement('option');
+      blank.value = '';
+      select.appendChild(blank);
       for (var i = 0; i < models.length; i++) {
-        var m = models[i];
         var opt = document.createElement('option');
-        opt.value = m;
-        opt.textContent = m;
-        if (m === prev) opt.selected = true;
-        sel.appendChild(opt);
+        opt.value = models[i];
+        opt.textContent = models[i];
+        if (models[i] === prev) opt.selected = true;
+        select.appendChild(opt);
       }
-      if (!sel.value && models.length) sel.selectedIndex = 0;
+      if (!input.value) input.value = models[0];
     }
 
     function updateOllamaBanner() {

@@ -4,6 +4,18 @@ class StatusTest < ActiveSupport::TestCase
   def setup
     @project = projects(:one)
     @status = Status.new(name: "Test Status", project: @project)
+
+    # Status itself has no has_paper_trail, but several tests below create
+    # Project/Task records (which do) via Project.create!/Task.create! -
+    # without this, PaperTrail's ip_for_paper_trail/user_agent_for_paper_trail
+    # (app/models/project.rb, app/models/task.rb) blow up on a nil
+    # PaperTrail.request.controller_info, same as every controller test and
+    # ProjectTest already guard against.
+    setup_paper_trail(@project.user)
+  end
+
+  def teardown
+    teardown_paper_trail
   end
 
   test "should be valid" do

@@ -1,0 +1,6 @@
+es:
+  views:
+    shared:
+      llm_model_field:
+        placeholder: "Elige o escribe el nombre de un modelo de Ollama"
+        select_placeholder: "Elige un modelo que ya hayas usado..."

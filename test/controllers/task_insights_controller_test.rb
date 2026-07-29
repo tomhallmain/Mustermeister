@@ -112,6 +112,34 @@ class TaskInsightsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 3, conversation.reload.task_insights_messages.count
   end
 
+  test "create accepts a model that isn't in available_models yet, e.g. one not pulled locally" do
+    responses = [OllamaLlmService::Result.new(response: '{"type":"final","answer":"ok"}')]
+    fake_llm = Class.new do
+      def initialize(responses)
+        @responses = responses
+      end
+
+      def generate_response(_prompt, system_prompt:)
+        @responses.shift
+      end
+    end.new(responses)
+
+    # available_models deliberately does NOT include "brand-new-model" - see
+    # the matching ReportsController test.
+    OllamaLlmService.stub :available_models, ["deepseek-r1:14b"] do
+      OllamaLlmService.stub :new, fake_llm do
+        post task_insights_path, params: {
+          question: "What are risky patterns?",
+          ai_locale: "en",
+          ai_model: "brand-new-model"
+        }, as: :json
+      end
+    end
+
+    assert_response :accepted
+    assert_equal "brand-new-model", @user.reload.ai_summary_model
+  end
+
   test "status returns not found for unknown run id" do
     OllamaLlmService.stub :available_models, ["deepseek-r1:14b"] do
       get task_insights_status_path(run_id: SecureRandom.uuid), as: :json

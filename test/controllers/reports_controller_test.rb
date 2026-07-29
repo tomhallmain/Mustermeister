@@ -91,6 +91,26 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Excluded But Visible Project", response.body
   end
 
+  test "AI summary accepts a model that isn't in available_models yet, e.g. one not pulled locally" do
+    @included_project.create_task!(title: "Only Task", user: @user)
+    fake_llm = stub_llm
+
+    # available_models deliberately does NOT include "brand-new-model" - the
+    # model field accepts free text (Ollama supports far more models than
+    # whatever's already pulled), so an unrecognized value must still be
+    # used as requested rather than silently falling back.
+    OllamaLlmService.stub :available_models, ["llama3"] do
+      OllamaLlmService.stub :new, fake_llm do
+        get reports_analysis_path, params: {
+          ai_summary: "1", ai_locale: "en", ai_model: "brand-new-model", project_ids: [@included_project.id]
+        }
+      end
+    end
+
+    assert_response :success
+    assert_equal "brand-new-model", @user.reload.ai_summary_model
+  end
+
   test "index exposes the user's distinct project categories for the category filter" do
     Project.create!(title: "Marketing Site", user: @user, category: "Marketing", confirm_duplicate: true)
     Project.create!(title: "Ops Project", user: @user, category: "Operations", confirm_duplicate: true)

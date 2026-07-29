@@ -1,4 +1,8 @@
-<div class="container mx-auto px-4 py-8 max-w-4xl" data-escape-to-kanban-url="<%= kanban_path %>">
+<div class="container mx-auto px-4 py-8 max-w-4xl" data-escape-to-kanban-url="<%= kanban_path %>"
+     data-controller="translate"
+     data-translate-url-value="<%= translate_task_path(@task) %>"
+     data-translate-update-url-value="<%= task_path(@task) %>"
+     data-translate-ollama-health-url-value="<%= task_insights_ollama_health_path %>">
   <div class="mb-8">
     <div class="flex justify-between items-start">
       <div>
@@ -34,6 +38,64 @@
         <%= link_to t('views.tasks.show.duplicate_task'), new_project_task_path(@task.project, source_task_id: @task.id),
             class: 'bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded',
             data: { turbo: false } %>
+        <button type="button" data-translate-target="button" data-action="translate#openModal"
+                title="<%= t('views.tasks.show.translate.tooltip') %>"
+                class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
+          <%= t('views.tasks.show.translate.button') %>
+        </button>
+      </div>
+    </div>
+
+    <p data-translate-target="error" data-generic-error="<%= t('views.tasks.show.translate.generic_error') %>"
+       class="mt-4 hidden text-sm text-red-700 bg-red-50 border-l-4 border-red-400 p-3 rounded-md"></p>
+
+    <div data-translate-target="modal" class="hidden fixed inset-0 bg-gray-600/50 overflow-y-auto h-full w-full z-50">
+      <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md surface">
+        <h3 class="text-lg font-medium text-gray-900 mb-2"><%= t('views.tasks.show.translate.confirm_title') %></h3>
+        <p class="text-sm text-gray-600 mb-4">
+          <%= t('views.tasks.show.translate.confirm_body', language: @translate_target_language_preview) %>
+        </p>
+        <div class="mb-4">
+          <label for="translate-model" class="block text-sm font-medium text-gray-700 mb-1">
+            <%= t('views.tasks.show.translate.model_label') %>
+          </label>
+          <%= render 'shared/llm_model_field', id: 'translate-model', name: 'model',
+              value: @translate_default_model_preview, data: { translate_target: "modelInput" } %>
+        </div>
+        <div class="flex justify-end space-x-3">
+          <button type="button" data-action="translate#cancelModal"
+                  class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200">
+            <%= t('views.tasks.show.translate.dismiss') %>
+          </button>
+          <button type="button" data-translate-target="confirmButton" data-action="translate#confirm"
+                  class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700">
+            <%= t('views.tasks.show.translate.button') %>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div data-translate-target="panel" class="mt-4 hidden surface rounded-lg shadow p-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-3"><%= t('views.tasks.show.translate.panel_title') %></h2>
+      <div class="space-y-3">
+        <div>
+          <h3 class="text-sm font-medium text-gray-500"><%= t('views.tasks.show.translate.translated_title') %></h3>
+          <p data-translate-target="title" class="mt-1 text-gray-900 font-medium"></p>
+        </div>
+        <div>
+          <h3 class="text-sm font-medium text-gray-500"><%= t('views.tasks.show.translate.translated_description') %></h3>
+          <p data-translate-target="description" class="mt-1 text-gray-900 whitespace-pre-line"></p>
+        </div>
+      </div>
+      <div class="mt-4 flex space-x-3">
+        <button type="button" data-action="translate#apply"
+                class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+          <%= t('views.tasks.show.translate.apply') %>
+        </button>
+        <button type="button" data-action="translate#dismiss"
+                class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+          <%= t('views.tasks.show.translate.dismiss') %>
+        </button>
       </div>
     </div>
 

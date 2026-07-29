@@ -260,6 +260,13 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "show does not make a live Ollama call - the Translate modal's model list is fetched client-side, on demand" do
+    OllamaLlmService.stub :available_models, -> { raise "should not be called from #show" } do
+      get task_path(@task)
+    end
+    assert_response :success
+  end
+
   test "task show includes a link to duplicate the task" do
     get task_path(@task)
     assert_response :success
@@ -827,6 +834,154 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     @task.reload
     assert @task.updated_at > old_updated_at
     assert @task.updated_at <= Time.current
+  end
+
+  def stub_translation_llm(title:, description:)
+    Class.new do
+      define_method(:generate_response) do |_prompt, system_prompt:|
+        OllamaLlmService::Result.new(response: { title: title, description: description }.to_json)
+      end
+    end.new
+  end
+
+  test "translate returns the translated title and description as JSON" do
+    @user.update!(translate_target_language: "Spanish", ai_summary_model: "llama3")
+    fake_llm = stub_translation_llm(title: "Tarea traducida", description: "Descripcion traducida")
+
+    OllamaLlmService.stub :available_models, ["llama3"] do
+      OllamaLlmService.stub :new, fake_llm do
+        post translate_task_path(@task)
+      end
+    end
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal "Tarea traducida", body["title"]
+    assert_equal "Descripcion traducida", body["description"]
+  end
+
+  test "translate uses the model param when provided, without requiring it to be in available_models" do
+    @user.update!(translate_target_language: "Spanish")
+    fake_llm = stub_translation_llm(title: "Tarea traducida", description: "")
+
+    # available_models is stubbed to an empty list on purpose - if
+    # resolve_translation_model's fallback chain (which does consult it)
+    # were reached instead of the model param short-circuiting it, model
+    # resolution would fail and this would come back as an error, not
+    # success. The model field accepts free text (Ollama supports models
+    # beyond whatever's already pulled locally), so it must never be
+    # validated against available_models.
+    OllamaLlmService.stub :available_models, [] do
+      OllamaLlmService.stub :new, fake_llm do
+        post translate_task_path(@task), params: { model: "brand-new-model:latest" }
+      end
+    end
+
+    assert_response :success
+  end
+
+  test "translate persists the model used as the user's ai_summary_model" do
+    @user.update!(translate_target_language: "Spanish", ai_summary_model: "old-model")
+    fake_llm = stub_translation_llm(title: "ok", description: "")
+
+    OllamaLlmService.stub :available_models, [] do
+      OllamaLlmService.stub :new, fake_llm do
+        post translate_task_path(@task), params: { model: "brand-new-model:latest" }
+      end
+    end
+
+    assert_response :success
+    assert_equal "brand-new-model:latest", @user.reload.ai_summary_model
+  end
+
+  test "translate falls back to ENV['OLLAMA_REPORT_MODEL'] when the user's saved model is unavailable" do
+    @user.update!(translate_target_language: "Spanish", ai_summary_model: "unavailable-model")
+    fake_llm = stub_translation_llm(title: "Tarea traducida", description: "")
+
+    original_env = ENV["OLLAMA_REPORT_MODEL"]
+    ENV["OLLAMA_REPORT_MODEL"] = "env-model"
+    begin
+      OllamaLlmService.stub :available_models, ["env-model"] do
+        OllamaLlmService.stub :new, fake_llm do
+          post translate_task_path(@task)
+        end
+      end
+    ensure
+      ENV["OLLAMA_REPORT_MODEL"] = original_env
+    end
+
+    assert_response :success
+  end
+
+  test "translate falls back to the app's current locale when no target language is configured" do
+    @user.update!(translate_target_language: nil, ai_summary_model: "llama3")
+    fake_llm = Class.new do
+      attr_reader :prompt_received
+
+      def generate_response(prompt, system_prompt:)
+        @prompt_received = prompt
+        OllamaLlmService::Result.new(response: '{"title": "ok", "description": ""}')
+      end
+    end.new
+
+    OllamaLlmService.stub :available_models, ["llama3"] do
+      OllamaLlmService.stub :new, fake_llm do
+        post translate_task_path(@task, locale: "de")
+      end
+    end
+
+    assert_response :success
+    assert_includes fake_llm.prompt_received, "German"
+  end
+
+  test "translate falls back to English when no target language is configured and no locale is set" do
+    @user.update!(translate_target_language: nil, ai_summary_model: "llama3")
+    fake_llm = Class.new do
+      attr_reader :prompt_received
+
+      def generate_response(prompt, system_prompt:)
+        @prompt_received = prompt
+        OllamaLlmService::Result.new(response: '{"title": "ok", "description": ""}')
+      end
+    end.new
+
+    OllamaLlmService.stub :available_models, ["llama3"] do
+      OllamaLlmService.stub :new, fake_llm do
+        post translate_task_path(@task)
+      end
+    end
+
+    assert_response :success
+    assert_includes fake_llm.prompt_received, "English"
+  end
+
+  test "translate returns an error when no LLM model is available" do
+    @user.update!(translate_target_language: "Spanish")
+
+    OllamaLlmService.stub :available_models, [] do
+      post translate_task_path(@task)
+    end
+
+    assert_response :unprocessable_entity
+    assert JSON.parse(response.body)["error"].present?
+  end
+
+  test "translate returns an error when the LLM call fails" do
+    @user.update!(translate_target_language: "Spanish", ai_summary_model: "llama3")
+    failing_llm = Class.new do
+      def generate_response(_prompt, system_prompt:)
+        raise OllamaLlmService::ResponseError, "unreachable"
+      end
+    end.new
+
+    OllamaLlmService.stub :available_models, ["llama3"] do
+      OllamaLlmService.stub :new, failing_llm do
+        post translate_task_path(@task)
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_equal "unreachable", JSON.parse(response.body)["error"]
   end
 
   test "should search tasks by title and description" do

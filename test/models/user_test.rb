@@ -95,4 +95,19 @@ class UserTest < ActiveSupport::TestCase
     @user.update!(task_insights_excluded_project_ids: [42, 7])
     assert_equal [42, 7], @user.reload.task_insights_excluded_project_ids
   end
+
+  test "translate_target_language accepts a value from the allowed list" do
+    @user.translate_target_language = "Japanese"
+    assert @user.valid?
+  end
+
+  test "translate_target_language allows blank" do
+    @user.translate_target_language = nil
+    assert @user.valid?
+  end
+
+  test "translate_target_language rejects a value outside the allowed list" do
+    @user.translate_target_language = "Klingon"
+    assert_not @user.valid?
+  end
 end

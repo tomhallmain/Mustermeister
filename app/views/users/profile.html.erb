@@ -42,6 +42,20 @@
           </div>
 
           <div>
+            <%= f.label :translate_target_language, t('views.users.profile.translate_target_language'), class: "block text-sm font-medium text-gray-700" %>
+            <%= f.select :translate_target_language,
+                options_for_select(
+                  User::TRANSLATE_LANGUAGES.map { |language| [t("views.users.profile.translate_languages.#{language.parameterize.underscore}"), language] },
+                  current_user.translate_target_language
+                ),
+                { include_blank: t('views.users.profile.translate_target_language_blank') },
+                { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" } %>
+            <p class="mt-1 text-sm text-gray-500">
+              <%= t('views.users.profile.translate_target_language_help') %>
+            </p>
+          </div>
+
+          <div>
             <%= f.submit t('views.users.profile.update_profile'), class: "inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>
           </div>
         <% end %>
@@ -132,7 +146,7 @@
 </div>
 
 <!-- Encrypted Export Modal -->
-<div id="encrypted-export-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50"
+<div id="encrypted-export-modal" class="fixed inset-0 bg-gray-600/50 overflow-y-auto h-full w-full hidden z-50"
      data-i18n-passwords-no-match="<%= t('views.users.profile.passwords_no_match') %>"
      data-i18n-password-too-short="<%= t('views.users.profile.password_too_short') %>">
   <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md surface">

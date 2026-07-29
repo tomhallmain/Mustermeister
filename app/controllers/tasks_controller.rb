@@ -17,7 +17,7 @@ class TasksController < ApplicationController
   SQL
 
   before_action :initialize_show_completed_prefs
-  before_action :set_task, only: [:show, :edit, :update, :destroy, :toggle, :archive, :refresh]
+  before_action :set_task, only: [:show, :edit, :update, :destroy, :toggle, :archive, :refresh, :translate]
   before_action :load_projects_and_tags, only: [:new, :edit, :create, :update]
   before_action :run_recurring_task_generation_check, only: [:index]
 
@@ -89,6 +89,14 @@ class TasksController < ApplicationController
   def show
     @comment = Comment.new
     @comments = @task.comments.includes(:user)
+    # Cheap defaults for the Translate confirm modal - deliberately no live
+    # Ollama call here (unlike Reports/Task Insights' pages, which do call
+    # OllamaLlmService.available_models synchronously on every render): the
+    # modal's model suggestions are instead fetched client-side, on demand,
+    # only when the user actually opens it (see translate_controller.js),
+    # so viewing a task is never slowed down by Ollama being slow/unreachable.
+    @translate_target_language_preview = resolve_translation_target_language
+    @translate_default_model_preview = current_user.ai_summary_model.presence || ENV["OLLAMA_REPORT_MODEL"].presence
   end
 
   def new
@@ -265,9 +273,35 @@ class TasksController < ApplicationController
     # TODO: Consider using a separate timestamp column for manual "refresh"
     #       instead of overwriting the standard updated_at value.
     @task.touch
-    
-    redirect_to task_path(@task), 
+
+    redirect_to task_path(@task),
                 notice: 'Task refreshed successfully.'
+  end
+
+  def translate
+    target_language = resolve_translation_target_language
+
+    # params[:model] is trusted as-is (the confirm modal's model field
+    # accepts free text, not just models Ollama already knows about - see
+    # shared/_llm_model_field) and takes priority; resolve_translation_model
+    # (which does call OllamaLlmService.available_models) is only a fallback
+    # for when it's blank, e.g. JS-disabled or a direct API call.
+    model_name = params[:model].to_s.strip.presence || resolve_translation_model
+    if model_name.blank?
+      render json: { error: t('views.tasks.show.translate.no_model_available') }, status: :unprocessable_entity
+      return
+    end
+
+    # Persisted the same way Reports/Task Insights persist their model
+    # choice, so "the last configured model" (used to pre-fill this same
+    # modal next time, and as the fallback in resolve_translation_model)
+    # actually reflects what was just used here too.
+    current_user.update(ai_summary_model: model_name)
+
+    translation = TaskTranslationService.call(task: @task, target_language: target_language, model_name: model_name)
+    render json: translation
+  rescue TaskTranslationService::TranslationError => e
+    render json: { error: e.message }, status: :unprocessable_entity
   end
 
   def bulk_archive
@@ -393,6 +427,35 @@ class TasksController < ApplicationController
   end
 
   private
+
+  # Same fallback chain as ReportsController/TaskInsightsController's model
+  # resolution (minus the "requested via param" tier - translate has no
+  # per-request model picker, it always uses "the last configured model").
+  def resolve_translation_model
+    available_models = OllamaLlmService.available_models
+    preferred_model = current_user.ai_summary_model.to_s
+    return preferred_model if available_models.include?(preferred_model)
+
+    env_default_model = ENV["OLLAMA_REPORT_MODEL"].to_s
+    return env_default_model if available_models.include?(env_default_model)
+
+    available_models.first
+  end
+
+  # Reuses ReportLlmSummaryService's locale -> LLM-friendly English language
+  # name mapping rather than duplicating one, for whichever locale this
+  # request is actually rendering in (see ApplicationController#set_locale).
+  def default_translation_language
+    ReportLlmSummaryService::PROMPT_COPY[I18n.locale.to_s]&.dig(:language_name) || "English"
+  end
+
+  # No configured preference isn't an error - someone would only be
+  # translating a task because it isn't already in a language they want, so
+  # falling back to the app's own current language is a reasonable default
+  # rather than a dead end (see the Translate button's tooltip).
+  def resolve_translation_target_language
+    current_user.translate_target_language.presence || default_translation_language
+  end
 
   # The standard, project-agnostic 5-column board (folds Investigated into To
   # Investigate, and Closed into Complete by name) - unchanged from before

@@ -24,8 +24,8 @@ class TaskInsightsController < ApplicationController
     if question.blank?
       return render json: { error: "Question is required." }, status: :unprocessable_entity
     end
-    if @available_ai_models.empty?
-      return render json: { error: "No local Ollama models available." }, status: :unprocessable_entity
+    if @ai_model.blank?
+      return render json: { error: "No Ollama models are available." }, status: :unprocessable_entity
     end
 
     unless current_user.update(
@@ -88,13 +88,16 @@ class TaskInsightsController < ApplicationController
       I18n.locale.to_s
     end
 
-    requested_ai_model = params[:ai_model].to_s
+    # requested_ai_model is trusted as-is (not required to already be in
+    # @available_ai_models) - see the matching comment in
+    # ReportsController#analysis.
+    requested_ai_model = params[:ai_model].to_s.strip
     preferred_model = current_user.ai_summary_model.to_s
-    @ai_model = if @available_ai_models.include?(requested_ai_model)
+    @ai_model = if requested_ai_model.present?
       requested_ai_model
-    elsif @available_ai_models.include?(preferred_model)
+    elsif preferred_model.present?
       preferred_model
-    elsif @available_ai_models.include?(ENV["OLLAMA_REPORT_MODEL"].to_s)
+    elsif ENV["OLLAMA_REPORT_MODEL"].present?
       ENV["OLLAMA_REPORT_MODEL"].to_s
     else
       @available_ai_models.first

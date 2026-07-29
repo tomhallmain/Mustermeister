@@ -17,14 +17,14 @@
     <h1 class="kanban-page-title text-sm font-bold text-gray-900"><%= t('views.tasks.kanban.title') %></h1>
     
     <div class="flex items-center space-x-4">
-      <select id="project-filter" class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+      <select id="project-filter" class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200/50">
         <option value=""><%= t('views.tasks.kanban.all_projects') %></option>
         <% @projects.each do |project| %>
           <option value="<%= project.id %>" <%= 'selected' if @current_project&.id == project.id %>><%= project.title %></option>
         <% end %>
       </select>
 
-      <select id="priority-filter" class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+      <select id="priority-filter" class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200/50">
         <option value=""><%= t('views.tasks.kanban.all_priorities') %></option>
         <option value="high" <%= 'selected' if @priority_filter == 'high' %>><%= t('priorities.high') %></option>
         <option value="medium" <%= 'selected' if @priority_filter == 'medium' %>><%= t('priorities.medium') %></option>
@@ -32,7 +32,7 @@
         <option value="leisure" <%= 'selected' if @priority_filter == 'leisure' %>><%= t('priorities.leisure') %></option>
       </select>
 
-      <select id="updated-within-days" class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+      <select id="updated-within-days" class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200/50">
         <option value=""><%= t('views.tasks.kanban.all_time') %></option>
         <option value="1"><%= t('views.tasks.kanban.updated_within.last_1_day') %></option>
         <option value="3"><%= t('views.tasks.kanban.updated_within.last_3_days') %></option>
@@ -48,7 +48,7 @@
 
       <div class="relative">
         <input type="text" id="search-input" 
-               class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 pl-8"
+               class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200/50 pl-8"
                placeholder="<%= t('views.tasks.kanban.search_placeholder') %>">
         <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
           <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,7 +57,7 @@
         </div>
       </div>
 
-      <select id="sort-by" class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+      <select id="sort-by" class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200/50">
         <option value="updated_at" <%= 'selected' if @sort_by == 'updated_at' %>><%= t('views.tasks.kanban.sort.last_updated') %></option>
         <option value="updated_at_asc" <%= 'selected' if @sort_by == 'updated_at_asc' %>><%= t('views.tasks.kanban.sort.oldest_updated') %></option>
         <option value="created_at" <%= 'selected' if @sort_by == 'created_at' %>><%= t('views.tasks.kanban.sort.created_at') %></option>
@@ -65,8 +65,8 @@
       </select>
     </div>
 
-    <button type="button" id="show-all-completed-btn" 
-            class="flex items-center space-x-2 px-4 py-2 rounded-md bg-gray-100 text-gray-700 hover:bg-opacity-80 text-xs">
+    <button type="button" id="show-all-completed-btn"
+            class="flex items-center space-x-2 px-4 py-2 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-100/80 text-xs">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
       </svg>

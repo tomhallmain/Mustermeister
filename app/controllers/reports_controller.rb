@@ -67,13 +67,20 @@ class ReportsController < ApplicationController
     else
       I18n.locale.to_s
     end
-    requested_ai_model = params[:ai_model].to_s
+    # requested_ai_model is trusted as-is (not required to already be in
+    # @available_ai_models) - that list only reflects models Ollama already
+    # knows about (locally pulled, or a cloud model already used at least
+    # once), and Ollama supports far more than that, so restricting to it
+    # would make it impossible to ever specify a new one. An invalid/unknown
+    # model just surfaces as the existing @llm_summary_error below when the
+    # generate call itself fails.
+    requested_ai_model = params[:ai_model].to_s.strip
     preferred_model = current_user.ai_summary_model.to_s
-    @ai_model = if @available_ai_models.include?(requested_ai_model)
+    @ai_model = if requested_ai_model.present?
       requested_ai_model
-    elsif @available_ai_models.include?(preferred_model)
+    elsif preferred_model.present?
       preferred_model
-    elsif @available_ai_models.include?(ENV["OLLAMA_REPORT_MODEL"].to_s)
+    elsif ENV["OLLAMA_REPORT_MODEL"].present?
       ENV["OLLAMA_REPORT_MODEL"].to_s
     else
       @available_ai_models.first
@@ -83,8 +90,8 @@ class ReportsController < ApplicationController
 
     if params[:ai_summary].to_s == "1"
       begin
-        if @available_ai_models.empty?
-          @llm_summary_error = "No local Ollama models are available."
+        if @ai_model.blank?
+          @llm_summary_error = "No Ollama models are available."
         else
           current_user.update(
             ai_summary_locale: @ai_locale,
