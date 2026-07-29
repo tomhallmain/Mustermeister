@@ -187,6 +187,14 @@ class Project < ApplicationRecord
     statuses.find_by(name: Status.default_statuses[key])
   end
 
+  def custom_statuses
+    statuses.custom
+  end
+
+  def custom_statuses?
+    custom_statuses.exists?
+  end
+
   # Helper method to create a task with default status
   def create_task!(attributes = {})
     tasks.create!(attributes.merge(status: status_by_key(:not_started)))

@@ -579,4 +579,22 @@ class ProjectTest < ActiveSupport::TestCase
     other_project.description = "Just changing the description"
     assert other_project.save
   end
+
+  test "custom_statuses? is false for a project with only default statuses" do
+    project = Project.create!(title: "Only Defaults", user: @user, confirm_duplicate: true)
+    assert_not project.custom_statuses?
+  end
+
+  test "custom_statuses? is true once a project has a non-default-named status" do
+    project = Project.create!(title: "Has Custom", user: @user, confirm_duplicate: true)
+    project.statuses.create!(name: "Blocked")
+    assert project.custom_statuses?
+  end
+
+  test "custom_statuses only returns the non-default-named statuses" do
+    project = Project.create!(title: "Has Custom", user: @user, confirm_duplicate: true)
+    custom = project.statuses.create!(name: "Blocked")
+
+    assert_equal [custom], project.custom_statuses.to_a
+  end
 end

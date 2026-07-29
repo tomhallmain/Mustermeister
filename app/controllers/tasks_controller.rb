@@ -321,6 +321,14 @@ class TasksController < ApplicationController
     @projects = current_user.projects.order(:title)
     @statuses = Status.default_statuses
     @current_project = params[:project_id].present? ? current_user.projects.find(params[:project_id]) : nil
+    # Only when a single project is selected AND it has a status beyond the
+    # fixed default set does the board switch from the standard 5 columns to
+    # one column per that project's actual (ordered) status list - see
+    # kanban.html.erb/kanban.js. @custom_status_project_ids lets the project
+    # filter dropdown know, without a round trip, whether switching to a
+    # given project requires a full page reload to pick up different columns.
+    @dynamic_project_statuses = @current_project.statuses.ordered if @current_project&.custom_statuses?
+    @custom_status_project_ids = current_user.projects.joins(:statuses).merge(Status.custom).distinct.pluck(:id)
     @sort_by = params[:sort_by] || 'updated_at'
     @priority_filter = params[:priority]
     @page = (params[:page] || 1).to_i
@@ -377,14 +385,26 @@ class TasksController < ApplicationController
       end
     end
 
-    # Group tasks by status
-    @tasks_by_status = {}
+    if @current_project&.custom_statuses?
+      render_dynamic_kanban_tasks(tasks)
+    else
+      render_default_kanban_tasks(tasks)
+    end
+  end
+
+  private
+
+  # The standard, project-agnostic 5-column board (folds Investigated into To
+  # Investigate, and Closed into Complete by name) - unchanged from before
+  # custom statuses existed.
+  def render_default_kanban_tasks(tasks)
+    tasks_by_status = {}
     has_more = false
     Status.default_statuses.each do |key, name|
       next if name == 'Closed' # Skip Closed status as it's included in Complete column
-      
+
       status_tasks = tasks.where(status: { name: name })
-      
+
       # For completed tasks, only show those from the last 7 days unless show_all_completed is true
       if key == :complete
         status_tasks = status_tasks.or(tasks.where(status: { name: 'Closed' }))
@@ -392,40 +412,75 @@ class TasksController < ApplicationController
           status_tasks = status_tasks.where('tasks.updated_at >= ?', 7.days.ago)
         end
       end
-      
+
       paginated_tasks = status_tasks.page(@page).per(@per_page)
-      @tasks_by_status[key] = paginated_tasks
+      tasks_by_status[key] = paginated_tasks
       has_more ||= paginated_tasks.total_pages > @page
-      AppDebugLogger.debug { "Status #{key}: #{@tasks_by_status[key].count} tasks" }
+      AppDebugLogger.debug { "Status #{key}: #{tasks_by_status[key].count} tasks" }
     end
 
     respond_to do |format|
-      format.json { 
+      format.json {
         render json: {
-          tasks: @tasks_by_status.transform_values { |tasks| 
-            tasks.map { |task| 
-              {
-                id: task.id,
-                title: task.title,
-                description: task.description,
-                status: task.status.name,
-                project: task.project.title,
-                project_color: task.project.color,
-                user: task.user.name,
-                updated_at: task.updated_at,
-                priority: task.priority,
-                category: task.task_category&.display_name,
-                category_color: task.task_category&.color
-              }
-            }
-          },
+          dynamic: false,
+          tasks: tasks_by_status.transform_values { |group| serialize_kanban_tasks(group) },
           has_more: has_more
         }
       }
     end
   end
 
-  private
+  # One column per the current project's actual statuses (default + custom),
+  # in position order, keyed by status id rather than by name/key - only used
+  # once a single project with a custom status is selected (see #kanban).
+  def render_dynamic_kanban_tasks(tasks)
+    statuses = @current_project.statuses.ordered.to_a
+    terminal_names = Status.default_statuses.values_at(:complete, :closed)
+
+    tasks_by_status = {}
+    has_more = false
+
+    statuses.each do |status|
+      status_tasks = tasks.where(status_id: status.id)
+
+      if terminal_names.include?(status.name) && !@show_all_completed
+        status_tasks = status_tasks.where('tasks.updated_at >= ?', 7.days.ago)
+      end
+
+      paginated_tasks = status_tasks.page(@page).per(@per_page)
+      tasks_by_status[status.id.to_s] = paginated_tasks
+      has_more ||= paginated_tasks.total_pages > @page
+    end
+
+    respond_to do |format|
+      format.json {
+        render json: {
+          dynamic: true,
+          columns: statuses.map { |s| { key: s.id.to_s, label: Task.localized_status_name(s), terminal: terminal_names.include?(s.name) } },
+          tasks: tasks_by_status.transform_values { |group| serialize_kanban_tasks(group) },
+          has_more: has_more
+        }
+      }
+    end
+  end
+
+  def serialize_kanban_tasks(tasks)
+    tasks.map do |task|
+      {
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        status: task.status.name,
+        project: task.project.title,
+        project_color: task.project.color,
+        user: task.user.name,
+        updated_at: task.updated_at,
+        priority: task.priority,
+        category: task.task_category&.display_name,
+        category_color: task.task_category&.color
+      }
+    end
+  end
 
   def initialize_show_completed_prefs
     session[:projects_show_completed] ||= {}

@@ -1,0 +1,12 @@
+en:
+  views:
+    statuses:
+      form:
+        name: "Name"
+        new_status: "New Status"
+        edit_status: "Edit Status"
+        cancel: "Cancel"
+        submit: "Save Status"
+        error: "error"
+        errors: "errors"
+        prohibited_save: "prohibited this status from being saved:"

@@ -1,0 +1,17 @@
+es:
+  views:
+    projects:
+      edit:
+        statuses:
+          title: "Estados de la tarea"
+          add_status: "Agregar estado"
+          help: "Personaliza los estados por los que pasan las tareas en este proyecto. Los estados predeterminados se pueden reordenar pero no renombrar ni eliminar; los estados personalizados se pueden renombrar, reordenar o eliminar una vez que ninguna tarea los use."
+          default_badge: "Predeterminado"
+          custom_badge: "Personalizado"
+          delete_confirm: "¿Estás seguro de que deseas eliminar este estado?"
+          created: "El estado se creó correctamente."
+          updated: "El estado se actualizó correctamente."
+          deleted: "El estado se eliminó correctamente."
+          in_use: "Este estado está asignado a tareas y no se puede eliminar."
+          not_found: "Estado no encontrado."
+          default_immutable: "Los estados predeterminados no se pueden editar ni eliminar."

@@ -1,0 +1,12 @@
+fr:
+  views:
+    statuses:
+      form:
+        name: "Nom"
+        new_status: "Nouveau statut"
+        edit_status: "Modifier le statut"
+        cancel: "Annuler"
+        submit: "Enregistrer le statut"
+        error: "erreur"
+        errors: "erreurs"
+        prohibited_save: "a interdit l'enregistrement de ce statut :"

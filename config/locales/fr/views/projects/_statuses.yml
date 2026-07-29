@@ -1,0 +1,17 @@
+fr:
+  views:
+    projects:
+      edit:
+        statuses:
+          title: "Statuts des tâches"
+          add_status: "Ajouter un statut"
+          help: "Personnalisez les statuts par lesquels passent les tâches de ce projet. Les statuts par défaut peuvent être réorganisés mais pas renommés ni supprimés ; les statuts personnalisés peuvent être renommés, réorganisés ou supprimés une fois qu'aucune tâche ne les utilise."
+          default_badge: "Par défaut"
+          custom_badge: "Personnalisé"
+          delete_confirm: "Êtes-vous sûr de vouloir supprimer ce statut ?"
+          created: "Le statut a été créé avec succès."
+          updated: "Le statut a été mis à jour avec succès."
+          deleted: "Le statut a été supprimé avec succès."
+          in_use: "Ce statut est attribué à des tâches et ne peut pas être supprimé."
+          not_found: "Statut introuvable."
+          default_immutable: "Les statuts par défaut ne peuvent pas être modifiés ni supprimés."

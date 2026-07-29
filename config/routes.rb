@@ -34,6 +34,12 @@ Rails.application.routes.draw do
 
   resources :projects do
     resources :tasks, shallow: true
+    resources :statuses, shallow: true, only: [:new, :create, :edit, :update, :destroy] do
+      member do
+        patch 'move_up'
+        patch 'move_down'
+      end
+    end
     member do
       get 'report'
       post 'reprioritize'

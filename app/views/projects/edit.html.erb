@@ -4,4 +4,6 @@
   </div>
 
   <%= render 'form', project: @project %>
-</div> 
+
+  <%= render 'statuses', project: @project, statuses: @project.statuses.ordered %>
+</div>

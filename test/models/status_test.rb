@@ -67,4 +67,87 @@ class StatusTest < ActiveSupport::TestCase
     @status.name = "Custom Status"
     assert_nil @status.default_key
   end
+
+  test "position is auto-assigned on create, appended after existing statuses" do
+    highest = @project.statuses.maximum(:position)
+    @status.save!
+    assert_equal highest + 1, @status.position
+  end
+
+  test "position is not overwritten if already set" do
+    @status.position = 99
+    @status.save!
+    assert_equal 99, @status.position
+  end
+
+  test "ordered scope sorts by position then id" do
+    project = Project.create!(title: "Fresh Project", user: @project.user, confirm_duplicate: true)
+    project.statuses.destroy_all
+    third = Status.create!(name: "Third", project: project, position: 2)
+    first = Status.create!(name: "First", project: project, position: 0)
+    second = Status.create!(name: "Second", project: project, position: 1)
+
+    assert_equal [first, second, third], project.statuses.ordered.to_a
+  end
+
+  test "custom scope excludes default-named statuses" do
+    @status.name = "Custom Status"
+    @status.save!
+    default_status = @project.statuses.find { |s| s.default? }
+
+    assert_includes @project.statuses.custom, @status
+    assert_not_includes @project.statuses.custom, default_status
+  end
+
+  test "in_use? reflects whether any task has this status" do
+    @status.save!
+    assert_not @status.in_use?
+
+    Task.create!(title: "Uses it", project: @project, user: @project.user, status: @status, skip_duplicate_check: true)
+    assert @status.in_use?
+  end
+
+  test "move_earlier swaps position with the previous status" do
+    project = Project.create!(title: "Fresh Project", user: @project.user, confirm_duplicate: true)
+    project.statuses.destroy_all
+    first = Status.create!(name: "First", project: project, position: 0)
+    second = Status.create!(name: "Second", project: project, position: 1)
+
+    second.move_earlier
+
+    assert_equal [second.reload, first.reload], project.statuses.ordered.to_a
+  end
+
+  test "move_earlier is a no-op at the start of the list" do
+    project = Project.create!(title: "Fresh Project", user: @project.user, confirm_duplicate: true)
+    project.statuses.destroy_all
+    first = Status.create!(name: "First", project: project, position: 0)
+    Status.create!(name: "Second", project: project, position: 1)
+
+    first.move_earlier
+
+    assert_equal 0, first.reload.position
+  end
+
+  test "move_later swaps position with the next status" do
+    project = Project.create!(title: "Fresh Project", user: @project.user, confirm_duplicate: true)
+    project.statuses.destroy_all
+    first = Status.create!(name: "First", project: project, position: 0)
+    second = Status.create!(name: "Second", project: project, position: 1)
+
+    first.move_later
+
+    assert_equal [second.reload, first.reload], project.statuses.ordered.to_a
+  end
+
+  test "move_later is a no-op at the end of the list" do
+    project = Project.create!(title: "Fresh Project", user: @project.user, confirm_duplicate: true)
+    project.statuses.destroy_all
+    Status.create!(name: "First", project: project, position: 0)
+    second = Status.create!(name: "Second", project: project, position: 1)
+
+    second.move_later
+
+    assert_equal 1, second.reload.position
+  end
 end 

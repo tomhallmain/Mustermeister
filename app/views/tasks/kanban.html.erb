@@ -75,18 +75,33 @@
     <input type="checkbox" id="show-all-completed" class="hidden" />
   </div>
 
-  <div id="kanban-board" class="flex space-x-2 overflow-x-auto pb-4">
-    <% { not_started: 'Not Started', investigations: 'To Investigate', in_progress: 'In Progress', ready_to_test: 'Ready to Test', complete: 'Complete' }.each do |key, db_name| %>
-      <div class="kanban-column flex-shrink-0 w-64 rounded-lg p-2 flex flex-col"
-           data-status="<%= key %>"
-           data-status-id="<%= Status.find_by(name: db_name)&.id %>">
-        <h3 class="text-sm font-semibold text-gray-900 mb-2">
-          <%= t("views.tasks.kanban.columns.#{key}") %>
-        </h3>
-        <div class="kanban-tasks space-y-2 min-h-[200px] flex-1" data-status="<%= key %>">
-          <!-- Tasks will be loaded here via JavaScript -->
+  <div id="kanban-board" class="flex space-x-2 overflow-x-auto pb-4"
+       data-kanban-mode="<%= @dynamic_project_statuses ? 'dynamic' : 'default' %>"
+       data-custom-status-project-ids="<%= @custom_status_project_ids.to_json %>">
+    <% if @dynamic_project_statuses %>
+      <% @dynamic_project_statuses.each do |status| %>
+        <div class="kanban-column flex-shrink-0 w-64 rounded-lg p-2 flex flex-col"
+             data-status="<%= status.id %>">
+          <h3 class="text-sm font-semibold text-gray-900 mb-2">
+            <%= Task.localized_status_name(status) %>
+          </h3>
+          <div class="kanban-tasks space-y-2 min-h-[200px] flex-1" data-status="<%= status.id %>">
+            <!-- Tasks will be loaded here via JavaScript -->
+          </div>
         </div>
-      </div>
+      <% end %>
+    <% else %>
+      <% %i[not_started investigations in_progress ready_to_test complete].each do |key| %>
+        <div class="kanban-column flex-shrink-0 w-64 rounded-lg p-2 flex flex-col"
+             data-status="<%= key %>">
+          <h3 class="text-sm font-semibold text-gray-900 mb-2">
+            <%= t("views.tasks.kanban.columns.#{key}") %>
+          </h3>
+          <div class="kanban-tasks space-y-2 min-h-[200px] flex-1" data-status="<%= key %>">
+            <!-- Tasks will be loaded here via JavaScript -->
+          </div>
+        </div>
+      <% end %>
     <% end %>
   </div>
 </div>

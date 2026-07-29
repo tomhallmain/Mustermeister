@@ -1,0 +1,12 @@
+de:
+  views:
+    statuses:
+      form:
+        name: "Name"
+        new_status: "Neuer Status"
+        edit_status: "Status bearbeiten"
+        cancel: "Abbrechen"
+        submit: "Status speichern"
+        error: "Fehler"
+        errors: "Fehler"
+        prohibited_save: "verbot, diesen Status zu speichern:"

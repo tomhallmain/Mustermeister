@@ -1,0 +1,17 @@
+en:
+  views:
+    projects:
+      edit:
+        statuses:
+          title: "Task Statuses"
+          add_status: "Add Status"
+          help: "Customize the statuses tasks move through in this project. Default statuses can be reordered but not renamed or deleted; custom statuses can be renamed, reordered, or deleted once no task uses them."
+          default_badge: "Default"
+          custom_badge: "Custom"
+          delete_confirm: "Are you sure you want to delete this status?"
+          created: "Status was successfully created."
+          updated: "Status was successfully updated."
+          deleted: "Status was successfully deleted."
+          in_use: "This status is assigned to tasks and cannot be deleted."
+          not_found: "Status not found."
+          default_immutable: "Default statuses cannot be edited or deleted."

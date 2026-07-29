@@ -1,0 +1,42 @@
+<div class="mt-10 max-w-2xl">
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-xl font-bold text-gray-900"><%= t('views.projects.edit.statuses.title') %></h2>
+    <%= link_to t('views.projects.edit.statuses.add_status'), new_project_status_path(project), class: 'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm' %>
+  </div>
+  <p class="text-sm text-gray-500 mb-3"><%= t('views.projects.edit.statuses.help') %></p>
+
+  <div class="surface shadow rounded-lg divide-y divide-gray-200">
+    <% statuses.each_with_index do |status, index| %>
+      <div class="px-4 py-3 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-900"><%= Task.localized_status_name(status) %></span>
+          <% if status.default? %>
+            <span class="px-1.5 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600"><%= t('views.projects.edit.statuses.default_badge') %></span>
+          <% else %>
+            <span class="px-1.5 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700"><%= t('views.projects.edit.statuses.custom_badge') %></span>
+          <% end %>
+        </div>
+        <div class="flex items-center space-x-2">
+          <%= button_to move_up_status_path(status), method: :patch, class: "text-gray-500 hover:text-gray-800 disabled:opacity-30", disabled: index.zero? do %>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+          <% end %>
+          <%= button_to move_down_status_path(status), method: :patch, class: "text-gray-500 hover:text-gray-800 disabled:opacity-30", disabled: index == statuses.size - 1 do %>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          <% end %>
+          <% unless status.default? %>
+            <%= link_to edit_status_path(status), class: "text-blue-600 hover:text-blue-800" do %>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+            <% end %>
+            <%= button_to status_path(status), method: :delete, class: "text-red-600 hover:text-red-800", data: { confirm: t('views.projects.edit.statuses.delete_confirm') } do %>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

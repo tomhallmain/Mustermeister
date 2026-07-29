@@ -40,7 +40,7 @@
       <% 
         # Get statuses only from the current project; default status names are translated
         current_project = task.project || @project
-        statuses = current_project.statuses.map { |s| [t("statuses.#{s.name.parameterize.underscore}", default: s.name), s.id] }
+        statuses = current_project.statuses.ordered.map { |s| [t("statuses.#{s.name.parameterize.underscore}", default: s.name), s.id] }
         current_status = task.status_id
       %>
       <%= f.select :status_id, 

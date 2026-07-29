@@ -1,0 +1,17 @@
+de:
+  views:
+    projects:
+      edit:
+        statuses:
+          title: "Aufgabenstatus"
+          add_status: "Status hinzufügen"
+          help: "Passen Sie die Status an, die Aufgaben in diesem Projekt durchlaufen. Standardstatus können neu angeordnet, aber nicht umbenannt oder gelöscht werden; benutzerdefinierte Status können umbenannt, neu angeordnet oder gelöscht werden, sobald keine Aufgabe sie mehr verwendet."
+          default_badge: "Standard"
+          custom_badge: "Benutzerdefiniert"
+          delete_confirm: "Sind Sie sicher, dass Sie diesen Status löschen möchten?"
+          created: "Status wurde erfolgreich erstellt."
+          updated: "Status wurde erfolgreich aktualisiert."
+          deleted: "Status wurde erfolgreich gelöscht."
+          in_use: "Dieser Status ist Aufgaben zugewiesen und kann nicht gelöscht werden."
+          not_found: "Status nicht gefunden."
+          default_immutable: "Standardstatus können nicht bearbeitet oder gelöscht werden."

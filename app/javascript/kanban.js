@@ -8,6 +8,28 @@ import {
 import { setupKanbanTaskContextMenu } from "kanban_context_menu";
 import Sortable from "sortablejs";
 
+// The standard board: 5 fixed columns folding Investigated into To
+// Investigate and Closed into Complete by name. Used whenever no single
+// project is selected, or the selected project has no custom status - see
+// kanban.html.erb/tasks_controller.rb#kanban for when the alternative
+// (dynamic, one column per actual project status, keyed by status id
+// instead of these fixed keys) applies instead.
+const DEFAULT_STATUS_TO_BACKEND_KEYS = {
+  not_started: ["not_started"],
+  investigations: ["to_investigate", "investigated"],
+  in_progress: ["in_progress"],
+  ready_to_test: ["ready_to_test"],
+  complete: ["complete", "closed"]
+};
+
+const DEFAULT_STATUS_TO_NAME = {
+  not_started: "Not Started",
+  investigations: "To Investigate",
+  in_progress: "In Progress",
+  ready_to_test: "Ready to Test",
+  complete: "Complete"
+};
+
 document.addEventListener("DOMContentLoaded", function () {
   const kanbanI18n = JSON.parse(
     document.querySelector("[data-kanban-i18n]")?.dataset?.kanbanI18n || "{}"
@@ -102,6 +124,39 @@ document.addEventListener("DOMContentLoaded", function () {
     kanbanBoard.addEventListener("drop", (e) => e.preventDefault());
   }
 
+  // Which column set is currently rendered server-side (kanban.html.erb) -
+  // fixed for the lifetime of the page, since the project filter dropdown
+  // normally updates columns via AJAX without a reload (see loadTasks()).
+  // customStatusProjectIds is the full set of the user's projects that have
+  // a custom status, regardless of which one (if any) is loaded right now -
+  // it's how the project filter's change handler below knows whether
+  // switching to/from a given project needs a full reload to pick up a
+  // different column set, without an extra round trip to find out.
+  const kanbanMode = kanbanBoard?.dataset?.kanbanMode === "dynamic" ? "dynamic" : "default";
+  const customStatusProjectIds = JSON.parse(
+    kanbanBoard?.dataset?.customStatusProjectIds || "[]"
+  ).map(String);
+  let terminalStatusIds = new Set();
+
+  function projectSwitchNeedsReload(newProjectId) {
+    return kanbanMode === "dynamic" || customStatusProjectIds.includes(String(newProjectId));
+  }
+
+  function reloadForProject(newProjectId) {
+    const params = new URLSearchParams(window.location.search);
+    if (newProjectId) {
+      params.set("project_id", newProjectId);
+    } else {
+      params.delete("project_id");
+    }
+    window.location.href = `${window.location.pathname}?${params}`;
+  }
+
+  // What the server actually used to decide kanbanMode/render the columns -
+  // captured before restoreFilterState()/applyProjectIdFromUrl() below can
+  // silently switch the effective project via sessionStorage.
+  const initialProjectIdFromUrl = new URLSearchParams(window.location.search).get("project_id") || "";
+
   document.querySelectorAll(".kanban-column").forEach(function (column) {
     // Only one Sortable root per column, on .kanban-tasks itself. A second
     // instance used to also be rooted on the parent .kanban-column, sharing
@@ -189,6 +244,9 @@ document.addEventListener("DOMContentLoaded", function () {
       .then((data) => {
         if (data) {
           allTasks = data.tasks;
+          terminalStatusIds = new Set(
+            (data.columns || []).filter((column) => column.terminal).map((column) => column.key)
+          );
           filterAndDisplayTasks();
           updatePaginationControls(data.has_more);
         }
@@ -206,20 +264,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function filterAndDisplayTasks() {
     const searchTerm = searchInput.value.toLowerCase();
-    const statusMapping = {
-      not_started: ["not_started"],
-      investigations: ["to_investigate", "investigated"],
-      in_progress: ["in_progress"],
-      ready_to_test: ["ready_to_test"],
-      complete: ["complete", "closed"]
-    };
+    // Dynamic mode: allTasks is already keyed by status id, one-to-one with
+    // each column's data-status - no folding needed. Default mode: allTasks
+    // is keyed by backend status key, several of which fold into one column.
+    const columnKeys =
+      kanbanMode === "dynamic" ? Object.keys(allTasks) : Object.keys(DEFAULT_STATUS_TO_BACKEND_KEYS);
 
-    Object.entries(statusMapping).forEach(([displayStatus, backendStatuses]) => {
+    columnKeys.forEach((displayStatus) => {
       const column = document.querySelector(
         `.kanban-tasks[data-status="${displayStatus}"]`
       );
       if (column) {
-        let tasks = backendStatuses.flatMap((status) => allTasks[status] || []);
+        let tasks =
+          kanbanMode === "dynamic"
+            ? allTasks[displayStatus] || []
+            : DEFAULT_STATUS_TO_BACKEND_KEYS[displayStatus].flatMap((status) => allTasks[status] || []);
         if (searchTerm) {
           tasks = tasks.filter(
             (task) =>
@@ -417,19 +476,19 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   async function updateTaskStatus(taskId, newStatus) {
-    const statusMapping = {
-      not_started: "Not Started",
-      investigations: "To Investigate",
-      in_progress: "In Progress",
-      ready_to_test: "Ready to Test",
-      complete: "Complete"
-    };
+    const requestPayload =
+      kanbanMode === "dynamic"
+        ? { task: { status_id: newStatus } }
+        : { task: { status_name: DEFAULT_STATUS_TO_NAME[newStatus] } };
 
-    const requestPayload = {
-      task: { status_name: statusMapping[newStatus] }
-    };
+    // In dynamic mode "terminal" (prompt for a task result) is decided by
+    // the columns[].terminal flag from the last loadTasks() response, which
+    // in turn only marks the status literally named Complete/Closed - same
+    // rule as the fixed board's "complete" column, just reached differently.
+    const isTerminal =
+      kanbanMode === "dynamic" ? terminalStatusIds.has(newStatus) : newStatus === "complete";
 
-    if (newStatus === "complete" && typeof window.promptTaskResult === "function") {
+    if (isTerminal && typeof window.promptTaskResult === "function") {
       const card = document.querySelector(`[data-task-id="${taskId}"]`);
       const outcome = await window.promptTaskResult({
         taskTitle: card?.dataset?.taskTitle,
@@ -476,6 +535,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
   projectFilter.addEventListener("change", function () {
     saveFilterState();
+    // The column set itself (fixed 5 vs. one per actual status) is decided
+    // server-side at page render time and can't be changed by the AJAX
+    // loadTasks() flow below - only a full reload re-renders kanban.html.erb
+    // with the right columns for the newly selected project. Only needed
+    // when dynamic-ness is actually changing, so switching between two
+    // ordinary projects (the common case) stays a fast AJAX-only update.
+    if (projectSwitchNeedsReload(this.value)) {
+      reloadForProject(this.value);
+      return;
+    }
     loadTasks();
   });
   priorityFilter.addEventListener("change", function () {
@@ -515,5 +584,18 @@ document.addEventListener("DOMContentLoaded", function () {
     saveFilterState();
   }
   updateShowCompletedButton();
-  loadTasks();
+
+  // restoreFilterState()/applyProjectIdFromUrl() above can silently change
+  // the effective project away from whichever one (if any) the URL had when
+  // the server rendered this page's columns - without going through the
+  // project filter's own "change" handler above, so projectSwitchNeedsReload
+  // needs to be checked here too. Without this, loadTasks() below could
+  // fetch one project's data (e.g. dynamic, id-keyed) while the page is
+  // still rendered for a different project's column set (e.g. fixed,
+  // name-keyed), leaving every column empty despite tasks existing.
+  if (projectFilter.value !== initialProjectIdFromUrl && projectSwitchNeedsReload(projectFilter.value)) {
+    reloadForProject(projectFilter.value);
+  } else {
+    loadTasks();
+  }
 });
