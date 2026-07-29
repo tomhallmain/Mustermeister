@@ -43,8 +43,18 @@ class TaskTsvExportServiceTest < ActiveSupport::TestCase
 
     assert_equal "Bare task", rows[1][0]
     assert_nil rows[1][3], "expected no due date"
-    assert_nil rows[1][4], "expected no category"
+    assert_equal "Feature", rows[1][4], "expected the global default category"
     assert_nil rows[1][5], "expected no description"
+  end
+
+  test "a task with its category explicitly cleared renders an empty category column" do
+    task = @project.create_task!(title: "Bare task", user: @user)
+    task.update!(task_category: nil)
+
+    tsv = TaskTsvExportService.call([task])
+    rows = CSV.parse(tsv, col_sep: "\t")
+
+    assert_nil rows[1][4], "expected no category"
   end
 
   test "a title or description containing a literal tab or newline is still parsed back correctly" do

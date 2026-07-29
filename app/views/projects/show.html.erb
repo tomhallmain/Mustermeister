@@ -51,6 +51,12 @@
           <span class="text-sm"><%= t('projects.show.default_priority') %>: </span>
           <%= render 'shared/priority_badge', priority: @project.default_priority, size: 'text-sm' %>
         </div>
+        <% if @project.default_category %>
+          <div>
+            <span class="text-sm"><%= t('projects.show.default_category') %>: </span>
+            <%= render 'shared/category_badge', task_category: @project.default_category, size: 'text-sm' %>
+          </div>
+        <% end %>
       </div>
       <div class="flex items-center flex-shrink-0">
         <%= button_to reprioritize_project_path(@project), 

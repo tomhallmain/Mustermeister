@@ -100,7 +100,8 @@ class TasksController < ApplicationController
     @project = Project.find(params[:project_id])
     @task = current_user.tasks.build(
       project_id: params[:project_id],
-      priority: @project.default_priority
+      priority: @project.default_priority,
+      task_category_id: @project.default_category_id || TaskCategory.fallback_category&.id
     )
 
     if params[:source_task_id].present?

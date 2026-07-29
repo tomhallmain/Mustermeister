@@ -52,6 +52,19 @@ class ProjectTest < ActiveSupport::TestCase
     assert @project.valid?
   end
 
+  test "should allow an optional default_category" do
+    @project.default_category = task_categories(:feature)
+    assert @project.valid?
+
+    @project.save!
+    assert_equal task_categories(:feature), @project.reload.default_category
+  end
+
+  test "default_category can be left blank" do
+    @project.default_category = nil
+    assert @project.valid?
+  end
+
   test "should validate color inclusion" do
     @project.color = 'invalid'
     assert_not @project.valid?

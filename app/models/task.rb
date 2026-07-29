@@ -241,6 +241,10 @@ class Task < ApplicationRecord
   def set_defaults
     self.completed ||= false
     self.priority ||= project&.default_priority || 'medium'
+    # Only defaulted on creation - once a task exists, clearing its category
+    # (e.g. via the edit form) must stick, not silently refill on the next
+    # save the way priority/status do.
+    self.task_category_id ||= project&.default_category_id || TaskCategory.fallback_category&.id if new_record?
     self.archived ||= false
     self.status ||= project&.status_by_key(:not_started)
   end

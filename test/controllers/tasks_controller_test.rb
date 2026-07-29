@@ -82,6 +82,22 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to tasks_path(show_completed: false)
   end
 
+  test "new task form pre-selects the project's default category" do
+    @project.update!(default_category: task_categories(:tech_debt))
+
+    get new_project_task_path(@project)
+
+    assert_response :success
+    assert_select "select#task_task_category_id option[selected][value=?]", task_categories(:tech_debt).id.to_s
+  end
+
+  test "new task form pre-selects the global Feature category when project has no default_category" do
+    get new_project_task_path(@project)
+
+    assert_response :success
+    assert_select "select#task_task_category_id option[selected][value=?]", task_categories(:feature).id.to_s
+  end
+
   test "should create task with default status" do
     assert_difference('Task.count') do
       post tasks_path, params: {
@@ -135,6 +151,39 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     # Verify the task got the explicit priority, not project default
     task = Task.find_by(title: "Low Priority Task")
     assert_equal 'low', task.priority
+  end
+
+  test "should default to project's default category when creating task without a category" do
+    @project.update!(default_category: task_categories(:feature))
+
+    assert_difference('Task.count') do
+      post tasks_path, params: {
+        task: {
+          title: "Uncategorized Task",
+          project_id: @project.id
+        }
+      }
+    end
+
+    task = Task.find_by(title: "Uncategorized Task")
+    assert_equal task_categories(:feature), task.task_category
+  end
+
+  test "should use specified category when creating task, not project default" do
+    @project.update!(default_category: task_categories(:feature))
+
+    assert_difference('Task.count') do
+      post tasks_path, params: {
+        task: {
+          title: "Explicitly Categorized Task",
+          project_id: @project.id,
+          task_category_id: task_categories(:fix).id
+        }
+      }
+    end
+
+    task = Task.find_by(title: "Explicitly Categorized Task")
+    assert_equal task_categories(:fix), task.task_category
   end
 
   test "creating a task with a title similar to an existing one in the same project re-renders with a warning instead of saving" do

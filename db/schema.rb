@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_18_140000) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_29_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -51,6 +51,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_18_140000) do
     t.datetime "last_activity_at"
     t.string "default_priority", default: "medium"
     t.string "color"
+    t.bigint "default_category_id"
+    t.index ["default_category_id"], name: "index_projects_on_default_category_id"
     t.index ["user_id"], name: "index_projects_on_user_id"
   end
 
@@ -205,6 +207,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_18_140000) do
   add_foreign_key "comments", "tasks"
   add_foreign_key "comments", "users"
   add_foreign_key "notifications", "users"
+  add_foreign_key "projects", "task_categories", column: "default_category_id"
   add_foreign_key "projects", "users"
   add_foreign_key "recurring_task_templates", "projects"
   add_foreign_key "recurring_task_templates", "task_categories"

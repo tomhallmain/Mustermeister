@@ -173,6 +173,45 @@ class TaskTest < ActiveSupport::TestCase
     assert_equal 'low', task.priority
   end
 
+  test "should default task_category to the project's default_category when not specified" do
+    project = Project.create!(
+      title: "Project With Default Category",
+      user: @user,
+      default_category: task_categories(:tech_debt),
+      confirm_duplicate: true
+    )
+
+    task = project.build_task(title: "Uncategorized Task", user: @user)
+    task.save!
+
+    assert_equal task_categories(:tech_debt), task.task_category
+  end
+
+  test "should override project default_category when explicitly set" do
+    project = Project.create!(
+      title: "Project With Default Category",
+      user: @user,
+      default_category: task_categories(:tech_debt),
+      confirm_duplicate: true
+    )
+
+    task = project.build_task(
+      title: "Explicitly Categorized Task",
+      user: @user,
+      task_category: task_categories(:fix)
+    )
+    task.save!
+
+    assert_equal task_categories(:fix), task.task_category
+  end
+
+  test "should fall back to the global Feature category when the project has no default_category" do
+    task = @project.build_task(title: "No Category Project Task", user: @user)
+    task.save!
+
+    assert_equal task_categories(:feature), task.task_category
+  end
+
   test "completion percentage should be calculated correctly" do
     # Create a new project with a single task
     project = Project.create!(title: "Test Project", user: @user, confirm_duplicate: true)

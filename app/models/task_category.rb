@@ -24,6 +24,13 @@ class TaskCategory < ApplicationRecord
     DEFAULT_CATEGORY_COLORS.keys
   end
 
+  # The category a task falls back to when neither an explicit category nor
+  # its project's default_category is set - "Feature", the first (and most
+  # general) of the seeded default categories.
+  def self.fallback_category
+    default_categories.find_by(name: default_category_names.first)
+  end
+
   # Idempotent: safe to call from seeds, controllers, or anywhere the default
   # list needs to be guaranteed to exist (the test DB is loaded from schema.rb,
   # not replayed migrations, so a migration-only seed isn't enough). Also

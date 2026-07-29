@@ -11,7 +11,7 @@
   <% if other_errors.any? %>
     <div class="bg-red-50 p-4 rounded-lg">
       <div class="text-red-700 font-medium">
-        <%= pluralize(other_errors.count, "error") %> prohibited this project from being saved:
+        <%= pluralize(other_errors.count, t('views.projects.form.error'), t('views.projects.form.errors')) %> <%= t('views.projects.form.prohibited_save') %>
       </div>
       <ul class="list-disc list-inside text-red-600">
         <% other_errors.each do |error| %>
@@ -22,25 +22,36 @@
   <% end %>
 
   <div>
-    <%= f.label :title, class: "block text-sm font-medium text-gray-700" %>
+    <%= f.label :title, t('views.projects.form.title_label'), class: "block text-sm font-medium text-gray-700" %>
     <%= f.text_field :title, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
   </div>
 
   <div>
-    <%= f.label :description, class: "block text-sm font-medium text-gray-700" %>
+    <%= f.label :description, t('views.projects.form.description_label'), class: "block text-sm font-medium text-gray-700" %>
     <%= f.text_area :description, rows: 3, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
   </div>
 
   <div>
-    <%= f.label :due_date, class: "block text-sm font-medium text-gray-700" %>
+    <%= f.label :due_date, t('views.projects.form.due_date_label'), class: "block text-sm font-medium text-gray-700" %>
     <%= f.date_field :due_date, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
   </div>
 
   <div>
-    <%= f.label :default_priority, class: "block text-sm font-medium text-gray-700" %>
-    <%= f.select :default_priority, 
+    <%= f.label :default_priority, t('views.projects.form.default_priority_label'), class: "block text-sm font-medium text-gray-700" %>
+    <%= f.select :default_priority,
                options_for_select([[t('priorities.leisure'), 'leisure'], [t('priorities.low'), 'low'], [t('priorities.medium'), 'medium'], [t('priorities.high'), 'high']], project.default_priority || 'medium'), 
                {}, 
+               { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" } %>
+  </div>
+
+  <div>
+    <%= f.label :default_category_id, t('views.projects.form.default_category'), class: "block text-sm font-medium text-gray-700" %>
+    <%
+      category_options = @task_categories.map { |c| [c.display_name, c.id] }
+    %>
+    <%= f.select :default_category_id,
+               options_for_select(category_options, project.default_category_id),
+               { include_blank: t('views.projects.form.select_default_category') },
                { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" } %>
   </div>
 

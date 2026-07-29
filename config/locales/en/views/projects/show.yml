@@ -15,6 +15,7 @@ en:
       back_to_projects: "Back to Projects"
       description: "Description"
       default_priority: "Default Priority"
+      default_category: "Default Category"
       due_date: "Due Date"
       created_at: "Created"
       updated_at: "Last Updated"

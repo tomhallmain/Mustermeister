@@ -168,6 +168,21 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to project_path(new_project)
   end
 
+  test "should create project with default category" do
+    assert_difference('Project.count') do
+      post projects_path, params: {
+        project: {
+          title: "New Project",
+          description: "Project Description",
+          default_category_id: task_categories(:feature).id
+        }
+      }
+    end
+
+    new_project = Project.find_by(title: "New Project")
+    assert_equal task_categories(:feature), new_project.default_category
+  end
+
   test "should create default statuses for new project" do
     assert_difference('Project.count') do
       post projects_path, params: {
@@ -263,9 +278,33 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
         default_priority: "low"
       }
     }
-    
+
     @project.reload
     assert_equal "low", @project.default_priority
+  end
+
+  test "should update project default category" do
+    patch project_path(@project), params: {
+      project: {
+        default_category_id: task_categories(:feature).id
+      }
+    }
+
+    @project.reload
+    assert_equal task_categories(:feature), @project.default_category
+  end
+
+  test "should clear project default category" do
+    @project.update!(default_category: task_categories(:feature))
+
+    patch project_path(@project), params: {
+      project: {
+        default_category_id: ""
+      }
+    }
+
+    @project.reload
+    assert_nil @project.default_category
   end
 
   test "should create project with color" do

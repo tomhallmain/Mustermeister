@@ -14,6 +14,7 @@ class Project < ApplicationRecord
   has_many :statuses, dependent: :destroy
   has_many :recurring_task_templates, dependent: :destroy
   belongs_to :user
+  belongs_to :default_category, class_name: 'TaskCategory', optional: true
 
   # Not persisted - lets the create/edit form warn on a likely-duplicate
   # title without hard-blocking: set to a truthy value to bypass the check
