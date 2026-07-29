@@ -17,10 +17,13 @@ fr:
       form:
         title: "Détails du projet"
         description: "Description"
+        category: "Catégorie du projet"
         default_priority: "Priorité par défaut"
+        default_category: "Catégorie par défaut"
         due_date: "Date d'échéance"
         color: "Couleur du projet"
         select_priority: "Sélectionnez une priorité"
+        select_default_category: "Aucune catégorie par défaut"
         select_color: "Sélectionnez une couleur"
         create_project: "Créer un projet"
         update_project: "Mettre à jour le projet"
@@ -41,6 +44,9 @@ fr:
         submit: "Enregistrer le projet"
         create_anyway: "Enregistrer quand même"
         similar_title_warning_heading: "Un projet similaire existe déjà"
+        error: "erreur"
+        errors: "erreurs"
+        prohibited_save: "a interdit l'enregistrement de ce projet :"
         color_help: "Choisissez une couleur pour distinguer visuellement ce projet dans le tableau Kanban et les autres vues."
         colors:
           red: "Rouge"

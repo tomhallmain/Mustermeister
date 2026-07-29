@@ -1,4 +1,6 @@
 de:
   projects:
     show:
+      category: "Kategorie"
+      default_category: "Standardkategorie"
       view_on_kanban: "Auf der Kanban-Tafel ansehen"

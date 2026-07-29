@@ -15,6 +15,7 @@ class ReportsController < ApplicationController
   def index
     @projects = current_user.projects.order(:title)
     @available_stats = AVAILABLE_STATS
+    @project_categories = Project.category_suggestions_for(current_user)
     # Pre-fill from session when returning from analysis (or from params for backwards compatibility)
     @selected_project_ids = report_config_project_ids
     @selected_stats = report_config_stats
@@ -26,7 +27,8 @@ class ReportsController < ApplicationController
     stats = AVAILABLE_STATS.dup if stats.empty?
     session[REPORT_CONFIG_SESSION_KEY] = {
       "project_ids" => project_ids,
-      "stats" => stats
+      "stats" => stats,
+      "scope_label" => params[:scope_label].to_s.strip.presence
     }
     redirect_format = params[:redirect_format].to_s == "pdf" ? :pdf : nil
     redirect_to reports_analysis_path(format: redirect_format)
@@ -39,6 +41,7 @@ class ReportsController < ApplicationController
     stats_to_show = AVAILABLE_STATS.dup if stats_to_show.empty?
     sort_by = SORT_BY_OPTIONS.include?(params[:sort_by]) ? params[:sort_by] : "total_tasks"
     sort_direction = SORT_DIRECTIONS.include?(params[:sort_direction]) ? params[:sort_direction] : "desc"
+    @scope_label = params[:scope_label].presence || report_config_scope_label
 
     @projects_scope = current_user.projects
     @result = ReportStatsService.call(@projects_scope, project_ids: project_ids.presence)
@@ -128,6 +131,9 @@ class ReportsController < ApplicationController
   def render_pdf
     Prawn::Document.new do |pdf|
       pdf.text I18n.t("views.reports.analysis.title"), size: 18, style: :bold
+      if @scope_label.present?
+        pdf.text I18n.t("views.reports.analysis.scope_label", label: @scope_label), size: 12, style: :italic
+      end
       pdf.move_down 12
 
       ps = @result.projects_summary
@@ -192,5 +198,9 @@ class ReportsController < ApplicationController
   def report_config_stats
     stats = session.dig(REPORT_CONFIG_SESSION_KEY, "stats")
     stats.present? ? (stats & AVAILABLE_STATS) : AVAILABLE_STATS.dup
+  end
+
+  def report_config_scope_label
+    session.dig(REPORT_CONFIG_SESSION_KEY, "scope_label")
   end
 end

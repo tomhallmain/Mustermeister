@@ -32,6 +32,16 @@
   </div>
 
   <div>
+    <%= f.label :category, t('views.projects.form.category'), class: "block text-sm font-medium text-gray-700" %>
+    <%= f.text_field :category, list: "project-category-suggestions", class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+    <datalist id="project-category-suggestions">
+      <% @category_suggestions.each do |category| %>
+        <option value="<%= category %>"></option>
+      <% end %>
+    </datalist>
+  </div>
+
+  <div>
     <%= f.label :due_date, t('views.projects.form.due_date_label'), class: "block text-sm font-medium text-gray-700" %>
     <%= f.date_field :due_date, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
   </div>

@@ -183,6 +183,21 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     assert_equal task_categories(:feature), new_project.default_category
   end
 
+  test "should create project with a free-text category" do
+    assert_difference('Project.count') do
+      post projects_path, params: {
+        project: {
+          title: "New Project",
+          description: "Project Description",
+          category: "Marketing"
+        }
+      }
+    end
+
+    new_project = Project.find_by(title: "New Project")
+    assert_equal "Marketing", new_project.category
+  end
+
   test "should create default statuses for new project" do
     assert_difference('Project.count') do
       post projects_path, params: {
@@ -305,6 +320,36 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
 
     @project.reload
     assert_nil @project.default_category
+  end
+
+  test "should update project's free-text category" do
+    patch project_path(@project), params: {
+      project: {
+        category: "Operations"
+      }
+    }
+
+    @project.reload
+    assert_equal "Operations", @project.category
+  end
+
+  test "edit form suggests categories from the user's other projects" do
+    Project.create!(title: "Other Categorized Project", user: @user, category: "Marketing", confirm_duplicate: true)
+
+    get edit_project_path(@project)
+
+    assert_response :success
+    assert_select "datalist#project-category-suggestions option[value=?]", "Marketing"
+  end
+
+  test "edit form does not suggest another user's categories" do
+    other_user = users(:two)
+    Project.create!(title: "Someone Else's Project", user: other_user, category: "Sales", confirm_duplicate: true)
+
+    get edit_project_path(@project)
+
+    assert_response :success
+    assert_select "datalist#project-category-suggestions option[value=?]", "Sales", count: 0
   end
 
   test "should create project with color" do

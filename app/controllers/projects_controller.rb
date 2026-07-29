@@ -8,6 +8,7 @@ class ProjectsController < ApplicationController
   before_action :initialize_show_completed_prefs
   before_action :set_project, only: [:show, :edit, :update, :destroy, :report, :reprioritize]
   before_action :load_task_categories, only: [:new, :edit, :create, :update]
+  before_action :load_category_suggestions, only: [:new, :edit, :create, :update]
 
   def index
     @projects = current_user.projects.includes(:tasks)
@@ -222,11 +223,15 @@ class ProjectsController < ApplicationController
   end
 
   def project_params
-    params.require(:project).permit(:title, :description, :due_date, :default_priority, :default_category_id, :color, :confirm_duplicate)
+    params.require(:project).permit(:title, :description, :due_date, :default_priority, :default_category_id, :category, :color, :confirm_duplicate)
   end
 
   def load_task_categories
     TaskCategory.ensure_default_categories!
     @task_categories = TaskCategory.default_categories.order(:name) + current_user.task_categories.order(:name)
+  end
+
+  def load_category_suggestions
+    @category_suggestions = Project.category_suggestions_for(current_user)
   end
 end

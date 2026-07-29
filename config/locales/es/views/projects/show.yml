@@ -1,4 +1,6 @@
 es:
   projects:
     show:
+      category: "Categoría"
+      default_category: "Categoría predeterminada"
       view_on_kanban: "Vista en el tablero de Kanban"

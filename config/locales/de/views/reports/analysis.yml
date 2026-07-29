@@ -3,6 +3,7 @@ de:
     reports:
       analysis:
         title: "Analyse"
+        scope_label: "Umfang: %{label}"
         back_to_setup: "Zurück zur Berichtsverwaltung"
         summary: "Zusammenfassung"
         projects_summary: "Projekte"

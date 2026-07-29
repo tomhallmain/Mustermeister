@@ -4,6 +4,7 @@ en:
       form:
         title: "Project Details"
         description: "Description"
+        category: "Project Category"
         default_priority: "Default Priority"
         default_category: "Default Category"
         due_date: "Due Date"

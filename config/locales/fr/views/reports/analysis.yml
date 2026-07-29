@@ -3,6 +3,7 @@ fr:
     reports:
       analysis:
         title: "Analyse"
+        scope_label: "Portée : %{label}"
         back_to_setup: "Retour à la paramétrisation du rapport"
         summary: "Résumé"
         projects_summary: "Projets"

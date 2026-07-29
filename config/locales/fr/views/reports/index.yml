@@ -6,6 +6,8 @@ fr:
         subtitle: "Sélectionnez les projets et les stats, puis consultez l'analyse ou téléchargez le rapport au format PDF."
         projects_label: "Projets à inclure"
         projects_hint: "Laissez tous décochés pour inclure chaque projet."
+        category_filter_label: "Filtrer par catégorie de projet"
+        category_filter_placeholder: "Toutes les catégories"
         project_search_placeholder: "Rechercher des projets..."
         project_search_no_results: "Aucun projet ne correspond à votre recherche."
         select_all: "Tout sélectionner"

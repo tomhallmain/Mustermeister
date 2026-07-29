@@ -6,6 +6,8 @@ es:
         subtitle: "Elige proyectos y estadísticas, luego visualiza el análisis o descarga un informe en formato PDF."
         projects_label: "Proyectos para incluir"
         projects_hint: "Deje todos desmarcados para incluir todos los proyectos."
+        category_filter_label: "Filtrar por categoría del proyecto"
+        category_filter_placeholder: "Todas las categorías"
         project_search_placeholder: "Buscar proyectos..."
         project_search_no_results: "No hay proyectos que coinciden con tu búsqueda."
         select_all: "Seleccionar todo"

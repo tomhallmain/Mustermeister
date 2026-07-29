@@ -32,6 +32,7 @@ class Project < ApplicationRecord
   validate :warn_if_similar_title_exists, on: %i[create update]
 
   before_save :update_last_activity
+  before_save :normalize_category
   before_create :set_initial_activity
   after_create :create_default_statuses
   # confirm_duplicate is meant to authorize exactly one save - an
@@ -214,7 +215,19 @@ class Project < ApplicationRecord
     color.titleize
   end
 
+  # Distinct free-text categories the user has already used on other
+  # projects, for the edit form's suggestion list - lets someone reuse an
+  # existing category (e.g. for report grouping) instead of typing a
+  # near-duplicate.
+  def self.category_suggestions_for(user)
+    user.projects.where.not(category: [nil, ""]).distinct.order(:category).pluck(:category)
+  end
+
   private
+
+  def normalize_category
+    self.category = category.strip.presence if category
+  end
 
   # Weights for the given (already completed/incomplete-scoped) relation,
   # bucketed by priority (unrecognized/nil priorities fall back to "low",

@@ -41,6 +41,12 @@
     <div class="flex justify-between items-start mt-4 gap-4">
       <div class="flex items-center gap-4 flex-shrink-0">
         <p class="text-gray-600 text-sm whitespace-pre-line"><%= @project.description %></p>
+        <% if @project.category.present? %>
+          <div>
+            <span class="text-sm"><%= t('projects.show.category') %>: </span>
+            <span class="text-sm font-medium text-gray-700"><%= @project.category %></span>
+          </div>
+        <% end %>
         <div class="text-xs text-gray-500">
           <%= t('projects.show.created_at') %>: <%= @project.created_at.strftime("%B %d, %Y at %I:%M %p") %>
           <% if @project.updated_at != @project.created_at %>

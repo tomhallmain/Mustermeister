@@ -90,4 +90,64 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match "Excluded But Visible Project", response.body
   end
+
+  test "index exposes the user's distinct project categories for the category filter" do
+    Project.create!(title: "Marketing Site", user: @user, category: "Marketing", confirm_duplicate: true)
+    Project.create!(title: "Ops Project", user: @user, category: "Operations", confirm_duplicate: true)
+
+    get reports_path
+
+    assert_response :success
+    assert_select "select#project-category-filter option", text: "Marketing"
+    assert_select "select#project-category-filter option", text: "Operations"
+  end
+
+  test "set_config stores the scope label in session alongside project_ids and stats" do
+    post set_report_config_path, params: {
+      project_ids: [@included_project.id],
+      stats: ["total_tasks"],
+      scope_label: "Marketing"
+    }
+
+    assert_redirected_to reports_analysis_path
+    assert_equal "Marketing", session["report_config"]["scope_label"]
+  end
+
+  test "analysis displays the scope label carried over from session" do
+    post set_report_config_path, params: {
+      project_ids: [@included_project.id],
+      stats: ["total_tasks"],
+      scope_label: "Marketing"
+    }
+
+    get reports_analysis_path
+
+    assert_response :success
+    assert_select "p", text: "Scope: Marketing"
+  end
+
+  test "analysis omits the scope label when none was set" do
+    post set_report_config_path, params: {
+      project_ids: [@included_project.id],
+      stats: ["total_tasks"]
+    }
+
+    get reports_analysis_path
+
+    assert_response :success
+    assert_select "p", text: /Scope:/, count: 0
+  end
+
+  test "PDF download succeeds with a scope label set" do
+    post set_report_config_path, params: {
+      project_ids: [@included_project.id],
+      stats: ["total_tasks"],
+      scope_label: "Marketing"
+    }
+
+    get reports_analysis_path(format: :pdf)
+
+    assert_response :success
+    assert_equal "application/pdf", response.content_type
+  end
 end

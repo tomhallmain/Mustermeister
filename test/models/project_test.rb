@@ -65,6 +65,28 @@ class ProjectTest < ActiveSupport::TestCase
     assert @project.valid?
   end
 
+  test "should normalize category by stripping whitespace and blanking out empty strings" do
+    @project.category = "  Marketing  "
+    @project.save!
+    assert_equal "Marketing", @project.reload.category
+
+    @project.category = "   "
+    @project.save!
+    assert_nil @project.reload.category
+  end
+
+  test "category_suggestions_for returns distinct sorted categories for a user's own projects only" do
+    other_user = users(:two)
+
+    Project.create!(title: "Marketing Site", user: @user, category: "Marketing", confirm_duplicate: true)
+    Project.create!(title: "Marketing Campaign", user: @user, category: "Marketing", confirm_duplicate: true)
+    Project.create!(title: "Internal Tools", user: @user, category: "Engineering", confirm_duplicate: true)
+    Project.create!(title: "Uncategorized", user: @user, confirm_duplicate: true)
+    Project.create!(title: "Not Mine", user: other_user, category: "Sales", confirm_duplicate: true)
+
+    assert_equal ["Engineering", "Marketing"], Project.category_suggestions_for(@user)
+  end
+
   test "should validate color inclusion" do
     @project.color = 'invalid'
     assert_not @project.valid?

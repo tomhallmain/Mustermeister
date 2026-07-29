@@ -3,6 +3,7 @@ en:
     reports:
       analysis:
         title: "Analysis"
+        scope_label: "Scope: %{label}"
         back_to_setup: "Back to report setup"
         summary: "Summary"
         projects_summary: "Projects"

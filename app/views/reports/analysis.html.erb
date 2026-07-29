@@ -2,6 +2,9 @@
   <div class="mb-8 flex justify-between items-start flex-wrap gap-4">
     <div>
       <h1 class="text-2xl font-bold text-gray-900"><%= t('views.reports.analysis.title') %></h1>
+      <% if @scope_label.present? %>
+        <p class="text-sm text-gray-500 italic"><%= t('views.reports.analysis.scope_label', label: @scope_label) %></p>
+      <% end %>
     </div>
     <div class="flex flex-wrap gap-4">
       <%= link_to t('views.reports.analysis.back_to_setup'), reports_path, class: 'text-blue-600 hover:text-blue-800' %>

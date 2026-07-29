@@ -14,6 +14,7 @@ en:
       delete_project: "Delete Project"
       back_to_projects: "Back to Projects"
       description: "Description"
+      category: "Category"
       default_priority: "Default Priority"
       default_category: "Default Category"
       due_date: "Due Date"

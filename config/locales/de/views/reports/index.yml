@@ -6,6 +6,8 @@ de:
         subtitle: "Wählen Sie Projekte und Statistiken aus,schließen Sie dann die Analyse an oder herunterladen Sie einen PDF-Bericht."
         projects_label: "Projekte einzubeziehen"
         projects_hint: "lassen Sie alle nicht abgehakt, um alle Projekte einzubeziehen."
+        category_filter_label: "Nach Projektkategorie filtern"
+        category_filter_placeholder: "Alle Kategorien"
         project_search_placeholder: "Projekte suchen..."
         project_search_no_results: "Keine Projekte finden Ihr Suchbegriff."
         select_all: "Alles auswählen"

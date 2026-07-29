@@ -11,10 +11,22 @@
 
   <%= form_with url: set_report_config_path, method: :post, id: 'report-setup-form', class: 'space-y-8', data: { turbo: false } do |f| %>
     <%= hidden_field_tag :redirect_format, '', id: 'report-redirect-format' %>
+    <%= hidden_field_tag :scope_label, '', id: 'report-scope-label' %>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
       <div class="surface shadow-lg rounded-lg p-6 min-w-0">
         <h2 class="text-lg font-semibold text-gray-900 mb-1"><%= t('views.reports.index.projects_label') %></h2>
         <p class="text-sm text-gray-500 mb-2"><%= t('views.reports.index.projects_hint') %></p>
+        <% if @project_categories.present? %>
+          <div class="mb-2">
+            <label for="project-category-filter" class="block text-xs font-medium text-gray-600 mb-1"><%= t('views.reports.index.category_filter_label') %></label>
+            <select id="project-category-filter" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <option value=""><%= t('views.reports.index.category_filter_placeholder') %></option>
+              <% @project_categories.each do |category| %>
+                <option value="<%= category %>"><%= category %></option>
+              <% end %>
+            </select>
+          </div>
+        <% end %>
         <div class="mb-2">
           <input type="text" id="project-search" placeholder="<%= t('views.reports.index.project_search_placeholder') %>" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" autocomplete="off">
         </div>
@@ -28,7 +40,7 @@
             <li class="px-3 py-3 text-gray-500 italic" data-project-title=""><%= t('views.projects.index.no_projects') %></li>
           <% else %>
             <% @projects.each do |project| %>
-              <li class="project-row" data-project-title="<%= project.title %>">
+              <li class="project-row" data-project-title="<%= project.title %>" data-project-category="<%= project.category %>">
                 <label class="flex items-center gap-3 w-full cursor-pointer py-2.5 px-3 hover:bg-gray-50 text-left">
                   <%= f.check_box :project_ids, { multiple: true, checked: @selected_project_ids.include?(project.id), name: 'project_ids[]', id: "project_#{project.id}", class: 'rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0' }, project.id, nil %>
                   <span class="text-sm text-gray-700 min-w-0"><%= project.title %></span>
@@ -107,6 +119,15 @@
         redirectFormat.value = '';
       });
     }
+    var scopeLabelInput = document.getElementById('report-scope-label');
+    var categoryFilter = document.getElementById('project-category-filter');
+    function clearScopeLabel() {
+      if (scopeLabelInput) scopeLabelInput.value = '';
+    }
+    function resetCategoryFilter() {
+      if (categoryFilter) categoryFilter.value = '';
+    }
+
     var selectAll = document.getElementById('select-all-projects');
     if (selectAll) {
       selectAll.addEventListener('click', function() {
@@ -114,11 +135,49 @@
         var anyUnchecked = Array.from(boxes).some(function(b) { return !b.checked; });
         boxes.forEach(function(b) { b.checked = anyUnchecked; });
         selectAll.textContent = anyUnchecked ? '<%= j t('views.reports.index.select_all') %>' : '<%= j t('views.reports.index.deselect_all') %>';
+        resetCategoryFilter();
+        clearScopeLabel();
+      });
+    }
+
+    var projectsList = document.getElementById('projects-list');
+    if (categoryFilter && projectsList) {
+      categoryFilter.addEventListener('change', function() {
+        var selected = categoryFilter.value;
+        var boxes = form.querySelectorAll('input[name="project_ids[]"]');
+        if (selected) {
+          // Selecting a category takes over project selection entirely -
+          // clear the list first, then check only the matching projects,
+          // rather than layering onto whatever was already picked.
+          boxes.forEach(function(cb) {
+            var row = cb.closest('li.project-row');
+            var cat = row ? row.getAttribute('data-project-category') : '';
+            cb.checked = (cat === selected);
+          });
+        }
+        // Category selection counts as the most recent "named" selection
+        // for the PDF's scope label - even choosing "All categories" (which
+        // clears the label) is itself a selection that should win over
+        // whatever was loaded/typed before it.
+        if (scopeLabelInput) scopeLabelInput.value = selected;
+      });
+    }
+
+    // Any manual checkbox edit invalidates the "this is exactly category X"
+    // (or "exactly saved set Y") framing, so the scope label shouldn't keep
+    // claiming it. Setting .checked programmatically (category filter,
+    // select-all, loading a saved set) does not fire 'change', so this only
+    // reacts to the user's own clicks.
+    if (projectsList) {
+      projectsList.addEventListener('change', function(e) {
+        if (e.target && e.target.matches('input[name="project_ids[]"]')) {
+          resetCategoryFilter();
+          clearScopeLabel();
+        }
       });
     }
 
     var projectSearch = document.getElementById('project-search');
-    var projectsList = document.getElementById('projects-list');
     var noResultsEl = document.getElementById('project-search-no-results');
     if (projectSearch && projectsList) {
       var projectRows = Array.from(projectsList.querySelectorAll('li.project-row'));
@@ -229,6 +288,11 @@
           mainForm.querySelectorAll('input[name="stats[]"]').forEach(function(cb) {
             cb.checked = (item.stats || []).indexOf(cb.value) !== -1;
           });
+          // Loading a saved set is itself the most recent "named" selection -
+          // takes precedence over the scope label until something else
+          // (a category pick, or a manual checkbox edit) supersedes it.
+          resetCategoryFilter();
+          if (scopeLabelInput) scopeLabelInput.value = item.name;
           var msg = section.getAttribute('data-loaded-toast');
           if (msg && msg.length) {
             var toast = document.createElement('p');

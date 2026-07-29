@@ -6,6 +6,8 @@ en:
         subtitle: "Choose projects and stats, then view the analysis or download a PDF report."
         projects_label: "Projects to include"
         projects_hint: "Leave all unchecked to include every project."
+        category_filter_label: "Filter by project category"
+        category_filter_placeholder: "All categories"
         project_search_placeholder: "Search projects..."
         project_search_no_results: "No projects match your search."
         select_all: "Select all"

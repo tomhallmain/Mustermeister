@@ -17,10 +17,13 @@ es:
       form:
         title: "Detalles del proyecto"
         description: "Descripción"
+        category: "Categoría del proyecto"
         default_priority: "Prioridad predeterminada"
+        default_category: "Categoría predeterminada"
         due_date: "Fecha de vencimiento"
         color: "Color del proyecto"
         select_priority: "Seleccionar una prioridad"
+        select_default_category: "Sin categoría predeterminada"
         select_color: "Selecciona un color"
         create_project: "Crear proyecto"
         update_project: "Actualizar proyecto"
@@ -41,6 +44,9 @@ es:
         submit: "Guardar proyecto"
         create_anyway: "Guardar de todos modos"
         similar_title_warning_heading: "Ya existe un proyecto similar"
+        error: "error"
+        errors: "errores"
+        prohibited_save: "prohibió que se guardara este proyecto:"
         color_help: "Elige un color para distinguir visualmente este proyecto en el tablero kanban y otras vistas."
         colors:
           red: "Rojo"
