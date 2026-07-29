@@ -130,6 +130,16 @@ document.addEventListener("DOMContentLoaded", function () {
       // this needs to be generously large rather than tied to a fixed
       // min-height, to keep the whole empty column droppable regardless of
       // how tall its stretched siblings make it.
+      //
+      // SortableJS applies this same number on all 4 sides of an empty
+      // list's hit box, not just top/bottom - at 5000 that also swallowed
+      // the horizontal gap between columns, so an empty (or near-empty)
+      // column's drop zone covered the whole board width and intermittently
+      // stole drops mid-drag from whichever column was actually under the
+      // pointer (most visible dragging into Complete, usually the sparsest
+      // column). vendor/javascript/sortablejs.js is patched to cap the
+      // horizontal inflation independently of this value, so it's safe to
+      // keep this large for vertical reach without the sideways bleed.
       emptyInsertThreshold: 5000,
       onEnd: function (evt) {
         const taskId = evt.item.dataset.taskId;
