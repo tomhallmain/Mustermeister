@@ -433,6 +433,48 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Successfully updated 2 tasks/, flash[:notice])
   end
   
+  test "should not change priority of completed tasks when reprioritizing" do
+    # Create a fresh project for this test
+    project = Project.create!(
+      title: "Test Project for Completed Task Reprioritize",
+      user: @user,
+      default_priority: "medium"
+    )
+
+    # A completed task whose priority differs from the project default
+    completed_task = Task.create!(
+      title: "Completed High Priority Task",
+      project: project,
+      user: @user,
+      priority: "high",
+      completed: true
+    )
+
+    # An incomplete task whose priority also differs, to confirm it still updates
+    incomplete_task = Task.create!(
+      title: "Incomplete Low Priority Task",
+      project: project,
+      user: @user,
+      priority: "low"
+    )
+
+    # Only the incomplete task should generate an audit comment
+    assert_difference -> { Comment.count }, 1 do
+      post reprioritize_project_path(project)
+    end
+
+    completed_task.reload
+    incomplete_task.reload
+    assert_equal "high", completed_task.priority, "completed task priority should be left unchanged"
+    assert_equal "medium", incomplete_task.priority
+
+    assert_not Comment.exists?(task: completed_task, content: "Priority updated to medium to match project default")
+    assert Comment.exists?(task: incomplete_task, content: "Priority updated to medium to match project default")
+
+    assert_redirected_to project_path(project)
+    assert_match(/Successfully updated 1 tasks/, flash[:notice])
+  end
+
   test "should not update tasks that already match project priority" do
     # Create a fresh project for this test
     project = Project.create!(

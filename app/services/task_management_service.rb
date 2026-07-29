@@ -161,9 +161,9 @@ class TaskManagementService
     return 0 if project.default_priority.nil?
 
     ApplicationRecord.transaction do
-      tasks = project.tasks.not_archived.includes(:comments)
+      tasks = project.tasks.not_archived.not_completed.includes(:comments)
       updated_count = 0
-      
+
       tasks.find_each do |task|
         next if task.priority == project.default_priority # Skip tasks that already match
 
