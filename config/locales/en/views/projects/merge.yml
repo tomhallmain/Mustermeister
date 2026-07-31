@@ -1,0 +1,27 @@
+en:
+  views:
+    projects:
+      merge:
+        section_title: "Merge Project"
+        section_help: "Move all tasks, comments, statuses, and recurring task templates from this project into another one, then delete this project."
+        menu_link: "Merge Project"
+        title: "Merge \"%{source_title}\" into another project"
+        target_label: "Merge into"
+        select_target: "Choose a project"
+        no_other_projects: "You don't have any other projects to merge into."
+        continue: "Continue"
+        warning: "This will move all tasks, comments, statuses, and recurring task templates from \"%{source_title}\" into \"%{target_title}\", then permanently delete \"%{source_title}\". This cannot be undone."
+        fields:
+          title: "Title"
+          description: "Description"
+          default_priority: "Default Priority"
+          color: "Color"
+          category: "Category"
+          default_category_id: "Default Category"
+          due_date: "Due Date"
+        blank_value: "(none)"
+        confirm_button: "Merge Projects"
+        confirm_dialog: "Merge \"%{source_title}\" into \"%{target_title}\"? This cannot be undone."
+        invalid_target: "Please choose a valid project to merge into."
+        success: "\"%{source_title}\" was merged into \"%{target_title}\"."
+        failure: "Merge failed: %{message}"

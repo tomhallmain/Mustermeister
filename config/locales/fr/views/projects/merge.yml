@@ -1,0 +1,27 @@
+fr:
+  views:
+    projects:
+      merge:
+        section_title: "Fusionner le projet"
+        section_help: "Déplace toutes les tâches, commentaires, statuts et modèles de tâches récurrentes de ce projet vers un autre, puis supprime ce projet."
+        menu_link: "Fusionner le projet"
+        title: "Fusionner \"%{source_title}\" avec un autre projet"
+        target_label: "Fusionner avec"
+        select_target: "Choisissez un projet"
+        no_other_projects: "Vous n'avez aucun autre projet avec lequel fusionner celui-ci."
+        continue: "Continuer"
+        warning: "Cela déplacera toutes les tâches, commentaires, statuts et modèles de tâches récurrentes de \"%{source_title}\" vers \"%{target_title}\", puis supprimera définitivement \"%{source_title}\". Cette action est irréversible."
+        fields:
+          title: "Titre"
+          description: "Description"
+          default_priority: "Priorité par défaut"
+          color: "Couleur"
+          category: "Catégorie"
+          default_category_id: "Catégorie par défaut"
+          due_date: "Échéance"
+        blank_value: "(aucun)"
+        confirm_button: "Fusionner les projets"
+        confirm_dialog: "Fusionner \"%{source_title}\" avec \"%{target_title}\" ? Cette action est irréversible."
+        invalid_target: "Veuillez choisir un projet valide avec lequel fusionner."
+        success: "\"%{source_title}\" a été fusionné avec \"%{target_title}\"."
+        failure: "Échec de la fusion : %{message}"

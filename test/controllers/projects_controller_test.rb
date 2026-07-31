@@ -792,4 +792,61 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
 
     assert_select ".task-item", count: 2
   end
+
+  test "merge step 1 lists other projects but not the source itself" do
+    other_project = Project.create!(title: "Other Project", user: @user)
+
+    get merge_project_path(@project)
+
+    assert_response :success
+    assert_select "select#target_id option", text: other_project.title
+    assert_select "select#target_id option", text: @project.title, count: 0
+  end
+
+  test "merge step 2 renders a field choice once a target is chosen" do
+    other_project = Project.create!(title: "Other Project", user: @user)
+
+    get merge_project_path(@project, target_id: other_project.id)
+
+    assert_response :success
+    assert_select "input[name='merge[target_id]']", count: 1
+    assert_select "input[name='merge[field_choices][title]']", count: 2
+  end
+
+  test "merge step 2 falls back to step 1 for a nonexistent target_id" do
+    get merge_project_path(@project, target_id: 999999)
+
+    assert_response :success
+    assert_select "select#target_id"
+    assert_select "input[name='merge[field_choices][title]']", count: 0
+  end
+
+  test "merge execute moves tasks into the target and deletes the source" do
+    other_project = Project.create!(title: "Other Project", user: @user)
+    task = Task.create!(title: "Task to move", project: @project, user: @user)
+
+    post merge_execute_project_path(@project), params: { merge: { target_id: other_project.id, field_choices: { title: 'target' } } }
+
+    assert_redirected_to project_path(other_project)
+    assert_not Project.exists?(@project.id)
+    assert_equal other_project, task.reload.project
+  end
+
+  test "merge execute rejects a target belonging to another user" do
+    other_users_project = projects(:two)
+
+    post merge_execute_project_path(@project), params: { merge: { target_id: other_users_project.id } }
+
+    assert_redirected_to merge_project_path(@project)
+    assert_equal I18n.t('views.projects.merge.invalid_target'), flash[:alert]
+    assert Project.exists?(@project.id)
+  end
+
+  test "merge execute rejects merging a project into itself" do
+    post merge_execute_project_path(@project), params: { merge: { target_id: @project.id } }
+
+    assert_redirected_to merge_project_path(@project, target_id: @project.id)
+    assert_match(/itself/, flash[:alert])
+    assert Project.exists?(@project.id)
+  end
 end 

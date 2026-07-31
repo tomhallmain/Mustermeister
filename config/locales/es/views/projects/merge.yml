@@ -1,0 +1,27 @@
+es:
+  views:
+    projects:
+      merge:
+        section_title: "Fusionar proyecto"
+        section_help: "Mueve todas las tareas, comentarios, estados y plantillas de tareas recurrentes de este proyecto a otro y, a continuación, elimina este proyecto."
+        menu_link: "Fusionar proyecto"
+        title: "Fusionar \"%{source_title}\" con otro proyecto"
+        target_label: "Fusionar con"
+        select_target: "Elige un proyecto"
+        no_other_projects: "No tienes otros proyectos con los que fusionar este."
+        continue: "Continuar"
+        warning: "Esto moverá todas las tareas, comentarios, estados y plantillas de tareas recurrentes de \"%{source_title}\" a \"%{target_title}\", y luego eliminará permanentemente \"%{source_title}\". Esta acción no se puede deshacer."
+        fields:
+          title: "Título"
+          description: "Descripción"
+          default_priority: "Prioridad predeterminada"
+          color: "Color"
+          category: "Categoría"
+          default_category_id: "Categoría predeterminada"
+          due_date: "Fecha de vencimiento"
+        blank_value: "(ninguno)"
+        confirm_button: "Fusionar proyectos"
+        confirm_dialog: "¿Fusionar \"%{source_title}\" con \"%{target_title}\"? Esta acción no se puede deshacer."
+        invalid_target: "Por favor, elige un proyecto válido con el que fusionar."
+        success: "\"%{source_title}\" se fusionó con \"%{target_title}\"."
+        failure: "Error al fusionar: %{message}"

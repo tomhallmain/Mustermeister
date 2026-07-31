@@ -6,7 +6,7 @@ class ProjectsController < ApplicationController
   PROJECT_INDEX_SORT_OPTIONS = %w[last_activity_desc title_asc completion_desc weighted_progress_desc].freeze
 
   before_action :initialize_show_completed_prefs
-  before_action :set_project, only: [:show, :edit, :update, :destroy, :report, :reprioritize]
+  before_action :set_project, only: [:show, :edit, :update, :destroy, :report, :reprioritize, :merge, :merge_execute]
   before_action :load_task_categories, only: [:new, :edit, :create, :update]
   before_action :load_category_suggestions, only: [:new, :edit, :create, :update]
 
@@ -199,7 +199,35 @@ class ProjectsController < ApplicationController
     end
   end
 
+  def merge
+    @mergeable_projects = current_user.projects.where.not(id: @project.id).order(:title)
+    @target = current_user.projects.find_by(id: params[:target_id]) if params[:target_id].present?
+  end
+
+  def merge_execute
+    target = current_user.projects.find_by(id: merge_params[:target_id])
+
+    if target.nil?
+      redirect_to merge_project_path(@project), alert: t('views.projects.merge.invalid_target')
+      return
+    end
+
+    MergeProjectsService.call(
+      source: @project,
+      target: target,
+      field_choices: merge_params[:field_choices]&.to_h || {},
+      current_user: current_user
+    )
+    redirect_to project_path(target), notice: t('views.projects.merge.success', source_title: @project.title, target_title: target.title)
+  rescue MergeProjectsService::Error => e
+    redirect_to merge_project_path(@project, target_id: target&.id), alert: t('views.projects.merge.failure', message: e.message)
+  end
+
   private
+
+  def merge_params
+    params.fetch(:merge, {}).permit(:target_id, field_choices: MergeProjectsService::MERGEABLE_FIELDS)
+  end
 
   def initialize_show_completed_prefs
     session[:projects_show_completed] ||= {}

@@ -1,0 +1,27 @@
+de:
+  views:
+    projects:
+      merge:
+        section_title: "Projekt zusammenführen"
+        section_help: "Verschiebt alle Aufgaben, Kommentare, Status und wiederkehrenden Aufgabenvorlagen dieses Projekts in ein anderes und löscht dieses Projekt anschließend."
+        menu_link: "Projekt zusammenführen"
+        title: "\"%{source_title}\" in ein anderes Projekt zusammenführen"
+        target_label: "Zusammenführen mit"
+        select_target: "Projekt auswählen"
+        no_other_projects: "Sie haben kein anderes Projekt, mit dem Sie dieses zusammenführen könnten."
+        continue: "Weiter"
+        warning: "Dabei werden alle Aufgaben, Kommentare, Status und wiederkehrenden Aufgabenvorlagen von \"%{source_title}\" nach \"%{target_title}\" verschoben und \"%{source_title}\" anschließend endgültig gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
+        fields:
+          title: "Titel"
+          description: "Beschreibung"
+          default_priority: "Standardpriorität"
+          color: "Farbe"
+          category: "Kategorie"
+          default_category_id: "Standardkategorie"
+          due_date: "Fälligkeitsdatum"
+        blank_value: "(keine)"
+        confirm_button: "Projekte zusammenführen"
+        confirm_dialog: "\"%{source_title}\" mit \"%{target_title}\" zusammenführen? Diese Aktion kann nicht rückgängig gemacht werden."
+        invalid_target: "Bitte wählen Sie ein gültiges Projekt zum Zusammenführen aus."
+        success: "\"%{source_title}\" wurde mit \"%{target_title}\" zusammengeführt."
+        failure: "Zusammenführen fehlgeschlagen: %{message}"
