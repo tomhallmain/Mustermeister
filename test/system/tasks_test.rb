@@ -51,6 +51,48 @@ class TasksTest < ApplicationSystemTestCase
     assert_no_text @task.title
   end
 
+  test "deleting a task shows a modal with the task title and a comments warning, then deletes it" do
+    visit tasks_path
+
+    row = find_link(@task.title, exact: true).ancestor(".task-item")
+    within(row) { find("button[title='#{I18n.t('views.tasks.index.delete_task')}']").click }
+
+    within("[data-delete-task-confirm-target='modal']") do
+      assert_text I18n.t('views.tasks.index.delete_confirm.title')
+      assert_text @task.title
+      assert_text I18n.t('views.tasks.index.delete_confirm.comments_warning', count: @task.comments.size)
+      click_on I18n.t('views.tasks.index.delete_confirm.confirm')
+    end
+
+    assert_text I18n.t('views.tasks.index.deleted')
+    assert_no_text @task.title
+  end
+
+  test "canceling the delete modal leaves the task in place" do
+    visit tasks_path
+
+    row = find_link(@task.title, exact: true).ancestor(".task-item")
+    within(row) { find("button[title='#{I18n.t('views.tasks.index.delete_task')}']").click }
+
+    within("[data-delete-task-confirm-target='modal']") do
+      click_on I18n.t('views.tasks.index.delete_confirm.cancel')
+    end
+
+    assert_text @task.title
+  end
+
+  test "deleting a task without comments hides the comments warning" do
+    task_without_comments = tasks(:reprioritize_high)
+    visit tasks_path
+
+    row = find_link(task_without_comments.title, exact: true).ancestor(".task-item")
+    within(row) { find("button[title='#{I18n.t('views.tasks.index.delete_task')}']").click }
+
+    within("[data-delete-task-confirm-target='modal']") do
+      assert_no_selector("[data-delete-task-confirm-target='commentsWarning']")
+    end
+  end
+
   test "adding a comment to a task" do
     visit task_path(@task)
     

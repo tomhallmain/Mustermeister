@@ -45,7 +45,7 @@ class TasksController < ApplicationController
     current_preference = params[:show_completed] == 'true'
 
     # Now load the tasks based on the current preference
-    @tasks = current_user.tasks.not_archived.includes(:project, :tags, :task_category)
+    @tasks = current_user.tasks.not_archived.includes(:project, :tags, :task_category, :comments)
     @tasks = @tasks.not_completed unless current_preference
 
     # Remember sort_by/search whenever explicitly provided, and fall back to the
@@ -194,12 +194,12 @@ class TasksController < ApplicationController
       show_completed = show_completed.nil? ? false : show_completed
       
       @task.destroy
-      redirect_to project_path(project, show_completed: show_completed), 
-                notice: 'Task was successfully deleted.'
+      redirect_to project_path(project, show_completed: show_completed),
+                notice: t('views.tasks.index.deleted')
     else
       @task.destroy
-      redirect_to tasks_path(show_completed: session[:tasks_show_completed] || false), 
-                notice: 'Task was successfully deleted.'
+      redirect_to tasks_path(show_completed: session[:tasks_show_completed] || false),
+                notice: t('views.tasks.index.deleted')
     end
   end
 
