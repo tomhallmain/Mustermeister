@@ -13,6 +13,10 @@ Rails.application.routes.draw do
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
+  namespace :api do
+    get "tools/:tool_name", to: "tools#show", as: :tool
+  end
+
   # Configure Devise routes
   devise_for :users, controllers: {
     sessions: 'users/sessions' # Path to custom sessions controller
@@ -91,6 +95,7 @@ Rails.application.routes.draw do
   # a URL - browser history, server access logs, Referer headers, etc.
   post 'profile/export', to: 'users#export_data'
   post 'profile/import', to: 'users#import_data', as: :import_data
+  post 'profile/api_token', to: 'users#regenerate_api_token', as: :regenerate_api_token
 
   # CSP violation reporting endpoint
   post '/csp-violation-report', to: 'csp_violation_reports#create'

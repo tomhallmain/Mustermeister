@@ -4,7 +4,12 @@ class ProjectMergeTest < ApplicationSystemTestCase
   def setup
     @user = users(:one)
     @project = projects(:one)
+    setup_paper_trail(@user)
     sign_in_as(@user)
+  end
+
+  def teardown
+    teardown_paper_trail
   end
 
   test "merging two projects moves tasks into the target and deletes the source" do

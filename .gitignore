@@ -52,3 +52,5 @@
 db_backups/
 
 planning/*
+
+__pycache__

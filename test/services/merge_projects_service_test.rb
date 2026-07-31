@@ -3,9 +3,9 @@ require "test_helper"
 class MergeProjectsServiceTest < ActiveSupport::TestCase
   def setup
     @user = users(:one)
+    setup_paper_trail(@user)
     @source = @user.projects.create!(title: "Source Project", description: "src desc", default_priority: "low", color: "red", due_date: Date.tomorrow)
     @target = @user.projects.create!(title: "Target Project", description: "tgt desc", default_priority: "high", color: "blue", due_date: Date.tomorrow + 5)
-    setup_paper_trail
   end
 
   def teardown

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_29_040000) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_31_050000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -187,6 +187,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_29_040000) do
     t.string "ai_summary_model"
     t.integer "task_insights_excluded_project_ids", default: [], null: false, array: true
     t.string "translate_target_language"
+    t.string "api_token"
+    t.index ["api_token"], name: "index_users_on_api_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end

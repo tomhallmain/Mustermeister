@@ -58,6 +58,11 @@ class UsersController < ApplicationController
     end
   end
 
+  def regenerate_api_token
+    current_user.update!(api_token: SecureRandom.hex(32))
+    redirect_to profile_path, notice: t('views.users.profile.api_token_regenerated')
+  end
+
   private
 
   def user_params
