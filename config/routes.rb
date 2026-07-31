@@ -64,6 +64,11 @@ Rails.application.routes.draw do
       post :translate
     end
     resources :comments, only: [:create, :update, :destroy], shallow: true
+    resources :attachments, only: [:create, :destroy], shallow: true do
+      member do
+        get :download
+      end
+    end
   end
 
   resources :tags, except: [:show]

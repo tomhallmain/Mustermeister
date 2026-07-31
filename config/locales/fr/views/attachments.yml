@@ -1,0 +1,9 @@
+fr:
+  views:
+    attachments:
+      section_title: "Pièces jointes"
+      upload: "Téléverser"
+      none_yet: "Aucune pièce jointe pour le moment."
+      uploaded_by: "Téléversé par %{user} il y a %{time}"
+      created: "La pièce jointe a été téléversée avec succès."
+      deleted: "La pièce jointe a été supprimée avec succès."

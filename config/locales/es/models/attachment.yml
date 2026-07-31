@@ -1,0 +1,13 @@
+es:
+  activerecord:
+    models:
+      attachment:
+        one: "Archivo adjunto"
+        other: "Archivos adjuntos"
+    errors:
+      models:
+        attachment:
+          attributes:
+            file:
+              file_too_large: "El archivo es demasiado grande (el máximo es %{max}MB)"
+              invalid_content_type: "Este tipo de archivo no está permitido"

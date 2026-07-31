@@ -1,0 +1,9 @@
+de:
+  views:
+    attachments:
+      section_title: "Anhänge"
+      upload: "Hochladen"
+      none_yet: "Noch keine Anhänge."
+      uploaded_by: "Hochgeladen von %{user} vor %{time}"
+      created: "Anhang wurde erfolgreich hochgeladen."
+      deleted: "Anhang wurde erfolgreich gelöscht."

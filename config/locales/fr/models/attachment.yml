@@ -1,0 +1,13 @@
+fr:
+  activerecord:
+    models:
+      attachment:
+        one: "Pièce jointe"
+        other: "Pièces jointes"
+    errors:
+      models:
+        attachment:
+          attributes:
+            file:
+              file_too_large: "Le fichier est trop volumineux (maximum %{max}MB)"
+              invalid_content_type: "Ce type de fichier n'est pas autorisé"

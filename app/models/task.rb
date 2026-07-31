@@ -24,6 +24,7 @@ class Task < ApplicationRecord
   has_one :task_result, dependent: :destroy
   has_and_belongs_to_many :tags
   has_many :comments, dependent: :destroy
+  has_many :attachments, dependent: :destroy
 
   # Not persisted:
   # - confirm_duplicate: lets the create/edit form warn on a likely-duplicate

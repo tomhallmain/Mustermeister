@@ -1,0 +1,9 @@
+en:
+  views:
+    attachments:
+      section_title: "Attachments"
+      upload: "Upload"
+      none_yet: "No attachments yet."
+      uploaded_by: "Uploaded by %{user} %{time} ago"
+      created: "Attachment was successfully uploaded."
+      deleted: "Attachment was successfully deleted."

@@ -7,9 +7,8 @@ Run from the project root:
     python scripts/call_api.py search_tasks --keyword backup
     python scripts/call_api.py project_summary
 
-Reads MUSTERMEISTER_BASE_URL / MUSTERMEISTER_API_TOKEN from the environment
-(matching the config var names planned for Tagesform's own integration), or
-pass --base-url/--token explicitly. Generate a token first via the profile
+Reads MUSTERMEISTER_BASE_URL / MUSTERMEISTER_API_TOKEN from the environment,
+or pass --base-url/--token explicitly. Generate a token first via the profile
 page's "Regenerate Token" button, or `rake api:generate_token[email]`.
 
 Stdlib only, no external dependencies - and sets an explicit User-Agent,

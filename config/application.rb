@@ -31,7 +31,11 @@ module Myapp
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
-    config.autoload_lib(ignore: %w(assets tasks))
+    # `shrine` is ignored because it reopens the gem-provided `Shrine`
+    # namespace (config/initializers/shrine.rb requires it explicitly) -
+    # letting Zeitwerk also autoload/eager-load it risks a constant-already-
+    # defined conflict against that same namespace.
+    config.autoload_lib(ignore: %w(assets tasks shrine))
 
     # Configuration for the application, engines, and railties goes here.
     #

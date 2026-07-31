@@ -215,6 +215,29 @@
         </div>
       </div>
 
+      <div class="surface rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4"><%= t('views.attachments.section_title') %></h2>
+
+        <%= form_with(url: task_attachments_path(@task), method: :post, class: "mb-6", multipart: true, data: { turbo: false }) do %>
+          <div class="flex items-center gap-3">
+            <%= file_field_tag "attachment[file]",
+                class: "block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" %>
+            <%= submit_tag t('views.attachments.upload'),
+                class: "px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 whitespace-nowrap" %>
+          </div>
+        <% end %>
+
+        <% if @attachments.any? %>
+          <div class="space-y-3">
+            <% @attachments.each do |attachment| %>
+              <%= render "attachments/attachment", attachment: attachment %>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-sm text-gray-500"><%= t('views.attachments.none_yet') %></p>
+        <% end %>
+      </div>
+
       <%= render "status_history" %>
     </div>
   </div>

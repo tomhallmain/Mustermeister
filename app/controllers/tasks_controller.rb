@@ -89,6 +89,7 @@ class TasksController < ApplicationController
   def show
     @comment = Comment.new
     @comments = @task.comments.includes(:user)
+    @attachments = @task.attachments.includes(:user).order(created_at: :desc)
     # Cheap defaults for the Translate confirm modal - deliberately no live
     # Ollama call here (unlike Reports/Task Insights' pages, which do call
     # OllamaLlmService.available_models synchronously on every render): the

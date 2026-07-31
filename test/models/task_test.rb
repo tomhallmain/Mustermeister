@@ -280,6 +280,22 @@ class TaskTest < ActiveSupport::TestCase
     assert_empty Comment.where(task_id: task.id)
   end
 
+  test "destroying a task destroys its attachments" do
+    task = Task.create!(
+      title: "Task with an attachment",
+      user: @user,
+      project: @project,
+      skip_duplicate_check: true
+    )
+    file = StringIO.new("hello world")
+    file.define_singleton_method(:original_filename) { "notes.txt" }
+    Attachment.create!(task: task, user: @user, file: file)
+
+    assert_difference "Attachment.count", -1 do
+      task.destroy
+    end
+  end
+
   test "status_change_history records create and status updates" do
     @task.save!
     in_progress = @project.status_by_key(:in_progress)

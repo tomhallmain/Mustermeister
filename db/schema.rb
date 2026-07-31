@@ -10,9 +10,27 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_31_050000) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_31_060000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "attachment_blobs", force: :cascade do |t|
+    t.string "blob_id", null: false
+    t.binary "data", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["blob_id"], name: "index_attachment_blobs_on_blob_id", unique: true
+  end
+
+  create_table "attachments", force: :cascade do |t|
+    t.bigint "task_id", null: false
+    t.bigint "user_id", null: false
+    t.jsonb "file_data", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["task_id"], name: "index_attachments_on_task_id"
+    t.index ["user_id"], name: "index_attachments_on_user_id"
+  end
 
   create_table "comments", force: :cascade do |t|
     t.text "content"
@@ -208,6 +226,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_31_050000) do
     t.index ["user_id"], name: "index_versions_on_user_id"
   end
 
+  add_foreign_key "attachments", "tasks"
+  add_foreign_key "attachments", "users"
   add_foreign_key "comments", "projects"
   add_foreign_key "comments", "tasks"
   add_foreign_key "comments", "users"

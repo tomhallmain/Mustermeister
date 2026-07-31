@@ -1,0 +1,9 @@
+es:
+  views:
+    attachments:
+      section_title: "Archivos adjuntos"
+      upload: "Subir"
+      none_yet: "Todavía no hay archivos adjuntos."
+      uploaded_by: "Subido por %{user} hace %{time}"
+      created: "El archivo adjunto se subió correctamente."
+      deleted: "El archivo adjunto se eliminó correctamente."
