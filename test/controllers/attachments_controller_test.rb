@@ -62,7 +62,9 @@ class AttachmentsControllerTest < ActionDispatch::IntegrationTest
   test "create against another user's task 404s" do
     other_task = projects(:two).tasks.create!(title: "Someone else's task", user: users(:two))
 
-    post task_attachments_path(other_task), params: { attachment: { file: sample_upload } }
+    silence_expected_error_logging do
+      post task_attachments_path(other_task), params: { attachment: { file: sample_upload } }
+    end
 
     assert_response :not_found
   end
@@ -70,7 +72,9 @@ class AttachmentsControllerTest < ActionDispatch::IntegrationTest
   test "create against an archived task 404s" do
     @task.archive!(@user)
 
-    post task_attachments_path(@task), params: { attachment: { file: sample_upload } }
+    silence_expected_error_logging do
+      post task_attachments_path(@task), params: { attachment: { file: sample_upload } }
+    end
 
     assert_response :not_found
   end
@@ -91,7 +95,9 @@ class AttachmentsControllerTest < ActionDispatch::IntegrationTest
     other_attachment = Attachment.create!(task: other_task, user: users(:two), file: sample_upload)
 
     assert_no_difference "Attachment.count" do
-      delete attachment_path(other_attachment)
+      silence_expected_error_logging do
+        delete attachment_path(other_attachment)
+      end
     end
 
     assert_response :not_found
@@ -113,7 +119,9 @@ class AttachmentsControllerTest < ActionDispatch::IntegrationTest
     other_task = projects(:two).tasks.create!(title: "Someone else's task", user: users(:two))
     other_attachment = Attachment.create!(task: other_task, user: users(:two), file: sample_upload)
 
-    get download_attachment_path(other_attachment)
+    silence_expected_error_logging do
+      get download_attachment_path(other_attachment)
+    end
 
     assert_response :not_found
   end

@@ -1,4 +1,23 @@
-<div class="container mx-auto px-4 py-8" data-escape-to-kanban-url="<%= kanban_path %>">
+<div class="container mx-auto px-4 py-8" data-escape-to-kanban-url="<%= kanban_path %>" data-controller="delete-task-confirm">
+  <div data-delete-task-confirm-target="modal" class="hidden fixed inset-0 bg-gray-600/50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md surface">
+      <h3 class="text-lg font-medium text-gray-900 mb-2"><%= t('views.tasks.index.delete_confirm.title') %></h3>
+      <p data-delete-task-confirm-target="body" class="text-sm text-gray-600 mb-2"></p>
+      <p data-delete-task-confirm-target="commentsWarning"
+         class="hidden text-sm text-amber-700 bg-amber-50 border-l-4 border-amber-400 p-2 rounded-md mb-4"></p>
+      <div class="flex justify-end space-x-3">
+        <button type="button" data-action="delete-task-confirm#cancel"
+                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200">
+          <%= t('views.tasks.index.delete_confirm.cancel') %>
+        </button>
+        <button type="button" data-delete-task-confirm-target="confirmButton" data-action="delete-task-confirm#confirm"
+                class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700">
+          <%= t('views.tasks.index.delete_confirm.confirm') %>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="mb-8">
     <div class="flex justify-between items-start">
       <div>
@@ -181,10 +200,15 @@
           <% end %>
 
           <%= button_to task_path(task, show_completed: show_completed),
-              method: :delete, 
-              class: "text-red-600 hover:text-red-800", 
+              method: :delete,
+              class: "text-red-600 hover:text-red-800",
+              title: t('views.tasks.index.delete_task'),
               form: { data: { turbo: false } },
-              data: { confirm: t('views.tasks.index.delete_confirm') } do %>
+              data: {
+                action: "delete-task-confirm#open",
+                delete_task_confirm_body_param: t('views.tasks.index.delete_confirm.body', title: task.title),
+                delete_task_confirm_comments_warning_param: task.comments.size.positive? ? t('views.tasks.index.delete_confirm.comments_warning', count: task.comments.size) : ""
+              } do %>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
             </svg>

@@ -130,6 +130,20 @@ class ActionDispatch::IntegrationTest
     PaperTrail.request.whodunnit = nil
     PaperTrail.request.controller_info = {}
   end
+
+  # Wraps a request that's *expected* to raise a rescued exception (e.g. a
+  # deliberate 404/422 case under test) so DebugExceptions' own ERROR-level
+  # request log - a full backtrace dump, on top of Rails' own exception
+  # logging - doesn't drown out real test failures with expected noise.
+  # Scoped to just the block so unrelated failures in the same run still log
+  # normally.
+  def silence_expected_error_logging
+    original_level = Rails.logger.level
+    Rails.logger.level = Logger::FATAL
+    yield
+  ensure
+    Rails.logger.level = original_level
+  end
 end
 
 # Configure Capybara to use rack_test driver
