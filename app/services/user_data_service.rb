@@ -54,7 +54,8 @@ class UserDataService
   
   def validate_import_file(file)
     return { valid: false, error: "No file provided" } unless file
-    
+    return { valid: false, error: "No file provided" } unless file.respond_to?(:original_filename) && file.respond_to?(:size)
+
     file_extension = File.extname(file.original_filename).downcase
     max_size = 50.megabytes # 50MB limit
     
@@ -150,6 +151,9 @@ class UserDataService
         created_at: @user.created_at,
         updated_at: @user.updated_at
       },
+      # No separate "standalone tasks" bucket - Task#project_id is a required
+      # column and tasks are only ever created nested under a project, so
+      # every task is reachable via its project below.
       projects: @user.projects.map do |project|
         {
           id: project.id,
@@ -210,38 +214,6 @@ class UserDataService
           end
         }
       end,
-      standalone_tasks: @user.tasks.where(project: nil).map do |task|
-        {
-          id: task.id,
-          title: task.title,
-          description: task.description,
-          priority: task.priority,
-          due_date: task.due_date,
-          completed: task.completed,
-          completed_at: task.completed_at,
-          completed_by: task.completed_by,
-          archived: task.archived,
-          archived_at: task.archived_at,
-          created_at: task.created_at,
-          updated_at: task.updated_at,
-          status_name: task.status&.name, # Export status name instead of ID, handle nil case
-          comments: task.comments.map do |comment|
-            {
-              id: comment.id,
-              content: comment.content,
-              status: comment.status,
-              created_at: comment.created_at,
-              updated_at: comment.updated_at
-            }
-          end,
-          tags: task.tags.map do |tag|
-            {
-              id: tag.id,
-              name: tag.name
-            }
-          end
-        }
-      end,
       tags: @user.tasks.joins(:tags).distinct.pluck('tags.id', 'tags.name', 'tags.created_at', 'tags.updated_at').map do |tag_data|
         {
           id: tag_data[0],
@@ -265,19 +237,15 @@ class UserDataService
       
       # Import projects and their tasks
       imported_projects = import_projects(data['projects'] || [], imported_tags)
-      
-      # Import standalone tasks
-      imported_standalone_tasks = import_standalone_tasks(data['standalone_tasks'] || [], imported_tags)
-      
+
       {
         success: true,
         imported: {
           projects: imported_projects.count,
-          tasks: imported_projects.sum { |p| p.tasks.count } + imported_standalone_tasks.count,
+          tasks: imported_projects.sum { |p| p.tasks.count },
           tags: imported_tags.count,
-          comments: imported_projects.sum { |p| p.comments.count } + 
-                   imported_projects.sum { |p| p.tasks.sum { |t| t.comments.count } } +
-                   imported_standalone_tasks.sum { |t| t.comments.count }
+          comments: imported_projects.sum { |p| p.comments.count } +
+                   imported_projects.sum { |p| p.tasks.sum { |t| t.comments.count } }
         }
       }
     end
@@ -305,7 +273,11 @@ class UserDataService
         default_priority: project_data['priority'],
         created_at: project_data['created_at'],
         updated_at: project_data['updated_at'],
-        last_activity_at: project_data['last_activity_at']
+        last_activity_at: project_data['last_activity_at'],
+        # This is restoring a user's own previously-exported data, not a fresh
+        # user submission, so the similar-title warning (meant to catch
+        # accidental near-duplicates as they're typed) doesn't apply here.
+        confirm_duplicate: true
       )
       project.save!
       
@@ -357,6 +329,11 @@ class UserDataService
       end
       
       task.assign_attributes(
+        # The export doesn't carry a per-task owner (only completed_by/
+        # archived_by, which are plain historical ids, not the required
+        # Task#user association) - importing is always restoring the
+        # importing user's own data, so they're also every task's owner.
+        user: @user,
         description: task_data['description'],
         priority: task_data['priority'],
         due_date: task_data['due_date'],
@@ -366,7 +343,14 @@ class UserDataService
         archived_at: task_data['archived_at'],
         created_at: task_data['created_at'],
         updated_at: task_data['updated_at'],
-        status: status
+        status: status,
+        # This is restoring a user's own previously-exported data, not a fresh
+        # user submission, so the similar-title warning would otherwise wrongly
+        # flag legitimate sibling tasks (e.g. recurring-task instances, whose
+        # titles intentionally differ only by date label - see
+        # RecurringTaskTemplate#generate_task_for_period!, which bypasses the
+        # same check for the same reason).
+        skip_duplicate_check: true
       )
       
       # Handle completed_by and archived_by - only set if the user exists
@@ -387,92 +371,6 @@ class UserDataService
       
       # Import task tags
       import_task_tags(task, task_data['tags'] || [], imported_tags)
-    end
-  end
-  
-  def import_standalone_tasks(tasks_data, imported_tags)
-    tasks_data.map do |task_data|
-      task = @user.tasks.find_or_initialize_by(title: task_data['title'], project: nil)
-      
-      # For standalone tasks, we need to handle status differently
-      # Since they don't belong to a project, we'll skip status assignment
-      # or create a default status if needed
-      
-      task.assign_attributes(
-        description: task_data['description'],
-        priority: task_data['priority'],
-        due_date: task_data['due_date'],
-        completed: task_data['completed'],
-        completed_at: task_data['completed_at'],
-        archived: task_data['archived'],
-        archived_at: task_data['archived_at'],
-        created_at: task_data['created_at'],
-        updated_at: task_data['updated_at']
-      )
-      
-      # Handle completed_by and archived_by - only set if the user exists
-      if task_data['completed_by'].present?
-        completed_by_user = User.find_by(id: task_data['completed_by'])
-        task.completed_by = completed_by_user&.id
-      end
-      
-      if task_data['archived_by'].present?
-        archived_by_user = User.find_by(id: task_data['archived_by'])
-        task.archived_by = archived_by_user&.id
-      end
-      
-      # For standalone tasks, we need to handle the status requirement
-      # Since statuses belong to projects, we'll try to find a suitable status
-      # or create a temporary one if needed
-      if task_data['status_name'].present?
-        # Try to find a status with this name from any of the user's projects
-        status = @user.projects.joins(:statuses)
-                      .where(statuses: { name: task_data['status_name'] })
-                      .first&.statuses&.find_by(name: task_data['status_name'])
-        
-        if status
-          task.status = status
-        else
-          # If no matching status found, use the first available status from any project
-          first_status = @user.projects.joins(:statuses).first&.statuses&.first
-          task.status = first_status if first_status
-        end
-      else
-        # Use the first available status from any project
-        first_status = @user.projects.joins(:statuses).first&.statuses&.first
-        task.status = first_status if first_status
-      end
-      
-      # If we still don't have a status, we need to handle this case
-      # This might indicate a data integrity issue in the current system
-      unless task.status
-        Rails.logger.warn "Standalone task '#{task.title}' has no valid status. This may indicate a data integrity issue."
-        # Try to create a minimal status for this task
-        # This is a workaround for the current system limitation
-        begin
-          # Create a temporary project with default statuses just for this task
-          temp_project = @user.projects.create!(
-            title: "Temporary Project for Standalone Task",
-            description: "Auto-created for data import"
-          )
-          temp_project.create_default_statuses!
-          task.status = temp_project.status_by_key(:not_started)
-          task.project = temp_project  # Assign to the temporary project
-        rescue => e
-          Rails.logger.error "Failed to create temporary project for standalone task: #{e.message}"
-          raise "Cannot import standalone task '#{task.title}': No valid status available"
-        end
-      end
-      
-      task.save!
-      
-      # Import task comments
-      import_task_comments(task, task_data['comments'] || [])
-      
-      # Import task tags
-      import_task_tags(task, task_data['tags'] || [], imported_tags)
-      
-      task
     end
   end
   
@@ -484,13 +382,14 @@ class UserDataService
         created_at: comment_data['created_at']
       )
       comment.assign_attributes(
+        user: @user,
         status: comment_data['status'],
         updated_at: comment_data['updated_at']
       )
       comment.save!
     end
   end
-  
+
   def import_project_comments(project, comments_data)
     comments_data.each do |comment_data|
       # Use a more reliable identifier - combination of content and created_at
@@ -499,6 +398,7 @@ class UserDataService
         created_at: comment_data['created_at']
       )
       comment.assign_attributes(
+        user: @user,
         status: comment_data['status'],
         updated_at: comment_data['updated_at']
       )

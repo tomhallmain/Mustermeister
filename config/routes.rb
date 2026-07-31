@@ -83,6 +83,11 @@ Rails.application.routes.draw do
   get 'profile', to: 'users#profile', as: :profile
   patch 'profile', to: 'users#update'
   get 'profile/export', to: 'users#export_data', as: :export_data
+  # The encrypted ZIP export carries a password in its params, which the
+  # profile page submits via this POST route (not the GET one above, used
+  # only for the plain JSON download link) so the password never ends up in
+  # a URL - browser history, server access logs, Referer headers, etc.
+  post 'profile/export', to: 'users#export_data'
   post 'profile/import', to: 'users#import_data', as: :import_data
 
   # CSP violation reporting endpoint

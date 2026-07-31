@@ -209,23 +209,30 @@ document.getElementById('encrypted-export-form').addEventListener('submit', func
     return;
   }
   
-  // Create form and submit
+  // Create form and submit - POST (not GET), so the password never ends up
+  // in the URL (browser history, server access logs, Referer headers, etc.)
   const form = document.createElement('form');
-  form.method = 'GET';
+  form.method = 'POST';
   form.action = '<%= export_data_path %>';
-  
+
+  const csrfInput = document.createElement('input');
+  csrfInput.type = 'hidden';
+  csrfInput.name = 'authenticity_token';
+  csrfInput.value = document.querySelector('meta[name="csrf-token"]')?.content;
+  form.appendChild(csrfInput);
+
   const formatInput = document.createElement('input');
   formatInput.type = 'hidden';
   formatInput.name = 'format';
   formatInput.value = 'encrypted_zip';
   form.appendChild(formatInput);
-  
+
   const passwordInput = document.createElement('input');
   passwordInput.type = 'hidden';
   passwordInput.name = 'password';
   passwordInput.value = password;
   form.appendChild(passwordInput);
-  
+
   document.body.appendChild(form);
   form.submit();
   document.body.removeChild(form);
