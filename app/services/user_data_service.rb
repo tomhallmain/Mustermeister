@@ -1,16 +1,23 @@
 require 'zip'
 require 'openssl'
+require 'csv'
 
 class UserDataService
   SUPPORTED_FORMATS = %w[json encrypted_zip].freeze
-  
+
+  # Accepted TSV header names - matched by name (CSV `headers: true`), not
+  # position, so this is not a required column order. Listed here once as
+  # the single source of truth so the profile view's help text doesn't have
+  # to duplicate a literal, language-independent list in every locale.
+  TSV_IMPORT_COLUMNS = %w[Project Title Description Priority Status].freeze
+
   class << self
     def export_data(user, format: 'json', password: nil)
       new(user).export_data(format, password)
     end
     
-    def import_data(user, file, password: nil)
-      new(user).import_data(file, password)
+    def import_data(user, file, password: nil, require_existing_projects: false)
+      new(user).import_data(file, password, require_existing_projects: require_existing_projects)
     end
     
     def validate_import_file(file)
@@ -35,17 +42,19 @@ class UserDataService
     { success: false, error: "Export failed: #{e.message}" }
   end
   
-  def import_data(file, password = nil)
+  def import_data(file, password = nil, require_existing_projects: false)
     begin
       file_extension = File.extname(file.original_filename).downcase
-      
+
       case file_extension
       when '.json'
-        import_json(file)
+        import_json(file, require_existing_projects: require_existing_projects)
       when '.zip'
-        import_encrypted_zip(file, password)
+        import_encrypted_zip(file, password, require_existing_projects: require_existing_projects)
+      when '.tsv'
+        import_tsv(file, require_existing_projects: require_existing_projects)
       else
-        { success: false, error: "Unsupported file format. Please use .json or .zip files." }
+        { success: false, error: "Unsupported file format. Please use .json, .tsv, or .zip files." }
       end
     rescue => e
       { success: false, error: "Import failed: #{e.message}" }
@@ -63,8 +72,8 @@ class UserDataService
       return { valid: false, error: "File too large. Maximum size is #{max_size / 1.megabyte}MB" }
     end
     
-    unless ['.json', '.zip'].include?(file_extension)
-      return { valid: false, error: "Unsupported file format. Please use .json or .zip files." }
+    unless ['.json', '.zip', '.tsv'].include?(file_extension)
+      return { valid: false, error: "Unsupported file format. Please use .json, .tsv, or .zip files." }
     end
     
     { valid: true, format: file_extension }
@@ -111,30 +120,105 @@ class UserDataService
     }
   end
   
-  def import_json(file)
+  def import_json(file, require_existing_projects: false)
     json_content = file.read
     data = JSON.parse(json_content)
-    
-    import_user_data(data)
+
+    import_user_data(data, require_existing_projects: require_existing_projects)
   end
-  
-  def import_encrypted_zip(file, password)
+
+  def import_encrypted_zip(file, password, require_existing_projects: false)
     # Extract ZIP file
     zip_content = file.read
     encrypted_data = extract_from_zip(zip_content)
-    
+
     # Decrypt the data
     compressed_data = decrypt_data(encrypted_data, password)
-    
+
     # Decompress the data
     json_data = Zlib::Inflate.inflate(compressed_data)
-    
+
     # Parse JSON
     data = JSON.parse(json_data)
-    
-    import_user_data(data)
+
+    import_user_data(data, require_existing_projects: require_existing_projects)
   end
-  
+
+  # A lightweight companion to the JSON/ZIP account backup above: a flat,
+  # tab-separated task list (see TSV_IMPORT_COLUMNS for the accepted header
+  # names) rather than a full account export. Columns are matched by header
+  # name, not position, so the header row's column order is not fixed.
+  # No comments/tags/timestamps - just enough to bulk-create or update tasks,
+  # grouped into projects by the Project column. skip_blanks guards against a
+  # trailing blank line, which would otherwise surface as a spurious "Title
+  # can't be blank" error.
+  def import_tsv(file, require_existing_projects: false)
+    ActiveRecord::Base.transaction do
+      # liberal_parsing: real-world TSV (hand-authored, pasted from a note-
+      # taking app, etc.) commonly has a stray, unescaped `"` inside an
+      # otherwise-unquoted field (e.g. a description quoting an error
+      # message) - strict RFC 4180 parsing rejects that outright as
+      # "Illegal quoting", so treat quotes leniently instead of failing the
+      # whole import over an incidental character.
+      rows = CSV.parse(file.read, col_sep: "\t", headers: true, skip_blanks: true, liberal_parsing: true)
+
+      if require_existing_projects
+        ensure_projects_exist!(rows.map { |row| row['Project'].to_s.strip })
+      end
+
+      imported_tasks = rows.map { |row| import_tsv_task_row(row) }
+
+      {
+        success: true,
+        imported: {
+          projects: imported_tasks.map(&:project_id).uniq.count,
+          tasks: imported_tasks.count,
+          tags: 0,
+          comments: 0
+        }
+      }
+    end
+  rescue => e
+    { success: false, error: "Import failed: #{e.message}" }
+  end
+
+  def import_tsv_task_row(row)
+    project = @user.projects.find_or_initialize_by(title: row['Project'].to_s.strip)
+    # See import_projects - restoring the user's own data, not a fresh
+    # submission, so the similar-title warning doesn't apply here.
+    project.confirm_duplicate = true
+    project.save!
+    project.create_default_statuses! if project.statuses.empty?
+
+    status_name = row['Status'].to_s.strip
+    status = status_name.present? ? project.statuses.find_by(name: status_name) : nil
+    status ||= project.status_by_key(:not_started)
+
+    task = project.tasks.find_or_initialize_by(title: row['Title'].to_s.strip)
+    task.assign_attributes(
+      user: @user,
+      priority: row['Priority'].to_s.strip.downcase.presence,
+      description: row['Description'],
+      status: status,
+      # See import_project_tasks - same reasoning, same bypass.
+      skip_duplicate_check: true
+    )
+    task.save!
+    task
+  end
+
+  # Shared by the TSV and JSON/ZIP import paths: when require_existing_projects
+  # is set, a project name that doesn't already exist for this user must
+  # abort the whole import (nothing created or updated) rather than silently
+  # creating a new project - the usual failure mode being a typo'd project
+  # name in a hand-authored TSV file.
+  def ensure_projects_exist!(project_names)
+    missing = project_names.uniq - @user.projects.pluck(:title)
+    return if missing.empty?
+
+    raise I18n.t('views.users.profile.unknown_projects_error', projects: missing.join(', '))
+  end
+
   def collect_user_data
     {
       export_info: {
@@ -225,16 +309,20 @@ class UserDataService
     }
   end
   
-  def import_user_data(data)
+  def import_user_data(data, require_existing_projects: false)
     ActiveRecord::Base.transaction do
       # Validate data structure
       unless data['export_info'] && data['user']
         raise "Invalid data format. Missing required export information."
       end
-      
+
+      if require_existing_projects
+        ensure_projects_exist!((data['projects'] || []).map { |p| p['name'].to_s.strip })
+      end
+
       # Import tags first (they might be referenced by tasks)
       imported_tags = import_tags(data['tags'] || [])
-      
+
       # Import projects and their tasks
       imported_projects = import_projects(data['projects'] || [], imported_tags)
 

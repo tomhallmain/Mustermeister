@@ -25,7 +25,9 @@ class UsersController < ApplicationController
                 type: get_content_type(format),
                 disposition: 'attachment'
     else
-      redirect_to profile_path, alert: "Export failed: #{result[:error]}"
+      # result[:error] already reads "Export failed: ..." - UserDataService's
+      # own rescue adds that prefix, so don't add it again here.
+      redirect_to profile_path, alert: result[:error]
     end
   end
 
@@ -43,14 +45,16 @@ class UsersController < ApplicationController
     end
 
     password = params[:password] if validation[:format] == '.zip'
-    result = UserDataService.import_data(current_user, params[:file], password: password)
+    require_existing_projects = ActiveModel::Type::Boolean.new.cast(params[:require_existing_projects])
+    result = UserDataService.import_data(current_user, params[:file], password: password, require_existing_projects: require_existing_projects)
     
     if result[:success]
       imported = result[:imported]
       message = "Import successful! Imported #{imported[:projects]} projects, #{imported[:tasks]} tasks, #{imported[:tags]} tags, and #{imported[:comments]} comments."
       redirect_to profile_path, notice: message
     else
-      redirect_to profile_path, alert: "Import failed: #{result[:error]}"
+      # result[:error] already reads "Import failed: ..." - see export_data.
+      redirect_to profile_path, alert: result[:error]
     end
   end
 

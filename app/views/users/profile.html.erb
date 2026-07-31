@@ -102,18 +102,29 @@
             <%= form_with(url: import_data_path, method: :post, multipart: true, class: "space-y-4") do |f| %>
               <div>
                 <%= f.label :file, t('views.users.profile.select_file'), class: "block text-sm font-medium text-gray-700" %>
-                <%= f.file_field :file, accept: '.json,.zip', 
+                <%= f.file_field :file, accept: '.json,.zip,.tsv',
                     class: "mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" %>
                 <p class="mt-1 text-sm text-gray-500"><%= t('views.users.profile.max_file_size') %></p>
+                <p class="mt-1 text-sm text-gray-500">
+                  <%= t('views.users.profile.tsv_import_help', columns: UserDataService::TSV_IMPORT_COLUMNS.join(', ')) %>
+                </p>
               </div>
               
               <div id="password-field" class="hidden">
                 <%= f.label :password, t('views.users.profile.encryption_password'), class: "block text-sm font-medium text-gray-700" %>
-                <%= f.password_field :password, 
+                <%= f.password_field :password,
                     class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
                 <p class="mt-1 text-sm text-gray-500"><%= t('views.users.profile.encryption_password_help') %></p>
               </div>
-              
+
+              <div class="flex items-start">
+                <%= f.check_box :require_existing_projects, class: "mt-1 rounded border-gray-300 text-purple-600 focus:ring-purple-500" %>
+                <%= f.label :require_existing_projects, class: "ml-2 text-sm text-gray-700" do %>
+                  <%= t('views.users.profile.require_existing_projects') %>
+                  <p class="text-sm text-gray-500"><%= t('views.users.profile.require_existing_projects_help') %></p>
+                <% end %>
+              </div>
+
               <div>
                 <%= f.submit t('views.users.profile.import_data_submit'), 
                     class: "inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500" %>
