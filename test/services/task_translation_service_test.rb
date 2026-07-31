@@ -68,6 +68,55 @@ class TaskTranslationServiceTest < ActiveSupport::TestCase
     end
   end
 
+  test "replaces a code block in the description with a placeholder before translating, then restores it" do
+    code_block = "```ruby\nputs 'hi'\n```"
+    @task.description = "Before #{code_block} After"
+
+    fake_llm = Class.new do
+      attr_reader :prompt_received
+
+      def generate_response(prompt, system_prompt:)
+        @prompt_received = prompt
+        OllamaLlmService::Result.new(response: '{"title": "Titulo", "description": "Antes CODEBLOCK#1 despues"}')
+      end
+    end.new
+
+    result = nil
+    OllamaLlmService.stub :new, fake_llm do
+      result = TaskTranslationService.call(task: @task, target_language: "Spanish", model_name: "llama3")
+    end
+
+    assert_includes fake_llm.prompt_received, "CODEBLOCK#1"
+    refute_includes fake_llm.prompt_received, "puts 'hi'"
+    assert_equal "Antes #{code_block} despues", result[:description]
+  end
+
+  test "gives each code block in the description its own placeholder" do
+    first_block = "```ruby\nputs 1\n```"
+    second_block = "```ruby\nputs 2\n```"
+    @task.description = "#{first_block} and #{second_block}"
+
+    fake_llm = Class.new do
+      attr_reader :prompt_received
+
+      def generate_response(prompt, system_prompt:)
+        @prompt_received = prompt
+        OllamaLlmService::Result.new(response: '{"title": "T", "description": "CODEBLOCK#1 y CODEBLOCK#2"}')
+      end
+    end.new
+
+    result = nil
+    OllamaLlmService.stub :new, fake_llm do
+      result = TaskTranslationService.call(task: @task, target_language: "Spanish", model_name: "llama3")
+    end
+
+    assert_includes fake_llm.prompt_received, "CODEBLOCK#1"
+    assert_includes fake_llm.prompt_received, "CODEBLOCK#2"
+    refute_includes fake_llm.prompt_received, "puts 1"
+    refute_includes fake_llm.prompt_received, "puts 2"
+    assert_equal "#{first_block} y #{second_block}", result[:description]
+  end
+
   test "wraps an OllamaLlmService::ResponseError as a TranslationError" do
     fake_llm = Class.new do
       def generate_response(_prompt, system_prompt:)
