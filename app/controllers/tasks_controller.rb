@@ -347,9 +347,28 @@ class TasksController < ApplicationController
       redirect_to tasks_path(show_completed: session[:tasks_show_completed] || false), 
                   notice: "Successfully rescheduled #{count} tasks."
     rescue TaskManagementService::Error => e
-      redirect_to reschedule_path, 
+      redirect_to reschedule_path,
                   alert: "Failed to reschedule tasks: #{e.message}"
     end
+  end
+
+  def merge_tasks
+    @mergeable_tasks = current_user.tasks.not_archived.includes(:project).order(:title)
+  end
+
+  def merge_tasks_execute
+    target = current_user.tasks.not_archived.find_by(id: params[:target_id])
+    source = current_user.tasks.not_archived.find_by(id: params[:source_id])
+
+    if target.nil? || source.nil?
+      redirect_to merge_tasks_path, alert: t('views.tasks.merge.invalid_selection')
+      return
+    end
+
+    TaskMergeService.call(target: target, source: source, current_user: current_user)
+    redirect_to task_path(target), notice: t('views.tasks.merge.success', target_title: target.title)
+  rescue TaskMergeService::Error => e
+    redirect_to merge_tasks_path, alert: t('views.tasks.merge.failure', message: e.message)
   end
 
   def kanban

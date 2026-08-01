@@ -1074,6 +1074,60 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "merge_tasks renders the two task-picker dropdowns" do
+    get merge_tasks_path
+    assert_response :success
+    assert_select "select#target_id"
+    assert_select "select#source_id"
+  end
+
+  test "merge_tasks_execute merges two same-project tasks and redirects to the survivor" do
+    target = @project.tasks.create!(title: "Short", user: @user, skip_duplicate_check: true)
+    source = @project.tasks.create!(title: "A much longer title", user: @user, skip_duplicate_check: true)
+
+    assert_difference "Task.count", -1 do
+      post merge_tasks_execute_path, params: { target_id: target.id, source_id: source.id }
+    end
+
+    assert_redirected_to task_path(target)
+    assert_equal I18n.t("views.tasks.merge.success", target_title: "A much longer title"), flash[:notice]
+    assert_not Task.exists?(source.id)
+  end
+
+  test "merge_tasks_execute redirects with an alert when a task id is missing" do
+    target = @project.tasks.create!(title: "Solo task", user: @user, skip_duplicate_check: true)
+
+    assert_no_difference "Task.count" do
+      post merge_tasks_execute_path, params: { target_id: target.id, source_id: "" }
+    end
+
+    assert_redirected_to merge_tasks_path
+    assert_equal I18n.t("views.tasks.merge.invalid_selection"), flash[:alert]
+  end
+
+  test "merge_tasks_execute redirects with an alert instead of merging another user's task" do
+    target = @project.tasks.create!(title: "My task", user: @user, skip_duplicate_check: true)
+    other_task = projects(:two).tasks.create!(title: "Someone else's task", user: users(:two))
+
+    assert_no_difference "Task.count" do
+      post merge_tasks_execute_path, params: { target_id: target.id, source_id: other_task.id }
+    end
+
+    assert_redirected_to merge_tasks_path
+    assert_equal I18n.t("views.tasks.merge.invalid_selection"), flash[:alert]
+  end
+
+  test "merge_tasks_execute redirects with a failure alert when merging a task into itself" do
+    target = @project.tasks.create!(title: "Solo task", user: @user, skip_duplicate_check: true)
+
+    assert_no_difference "Task.count" do
+      post merge_tasks_execute_path, params: { target_id: target.id, source_id: target.id }
+    end
+
+    assert_redirected_to merge_tasks_path
+    assert flash[:alert].present?
+  end
+
   private
 
   def with_tasks_application_layout

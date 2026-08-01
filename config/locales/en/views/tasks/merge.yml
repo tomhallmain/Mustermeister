@@ -1,0 +1,18 @@
+en:
+  views:
+    tasks:
+      merge:
+        entry_link: "Merge Tasks"
+        title: "Merge Tasks"
+        help: "Pick two tasks in the same project to merge into one. The surviving task keeps the longer title, a combined description, the higher priority, and the earlier due date - review it afterward and adjust anything by hand."
+        keep_label: "Task to keep"
+        merge_away_label: "Task to merge away"
+        select_task: "Choose a task"
+        same_project_note: "Both tasks must be in the same project."
+        not_enough_tasks: "You need at least two tasks to merge."
+        confirm_button: "Merge Tasks"
+        confirm_dialog: "Merge these two tasks into one? This cannot be undone."
+        invalid_selection: "Please choose two different tasks."
+        success: "Tasks merged into \"%{target_title}\"."
+        failure: "Merge failed: %{message}"
+        description_separator: "--- Merged from \"%{title}\" ---"

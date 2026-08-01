@@ -1,0 +1,18 @@
+de:
+  views:
+    tasks:
+      merge:
+        entry_link: "Aufgaben zusammenführen"
+        title: "Aufgaben zusammenführen"
+        help: "Wählen Sie zwei Aufgaben aus demselben Projekt aus, um sie zu einer zusammenzuführen. Die verbleibende Aufgabe behält den längeren Titel, eine kombinierte Beschreibung, die höhere Priorität und das frühere Fälligkeitsdatum - überprüfen Sie sie danach und passen Sie bei Bedarf manuell an."
+        keep_label: "Aufgabe, die erhalten bleibt"
+        merge_away_label: "Aufgabe, die zusammengeführt wird"
+        select_task: "Aufgabe auswählen"
+        same_project_note: "Beide Aufgaben müssen zum selben Projekt gehören."
+        not_enough_tasks: "Sie benötigen mindestens zwei Aufgaben zum Zusammenführen."
+        confirm_button: "Aufgaben zusammenführen"
+        confirm_dialog: "Diese beiden Aufgaben zu einer zusammenführen? Dies kann nicht rückgängig gemacht werden."
+        invalid_selection: "Bitte wählen Sie zwei unterschiedliche Aufgaben aus."
+        success: "Aufgaben zu \"%{target_title}\" zusammengeführt."
+        failure: "Zusammenführen fehlgeschlagen: %{message}"
+        description_separator: "--- Zusammengeführt von \"%{title}\" ---"

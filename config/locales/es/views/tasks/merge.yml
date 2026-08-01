@@ -1,0 +1,18 @@
+es:
+  views:
+    tasks:
+      merge:
+        entry_link: "Combinar Tareas"
+        title: "Combinar Tareas"
+        help: "Elige dos tareas del mismo proyecto para combinarlas en una. La tarea resultante conserva el título más largo, una descripción combinada, la prioridad más alta y la fecha límite más próxima - revísala después y ajusta lo que necesites manualmente."
+        keep_label: "Tarea a conservar"
+        merge_away_label: "Tarea a combinar"
+        select_task: "Elige una tarea"
+        same_project_note: "Ambas tareas deben pertenecer al mismo proyecto."
+        not_enough_tasks: "Necesitas al menos dos tareas para combinar."
+        confirm_button: "Combinar Tareas"
+        confirm_dialog: "¿Combinar estas dos tareas en una? Esta acción no se puede deshacer."
+        invalid_selection: "Por favor elige dos tareas diferentes."
+        success: "Tareas combinadas en \"%{target_title}\"."
+        failure: "Error al combinar: %{message}"
+        description_separator: "--- Combinado desde \"%{title}\" ---"

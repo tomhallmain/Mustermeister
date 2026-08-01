@@ -1,0 +1,18 @@
+fr:
+  views:
+    tasks:
+      merge:
+        entry_link: "Fusionner les tâches"
+        title: "Fusionner les tâches"
+        help: "Choisissez deux tâches du même projet à fusionner en une seule. La tâche restante conserve le titre le plus long, une description combinée, la priorité la plus élevée et la date d'échéance la plus proche - vérifiez-la ensuite et ajustez ce qu'il faut manuellement."
+        keep_label: "Tâche à conserver"
+        merge_away_label: "Tâche à fusionner"
+        select_task: "Choisissez une tâche"
+        same_project_note: "Les deux tâches doivent appartenir au même projet."
+        not_enough_tasks: "Vous avez besoin d'au moins deux tâches pour fusionner."
+        confirm_button: "Fusionner les tâches"
+        confirm_dialog: "Fusionner ces deux tâches en une seule ? Cette action est irréversible."
+        invalid_selection: "Veuillez choisir deux tâches différentes."
+        success: "Tâches fusionnées dans \"%{target_title}\"."
+        failure: "Échec de la fusion : %{message}"
+        description_separator: "--- Fusionné depuis \"%{title}\" ---"

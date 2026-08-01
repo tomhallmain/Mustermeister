@@ -36,6 +36,10 @@ Rails.application.routes.draw do
   get '/reschedule', to: 'tasks#reschedule_index', as: :reschedule
   post '/reschedule/bulk', to: 'tasks#bulk_reschedule', as: :bulk_reschedule
 
+  # Merge tasks routes
+  get '/merge_tasks', to: 'tasks#merge_tasks', as: :merge_tasks
+  post '/merge_tasks', to: 'tasks#merge_tasks_execute', as: :merge_tasks_execute
+
   resources :projects do
     resources :tasks, shallow: true
     resources :statuses, shallow: true, only: [:new, :create, :edit, :update, :destroy] do

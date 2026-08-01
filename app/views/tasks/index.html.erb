@@ -71,6 +71,10 @@
             value: @search,
             class: "w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
       </div>
+      <%= f.submit t('views.tasks.index.search'), class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" %>
+      <% if @search.present? %>
+        <%= link_to t('views.tasks.index.clear'), tasks_path(show_completed: params[:show_completed], sort_by: @sort_by, search: ''), class: "bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" %>
+      <% end %>
       <%= f.label :sort_by, t('views.tasks.index.sort_by'), class: "text-sm font-medium text-gray-700 whitespace-nowrap" %>
       <%= f.select :sort_by,
           [
@@ -80,10 +84,8 @@
           { selected: @sort_by },
           { class: "px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500", onchange: "this.form.requestSubmit()" } %>
       <%= f.hidden_field :show_completed, value: params[:show_completed] %>
-      <%= f.submit t('views.tasks.index.search'), class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" %>
-      <% if @search.present? %>
-        <%= link_to t('views.tasks.index.clear'), tasks_path(show_completed: params[:show_completed], sort_by: @sort_by, search: ''), class: "bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" %>
-      <% end %>
+      <%= link_to t('views.tasks.merge.entry_link'), merge_tasks_path,
+          class: "ml-auto bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded whitespace-nowrap" %>
     </div>
   <% end %>
 
