@@ -6,6 +6,7 @@ import {
   applyProjectIdFromUrl
 } from "kanban_filter_persistence";
 import { setupKanbanTaskContextMenu } from "kanban_context_menu";
+import { taskMatchesSearch } from "kanban_search";
 import Sortable from "sortablejs";
 
 // The standard board: 5 fixed columns folding Investigated into To
@@ -280,12 +281,7 @@ document.addEventListener("DOMContentLoaded", function () {
             ? allTasks[displayStatus] || []
             : DEFAULT_STATUS_TO_BACKEND_KEYS[displayStatus].flatMap((status) => allTasks[status] || []);
         if (searchTerm) {
-          tasks = tasks.filter(
-            (task) =>
-              task.title.toLowerCase().includes(searchTerm) ||
-              task.description.toLowerCase().includes(searchTerm) ||
-              task.project.toLowerCase().includes(searchTerm)
-          );
+          tasks = tasks.filter((task) => taskMatchesSearch(task, searchTerm));
         }
         column.innerHTML = tasks.map((task) => createTaskCard(task)).join("");
       }
