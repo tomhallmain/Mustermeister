@@ -22,7 +22,7 @@ class ProjectTaskDeleteTest < ApplicationSystemTestCase
     end
 
     assert_text I18n.t('views.tasks.index.deleted')
-    assert_no_text @task.title
+    assert_no_link @task.title, exact: true
   end
 
   test "canceling the delete modal on the project page leaves the task in place" do

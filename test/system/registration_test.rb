@@ -14,7 +14,7 @@ class RegistrationTest < ApplicationSystemTestCase
     end
     
     assert_text "Welcome! You have signed up successfully."
-    assert_selector "h1", text: "Tasks" # Assuming this is the landing page after registration
+    assert_selector "h1", text: "Projects" # root path is projects#index
   end
   
   test "should not register user with invalid data" do
@@ -51,7 +51,7 @@ class RegistrationTest < ApplicationSystemTestCase
     click_on "Sign up"
     
     # Sign out
-    click_on "Sign out"
+    click_on "Sign Out"
     
     # Try to register with the same email
     visit new_user_registration_path

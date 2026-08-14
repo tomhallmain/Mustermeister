@@ -142,15 +142,54 @@ RAILS_ENV=development
 ## Testing
 
 ```bash
-# Run all tests
+# Run all tests except system tests (models, controllers, integration, etc.)
 rails test
+
+# Run only system tests (Capybara + a real browser, via Selenium)
+rails test:system
+
+# Run everything in one call: the above, plus system tests
+rails test:all
 
 # Run specific test file
 rails test test/models/user_test.rb
 
 # Run specific test
 rails test test/models/user_test.rb:10  # Line number
+
+# Run a single system test file
+rails test test/system/tasks_test.rb
 ```
+
+`rails test` excludes `test/system` by default because system tests drive a real
+browser and are much slower - `rails test:all` is the one command that runs both
+the regular (Rack::Test-driven) suite and the Capybara system tests together.
+
+### System tests: getting a browser
+
+System tests need an actual Chrome/Chromium binary, not just the `selenium-webdriver`
+gem. If you don't have Chrome installed (or `rails test:system` fails with something
+like "cannot find Chrome binary" or a Chrome/chromedriver version mismatch), download
+a matched, self-contained pair into `tmp/chrome_for_testing` (git-ignored) with:
+
+```bash
+rails chrome_for_testing:install
+```
+
+`test/application_system_test_case.rb` automatically picks up the downloaded Chrome
+and chromedriver from there if present, so no further configuration is needed. Re-run
+the install task whenever `rails test:system` starts complaining about a version
+mismatch again (e.g. after Chrome auto-updates on your machine).
+
+### Automatic retry for flaky system tests
+
+System tests (`minitest-retry` gem, configured in `test/test_helper.rb`) automatically
+re-run up to 2 extra times on failure, but *only* for classes descending from
+`ActionDispatch::SystemTestCase` - a failing model/controller/integration test still
+fails on the very first try, so a real bug there is never masked by a retry. A failing
+system test prints `[MinitestRetry] retry '...' count: N, ...` for each attempt; if it
+still fails after all retries, it's reported as a normal failure/error as usual. Run
+`bundle install` after pulling this gem in for the first time.
 
 ## Internationalization (i18n) Management
 

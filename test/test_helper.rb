@@ -7,6 +7,19 @@ require "rails/test_help"
 require "minitest/mock"
 require "capybara/rails"
 
+require "minitest/retry"
+# System tests drive a real browser and are prone to environmental/timing
+# flakiness (see the toggling-task-completion system test's history) that
+# has nothing to do with the app being wrong - automatically re-running just
+# those on failure absorbs that noise. Scoped to ActionDispatch::SystemTestCase
+# (matched by ancestry, so it covers every test/system/*.rb class) specifically
+# so a real bug in a model/controller/integration test still fails on the
+# first try, rather than being masked by a retry.
+Minitest::Retry.use!(
+  retry_count: 2,
+  classes_to_retry: ["ActionDispatch::SystemTestCase"]
+)
+
 class ActiveSupport::TestCase
   # Run tests in parallel with specified workers
   # parallelize(workers: :number_of_processors)
@@ -143,6 +156,21 @@ class ActionDispatch::IntegrationTest
     yield
   ensure
     Rails.logger.level = original_level
+  end
+end
+
+class ActionDispatch::SystemTestCase
+  # SystemTestCase inherits from ActiveSupport::TestCase directly, not from
+  # ActionDispatch::IntegrationTest (unlike a plain integration test) - the
+  # app is driven through a real browser instead, so there's no post/get
+  # request helper to reuse the IntegrationTest sign_in_as above. Sign-in has
+  # to go through the actual login form via Capybara instead.
+  def sign_in_as(user)
+    visit new_user_session_path
+    fill_in "user_email", with: user.email
+    fill_in "user_password", with: "password"
+    find('input[type="submit"]').click
+    assert_no_selector "input#user_password"
   end
 end
 

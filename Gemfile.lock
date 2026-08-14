@@ -218,6 +218,8 @@ GEM
     matrix (0.4.2)
     mini_mime (1.1.5)
     minitest (5.25.5)
+    minitest-retry (0.3.1)
+      minitest (>= 5.0)
     msgpack (1.8.0)
     multi_json (1.15.0)
     nested_form (0.3.2)
@@ -512,6 +514,7 @@ DEPENDENCIES
   kamal
   kaminari
   logging
+  minitest-retry (~> 0.3)
   paper_trail
   pg (~> 1.1)
   prawn (~> 2.4)

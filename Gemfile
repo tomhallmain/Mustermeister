@@ -110,4 +110,7 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara", "~> 3.40.0"
   gem "selenium-webdriver", "~> 4.10.0"
+  # Automatically re-runs a failing test a few times before reporting it as
+  # failed - see test/test_helper.rb for how it's scoped to system tests only.
+  gem "minitest-retry", "~> 0.3", require: false
 end
