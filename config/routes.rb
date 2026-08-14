@@ -51,6 +51,7 @@ Rails.application.routes.draw do
     member do
       get 'report'
       post 'reprioritize'
+      post 'recategorize'
       get 'merge'
       post 'merge_execute'
     end

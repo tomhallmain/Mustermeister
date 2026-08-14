@@ -11,6 +11,13 @@ fr:
       back_to_projects: "Retour aux projets"
       description: "Description"
       default_priority: "Priorité par défaut"
+      recategorize_tasks: "Recatégoriser les tâches"
+      recategorize_confirm: "Voulez-vous vraiment mettre à jour toutes les catégories de tâches pour qu'elles correspondent à la catégorie par défaut du projet (%{default_category}) ? Cette action est irréversible."
+      recategorize_success:
+        one: "%{count} tâche a été mise à jour avec succès pour correspondre à la catégorie par défaut du projet."
+        other: "%{count} tâches ont été mises à jour avec succès pour correspondre à la catégorie par défaut du projet."
+      recategorize_no_changes: "Aucune tâche n'a eu besoin d'une mise à jour de catégorie."
+      recategorize_failure: "Échec de la recatégorisation des tâches : %{message}"
       due_date: "Date d'échéance"
       created_at: "Créé le"
       updated_at: "Mis à jour le"

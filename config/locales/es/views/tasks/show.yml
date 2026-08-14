@@ -63,3 +63,4 @@ es:
             bulk_reschedule: "reprogramación masiva"
             project_reschedule: "reprogramación del proyecto"
             project_reprioritize: "repriorización del proyecto"
+            project_recategorize: "recategorización del proyecto"

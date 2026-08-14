@@ -197,4 +197,46 @@ class TaskManagementService
   rescue ActiveRecord::RecordInvalid => e
     raise Error, "Failed to reprioritize project tasks: #{e.message}"
   end
+
+  def self.recategorize_project_tasks(project:, current_user:)
+    raise Error, "Project cannot be nil" if project.nil?
+    return 0 if project.default_category.nil?
+
+    ApplicationRecord.transaction do
+      tasks = project.tasks.not_archived.not_completed.includes(:comments)
+      updated_count = 0
+
+      tasks.find_each do |task|
+        next if task.task_category_id == project.default_category_id # Skip tasks that already match
+
+        task.paper_trail_event = 'project_recategorize'
+        task.update!(
+          task_category: project.default_category,
+          updated_at: Time.current
+        )
+
+        # Create an audit comment
+        Comment.create!(
+          task: task,
+          user: current_user,
+          content: "Category updated to #{project.default_category.display_name} to match project default",
+          status: 'resolved'
+        )
+
+        updated_count += 1
+      end
+
+      if updated_count > 0 && defined?(NotificationService)
+        NotificationService.project_recategorize_completed(
+          project: project,
+          tasks_updated: updated_count,
+          user: current_user
+        )
+      end
+
+      return updated_count
+    end
+  rescue ActiveRecord::RecordInvalid => e
+    raise Error, "Failed to recategorize project tasks: #{e.message}"
+  end
 end 

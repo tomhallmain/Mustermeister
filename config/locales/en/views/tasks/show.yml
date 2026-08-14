@@ -63,3 +63,4 @@ en:
             bulk_reschedule: "bulk reschedule"
             project_reschedule: "project reschedule"
             project_reprioritize: "project reprioritize"
+            project_recategorize: "project recategorize"

@@ -63,3 +63,4 @@ fr:
             bulk_reschedule: "replanification groupée"
             project_reschedule: "replanification du projet"
             project_reprioritize: "repriorisation du projet"
+            project_recategorize: "recatégorisation du projet"

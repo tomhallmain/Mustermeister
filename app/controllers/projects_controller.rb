@@ -6,7 +6,7 @@ class ProjectsController < ApplicationController
   PROJECT_INDEX_SORT_OPTIONS = %w[last_activity_desc title_asc completion_desc weighted_progress_desc].freeze
 
   before_action :initialize_show_completed_prefs
-  before_action :set_project, only: [:show, :edit, :update, :destroy, :report, :reprioritize, :merge, :merge_execute]
+  before_action :set_project, only: [:show, :edit, :update, :destroy, :report, :reprioritize, :recategorize, :merge, :merge_execute]
   before_action :load_task_categories, only: [:new, :edit, :create, :update]
   before_action :load_category_suggestions, only: [:new, :edit, :create, :update]
 
@@ -186,17 +186,34 @@ class ProjectsController < ApplicationController
         project: @project,
         current_user: current_user
       )
-      
+
       notice = if updated_count > 0
         "Successfully updated #{updated_count} tasks to match project's default priority."
       else
         "No tasks needed priority updates."
       end
-      
+
       redirect_to project_path(@project), notice: notice
     rescue TaskManagementService::Error => e
       redirect_to project_path(@project), alert: "Failed to reprioritize tasks: #{e.message}"
     end
+  end
+
+  def recategorize
+    updated_count = TaskManagementService.recategorize_project_tasks(
+      project: @project,
+      current_user: current_user
+    )
+
+    notice = if updated_count > 0
+      t('projects.show.recategorize_success', count: updated_count)
+    else
+      t('projects.show.recategorize_no_changes')
+    end
+
+    redirect_to project_path(@project), notice: notice
+  rescue TaskManagementService::Error => e
+    redirect_to project_path(@project), alert: t('projects.show.recategorize_failure', message: e.message)
   end
 
   def merge

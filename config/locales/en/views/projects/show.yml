@@ -11,6 +11,13 @@ en:
       view_on_kanban: "View on Kanban Board"
       reprioritize_tasks: "Reprioritize Tasks"
       reprioritize_confirm: "Are you sure you want to update all task priorities to match the project's default priority (%{default_priority})? This action cannot be undone."
+      recategorize_tasks: "Recategorize Tasks"
+      recategorize_confirm: "Are you sure you want to update all task categories to match the project's default category (%{default_category})? This action cannot be undone."
+      recategorize_success:
+        one: "Successfully updated %{count} task to match project's default category."
+        other: "Successfully updated %{count} tasks to match project's default category."
+      recategorize_no_changes: "No tasks needed category updates."
+      recategorize_failure: "Failed to recategorize tasks: %{message}"
       delete_project: "Delete Project"
       back_to_projects: "Back to Projects"
       description: "Description"

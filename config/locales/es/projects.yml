@@ -11,6 +11,13 @@ es:
       back_to_projects: "Volver a Proyectos"
       description: "Descripción"
       default_priority: "Prioridad predeterminada"
+      recategorize_tasks: "Recategorizar tareas"
+      recategorize_confirm: "¿Seguro que quieres actualizar todas las categorías de tarea para que coincidan con la categoría predeterminada del proyecto (%{default_category})? Esta acción no se puede deshacer."
+      recategorize_success:
+        one: "Se actualizó %{count} tarea correctamente para que coincida con la categoría predeterminada del proyecto."
+        other: "Se actualizaron %{count} tareas correctamente para que coincidan con la categoría predeterminada del proyecto."
+      recategorize_no_changes: "Ninguna tarea necesitaba actualizar su categoría."
+      recategorize_failure: "No se pudieron recategorizar las tareas: %{message}"
       due_date: "Fecha de vencimiento"
       created_at: "Creado en"
       updated_at: "Actualizado el"

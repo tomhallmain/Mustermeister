@@ -11,6 +11,13 @@ de:
       back_to_projects: "Zurück zu den Projekten"
       description: "Beschreibung"
       default_priority: "Standardpriorität"
+      recategorize_tasks: "Kategorien neu zuordnen"
+      recategorize_confirm: "Möchten Sie wirklich alle Aufgabenkategorien an die Standardkategorie des Projekts (%{default_category}) anpassen? Diese Aktion kann nicht rückgängig gemacht werden."
+      recategorize_success:
+        one: "%{count} Aufgabe wurde erfolgreich an die Standardkategorie des Projekts angepasst."
+        other: "%{count} Aufgaben wurden erfolgreich an die Standardkategorie des Projekts angepasst."
+      recategorize_no_changes: "Es mussten keine Kategorien aktualisiert werden."
+      recategorize_failure: "Kategorien konnten nicht neu zugeordnet werden: %{message}"
       due_date: "Fälligkeitsdatum"
       created_at: "Erstellt am"
       updated_at: "Aktualisiert am"

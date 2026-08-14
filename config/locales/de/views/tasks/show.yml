@@ -63,3 +63,4 @@ de:
             bulk_reschedule: "Massen-Neuterminierung"
             project_reschedule: "Projektverschiebung"
             project_reprioritize: "Projektpriorisierung"
+            project_recategorize: "Projektkategorisierung"

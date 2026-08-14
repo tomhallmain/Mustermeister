@@ -615,6 +615,132 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Failed to reprioritize tasks/, flash[:alert])
   end
 
+  test "should recategorize tasks to match project default category" do
+    project = Project.create!(
+      title: "Test Project for Recategorize",
+      user: @user,
+      default_category: task_categories(:feature)
+    )
+
+    task_one = Task.create!(
+      title: "Task One",
+      project: project,
+      user: @user,
+      task_category: task_categories(:fix)
+    )
+
+    task_two = Task.create!(
+      title: "Task Two",
+      project: project,
+      user: @user,
+      task_category: task_categories(:tech_debt)
+    )
+
+    assert_difference -> { Comment.count }, 2 do # Should create 2 audit comments
+      post recategorize_project_path(project)
+    end
+
+    task_one.reload
+    task_two.reload
+    assert_equal task_categories(:feature), task_one.task_category
+    assert_equal task_categories(:feature), task_two.task_category
+
+    assert Comment.exists?(task: task_one, content: "Category updated to Feature to match project default")
+    assert Comment.exists?(task: task_two, content: "Category updated to Feature to match project default")
+
+    assert_redirected_to project_path(project)
+    assert_equal "Successfully updated 2 tasks to match project's default category.", flash[:notice]
+  end
+
+  test "should not change category of completed tasks when recategorizing" do
+    project = Project.create!(
+      title: "Test Project for Completed Task Recategorize",
+      user: @user,
+      default_category: task_categories(:feature)
+    )
+
+    # A completed task whose category differs from the project default
+    completed_task = Task.create!(
+      title: "Completed Task",
+      project: project,
+      user: @user,
+      task_category: task_categories(:fix),
+      completed: true
+    )
+
+    # An incomplete task whose category also differs, to confirm it still updates
+    incomplete_task = Task.create!(
+      title: "Incomplete Task",
+      project: project,
+      user: @user,
+      task_category: task_categories(:fix)
+    )
+
+    # Only the incomplete task should generate an audit comment
+    assert_difference -> { Comment.count }, 1 do
+      post recategorize_project_path(project)
+    end
+
+    completed_task.reload
+    incomplete_task.reload
+    assert_equal task_categories(:fix), completed_task.task_category, "completed task category should be left unchanged"
+    assert_equal task_categories(:feature), incomplete_task.task_category
+
+    assert_not Comment.exists?(task: completed_task, content: "Category updated to Feature to match project default")
+    assert Comment.exists?(task: incomplete_task, content: "Category updated to Feature to match project default")
+
+    assert_redirected_to project_path(project)
+    assert_equal "Successfully updated 1 task to match project's default category.", flash[:notice]
+  end
+
+  test "should not update tasks that already match project category" do
+    project = Project.create!(
+      title: "Test Project for No Category Updates",
+      user: @user,
+      default_category: task_categories(:feature)
+    )
+
+    task = Task.create!(
+      title: "Already Matching Task",
+      project: project,
+      user: @user,
+      task_category: task_categories(:feature)
+    )
+
+    assert_no_difference -> { Comment.count } do # Should not create any audit comments
+      post recategorize_project_path(project)
+    end
+
+    assert_equal task_categories(:feature), task.reload.task_category
+
+    assert_redirected_to project_path(project)
+    assert_equal "No tasks needed category updates.", flash[:notice]
+  end
+
+  test "should handle errors during recategorization" do
+    project = Project.create!(
+      title: "Test Project for Recategorize Error",
+      user: @user,
+      default_category: task_categories(:feature)
+    )
+
+    Task.create!(
+      title: "Test Task",
+      project: project,
+      user: @user,
+      task_category: task_categories(:fix)
+    )
+
+    # Mock the service to raise an error
+    TaskManagementService.stub(:recategorize_project_tasks, ->(*) { raise TaskManagementService::Error, "Test error" }) do
+      post recategorize_project_path(project)
+    end
+
+    # Verify redirect and error message
+    assert_redirected_to project_path(project)
+    assert_equal "Failed to recategorize tasks: Test error", flash[:alert]
+  end
+
   test "should search projects by title and description" do
     # Create projects with different search patterns
     Project.create!(
