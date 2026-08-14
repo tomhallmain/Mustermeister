@@ -600,6 +600,66 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes ids, low_task.id
   end
 
+  test "kanban_tasks filters by search across title and description" do
+    not_started = @project.status_by_key(:not_started)
+    title_match = @project.tasks.create!(title: "Quarterly Report Draft", user: @user, status: not_started)
+    description_match = @project.tasks.create!(title: "Unrelated Title", description: "Prepare the quarterly numbers", user: @user, status: not_started)
+    no_match = @project.tasks.create!(title: "Something Else Entirely", user: @user, status: not_started)
+
+    get kanban_tasks_path(search: 'quarterly'), as: :json
+    assert_response :success
+
+    ids = JSON.parse(response.body)['tasks'].values.flatten.map { |t| t['id'] }
+    assert_includes ids, title_match.id
+    assert_includes ids, description_match.id
+    assert_not_includes ids, no_match.id
+  end
+
+  test "kanban_tasks search only matches at a word boundary, not mid-word" do
+    not_started = @project.status_by_key(:not_started)
+    boundary_match = @project.tasks.create!(title: "Q1-Quarterly Numbers", user: @user, status: not_started)
+    mid_word = @project.tasks.create!(title: "Requarterly Task", user: @user, status: not_started, skip_duplicate_check: true)
+
+    get kanban_tasks_path(search: 'quarterly'), as: :json
+    assert_response :success
+
+    ids = JSON.parse(response.body)['tasks'].values.flatten.map { |t| t['id'] }
+    assert_includes ids, boundary_match.id
+    assert_not_includes ids, mid_word.id
+  end
+
+  test "kanban_tasks search is case-insensitive and safe against regex metacharacters in the term" do
+    not_started = @project.status_by_key(:not_started)
+    matching_task = @project.tasks.create!(title: "Upgrade to C++20", user: @user, status: not_started)
+    other_task = @project.tasks.create!(title: "Unrelated Task", user: @user, status: not_started)
+
+    get kanban_tasks_path(search: 'c++20'), as: :json
+    assert_response :success
+
+    ids = JSON.parse(response.body)['tasks'].values.flatten.map { |t| t['id'] }
+    assert_includes ids, matching_task.id
+    assert_not_includes ids, other_task.id
+  end
+
+  test "kanban_tasks search finds a match outside the first page of unfiltered results" do
+    not_started = @project.status_by_key(:not_started)
+    needle = @project.tasks.create!(title: "Findable Needle Task", user: @user, status: not_started)
+    101.times { |i| @project.tasks.create!(title: "Bulk Task #{i}", user: @user, status: not_started, skip_duplicate_check: true) }
+
+    # The default sort is most-recently-updated first, so the needle (created
+    # before all the bulk tasks) sits past the first 100-per-column page and
+    # is invisible without a search term, until "Load More".
+    get kanban_tasks_path, as: :json
+    assert_response :success
+    unfiltered_ids = JSON.parse(response.body)['tasks']['not_started'].map { |t| t['id'] }
+    assert_not_includes unfiltered_ids, needle.id
+
+    get kanban_tasks_path(search: 'Findable Needle'), as: :json
+    assert_response :success
+    filtered_ids = JSON.parse(response.body)['tasks']['not_started'].map { |t| t['id'] }
+    assert_includes filtered_ids, needle.id
+  end
+
   test "kanban_tasks filters by project_id" do
     other_project = @user.projects.create!(title: "Second Project")
     matching_task = @project.tasks.create!(title: "In Filtered Project", user: @user, status: @project.status_by_key(:not_started))

@@ -402,8 +402,9 @@ class TasksController < ApplicationController
     @page = (params[:page] || 1).to_i
     @per_page = 100
     @show_all_completed = params[:show_all_completed] == 'true'
+    @search = params[:search].presence
 
-    AppDebugLogger.debug { "Kanban tasks request - Project: #{@current_project&.id}, Sort: #{@sort_by}, Page: #{@page}, Show All Completed: #{@show_all_completed}, Priority: #{@priority_filter}, Updated Within Days: #{@updated_within_days}" }
+    AppDebugLogger.debug { "Kanban tasks request - Project: #{@current_project&.id}, Sort: #{@sort_by}, Page: #{@page}, Show All Completed: #{@show_all_completed}, Priority: #{@priority_filter}, Updated Within Days: #{@updated_within_days}, Search: #{@search}" }
 
     tasks = current_user.tasks
       .includes(:project, :status, :user, :task_category)
@@ -437,6 +438,22 @@ class TasksController < ApplicationController
         days_ago = @updated_within_days.abs.days.ago
         tasks = tasks.where('tasks.updated_at < ?', days_ago)
       end
+    end
+
+    if @search.present?
+      # Qualified column names are required here: kanban_tasks always builds
+      # this relation with includes(:project, :status, :user, :task_category),
+      # and the per-status .where(status: { name: ... }) filters below force
+      # Rails to resolve ALL of those includes as SQL JOINs rather than
+      # separate preload queries - projects has its own "title" column, so an
+      # unqualified "title" is ambiguous once that join is in play.
+      #
+      # Regex (not ILIKE) so the match is anchored to a word boundary - \y is
+      # Postgres's word-boundary escape - so "quart" matches "Quarterly
+      # Report" and "Q1-Quarterly" but not "Requarterly". ILIKE '%term%' has
+      # no such concept and would match anywhere mid-word.
+      escaped_search = Regexp.escape(@search)
+      tasks = tasks.where("tasks.title ~* ? OR tasks.description ~* ?", "\\y#{escaped_search}", "\\y#{escaped_search}")
     end
 
     if @current_project&.custom_statuses?

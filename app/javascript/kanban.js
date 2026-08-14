@@ -6,8 +6,12 @@ import {
   applyProjectIdFromUrl
 } from "kanban_filter_persistence";
 import { setupKanbanTaskContextMenu } from "kanban_context_menu";
-import { taskMatchesSearch } from "kanban_search";
 import Sortable from "sortablejs";
+
+// Delay (ms) between the last keystroke in the search box and the server
+// request it triggers, so search-as-you-type doesn't fire a request per
+// keystroke.
+const SEARCH_DEBOUNCE_MS = 300;
 
 // The standard board: 5 fixed columns folding Investigated into To
 // Investigate and Closed into Complete by name. Used whenever no single
@@ -57,6 +61,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let currentPage = 1;
   let isLoading = false;
   let allTasks = {};
+  let searchDebounceTimer = null;
 
   function saveFilterState() {
     persistFilterState(getFilterState(elements), sessionStorage);
@@ -233,6 +238,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (updatedWithinDays.value) {
       params.append("updated_within_days", updatedWithinDays.value);
     }
+    if (searchInput.value) params.append("search", searchInput.value);
 
     fetch(`/kanban/tasks?${params}`)
       .then((response) => {
@@ -264,7 +270,9 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function filterAndDisplayTasks() {
-    const searchTerm = searchInput.value.toLowerCase();
+    // The server already applies the search term (see loadTasks()) alongside
+    // every other filter, so allTasks only ever holds matching tasks - this
+    // just folds backend status keys into their display column.
     // Dynamic mode: allTasks is already keyed by status id, one-to-one with
     // each column's data-status - no folding needed. Default mode: allTasks
     // is keyed by backend status key, several of which fold into one column.
@@ -276,13 +284,10 @@ document.addEventListener("DOMContentLoaded", function () {
         `.kanban-tasks[data-status="${displayStatus}"]`
       );
       if (column) {
-        let tasks =
+        const tasks =
           kanbanMode === "dynamic"
             ? allTasks[displayStatus] || []
             : DEFAULT_STATUS_TO_BACKEND_KEYS[displayStatus].flatMap((status) => allTasks[status] || []);
-        if (searchTerm) {
-          tasks = tasks.filter((task) => taskMatchesSearch(task, searchTerm));
-        }
         column.innerHTML = tasks.map((task) => createTaskCard(task)).join("");
       }
     });
@@ -570,8 +575,10 @@ document.addEventListener("DOMContentLoaded", function () {
     loadTasks();
   });
   searchInput.addEventListener("input", function () {
-    filterAndDisplayTasks();
     saveFilterState();
+    currentPage = 1;
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(loadTasks, SEARCH_DEBOUNCE_MS);
   });
 
   restoreFilterState();
