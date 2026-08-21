@@ -501,6 +501,17 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_select "select#priority-filter"
     assert_select "select#sort-by"
     assert_select "select#sort-by option[value='updated_at_asc']"
+    assert_select ".kanban-column h3 [data-kanban-column-count]", count: 5
+  end
+
+  test "kanban board dynamic columns include a count placeholder" do
+    @project.statuses.create!(name: "Blocked")
+
+    get kanban_path(project_id: @project.id)
+    assert_response :success
+
+    assert_select ".kanban-column h3 [data-kanban-column-count]"
+    assert_select ".kanban-column[data-status=?]", @project.statuses.find_by(name: "Blocked").id.to_s
   end
 
   # Regression guard for a bug where dropping a card into a short or empty

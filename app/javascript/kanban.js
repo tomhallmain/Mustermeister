@@ -205,6 +205,7 @@ document.addEventListener("DOMContentLoaded", function () {
       onEnd: function (evt) {
         const taskId = evt.item.dataset.taskId;
         const newStatus = evt.to.closest(".kanban-column").dataset.status;
+        updateColumnCounts();
         updateTaskStatus(taskId, newStatus);
       }
     });
@@ -290,6 +291,16 @@ document.addEventListener("DOMContentLoaded", function () {
             : DEFAULT_STATUS_TO_BACKEND_KEYS[displayStatus].flatMap((status) => allTasks[status] || []);
         column.innerHTML = tasks.map((task) => createTaskCard(task)).join("");
       }
+    });
+    updateColumnCounts();
+  }
+
+  function updateColumnCounts() {
+    document.querySelectorAll(".kanban-column").forEach((column) => {
+      const countEl = column.querySelector("[data-kanban-column-count]");
+      if (!countEl) return;
+      const n = column.querySelectorAll(".kanban-tasks [data-task-id]").length;
+      countEl.textContent = `(${n})`;
     });
   }
 
