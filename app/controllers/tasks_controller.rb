@@ -601,7 +601,7 @@ class TasksController < ApplicationController
   end
 
   def set_task
-    @task = Task.not_archived.find(params[:id])
+    @task = current_user.tasks.not_archived.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     if params[:kanban]
       render json: { error: 'Task not found or already archived.' }, status: :not_found

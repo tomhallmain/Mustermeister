@@ -2,6 +2,12 @@ class ApplicationController < ActionController::Base
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
   allow_browser versions: :modern
 
+  # Must stay below the session cookie's own expire_after, so that an idle
+  # session is caught here while the cookie is still valid. Matching that value
+  # would make this check unreachable: the cookie stops being sent first,
+  # current_user goes nil, and Devise rejects the request before it runs.
+  SESSION_IDLE_TIMEOUT = 30.minutes
+
   before_action :authenticate_user!
   before_action :set_paper_trail_whodunnit
   before_action :configure_permitted_parameters, if: :devise_controller?
@@ -18,18 +24,30 @@ class ApplicationController < ActionController::Base
   private
 
   def set_session_timeout
-    if current_user && session[:last_seen_at] && session[:last_seen_at] < 1.hours.ago
+    if current_user && session[:last_seen_at] && session[:last_seen_at] < SESSION_IDLE_TIMEOUT.ago
       sign_out current_user
-      flash[:alert] = "Your session has expired. Please sign in again."
-      redirect_to new_user_session_path
+      respond_with_expired_session
     end
     session[:last_seen_at] = Time.current
   end
 
   def handle_unverified_request
     sign_out current_user if current_user
-    flash[:alert] = "Your session has expired. Please sign in again."
-    redirect_to new_user_session_path
+    respond_with_expired_session
+  end
+
+  # A JSON caller gets a 401 it can act on. Redirecting it to the sign-in page
+  # instead would reach fetch as a 200 carrying HTML, since fetch follows the
+  # redirect on its own and the caller sees only the final response.
+  def respond_with_expired_session
+    message = t('application.messages.session_expired')
+
+    if request.format.json?
+      render json: { error: message }, status: :unauthorized
+    else
+      flash[:alert] = message
+      redirect_to new_user_session_path
+    end
   end
 
   def set_locale

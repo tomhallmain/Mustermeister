@@ -60,6 +60,7 @@ es:
       confirmation_required: "¿Estás seguro?"
       delete_confirmation: "¿Está seguro de que desea eliminar este %{resource}?"
       unsaved_changes: "Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?"
+      session_expired: "Su sesión ha caducado. Por favor, inicie sesión de nuevo."
       destroyed: "%{resource} se ha eliminado correctamente."
       archived: "%{resource} se ha archivado correctamente."
       unarchived: "%{resource} se ha descomprimido correctamente."

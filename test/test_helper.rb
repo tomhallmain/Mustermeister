@@ -75,6 +75,16 @@ class ActiveSupport::TestCase
     Project.duplicate_title_check_disabled = false
     Task.duplicate_title_check_disabled = false
   end
+
+  # The test environment turns forgery protection off, so a test covering what
+  # a rejected token actually does has to switch it back on for its own request.
+  def with_forgery_protection
+    original = ActionController::Base.allow_forgery_protection
+    ActionController::Base.allow_forgery_protection = true
+    yield
+  ensure
+    ActionController::Base.allow_forgery_protection = original
+  end
 end
 
 class ActionDispatch::IntegrationTest

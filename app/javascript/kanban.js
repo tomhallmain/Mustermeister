@@ -89,8 +89,17 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  const SIGN_IN_PATH_PATTERN = /\/users\/sign_in\b/;
+
   function isSessionExpiredError(error, response) {
     if (response && (response.status === 401 || response.status === 403)) {
+      return true;
+    }
+    // fetch follows a redirect transparently, so an endpoint that answers an
+    // unauthenticated request with a 302 to the sign-in page surfaces here as
+    // an ordinary 200 carrying HTML. Recognising the landing URL catches any
+    // such path that doesn't produce the 401 checked above.
+    if (response && response.redirected && SIGN_IN_PATH_PATTERN.test(response.url)) {
       return true;
     }
     if (error) {
@@ -241,7 +250,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     if (searchInput.value) params.append("search", searchInput.value);
 
-    fetch(`/kanban/tasks?${params}`)
+    fetch(`/kanban/tasks?${params}`, {
+      headers: { Accept: "application/json" },
+      credentials: "same-origin"
+    })
       .then((response) => {
         if (isSessionExpiredError(null, response)) {
           handleSessionExpiration("loading tasks");
@@ -517,17 +529,19 @@ document.addEventListener("DOMContentLoaded", function () {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
+        Accept: "application/json",
         "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')
           .content
       },
+      credentials: "same-origin",
       body: JSON.stringify(requestPayload)
     })
       .then((response) => {
+        if (isSessionExpiredError(null, response)) {
+          handleSessionExpiration("updating task status");
+          return;
+        }
         if (!response.ok) {
-          if (isSessionExpiredError(null, response)) {
-            handleSessionExpiration("updating task status");
-            return;
-          }
           return response.json().then((data) => {
             throw new Error(data.error || "Failed to update task status");
           });

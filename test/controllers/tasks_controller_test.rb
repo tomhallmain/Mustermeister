@@ -766,7 +766,7 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_empty page_one_ids & page_two_ids, "Page 2 should not repeat tasks already shown on page 1"
   end
 
-  test "kanban task update should redirect to login when session expired" do
+  test "kanban task update returns 401 for an expired session" do
     # Simulate an expired session by manipulating the session cookie expiration
     # The session store is configured with expire_after: 1.hours
     travel_to 2.hours.from_now do
@@ -775,12 +775,110 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
           status_name: 'In Progress'
         }
       }, as: :json
-      
-      # Devise redirects to login page when session expires, even for JSON requests
-      # For JSON requests, the redirect URL includes .json extension
-      assert_response :redirect
-      assert_redirected_to new_user_session_path(format: :json)
+
+      # The board's fetch calls follow a redirect on their own and would read
+      # the sign-in page as a successful update, so a JSON caller has to get a
+      # status it can act on.
+      assert_response :unauthorized
     end
+  end
+
+  test "an expired session redirects a browser navigation to the login page" do
+    travel_to 2.hours.from_now do
+      get tasks_path(show_completed: false)
+
+      assert_redirected_to new_user_session_path
+    end
+  end
+
+  # Expiring the session cookie makes Devise reject the request before
+  # ApplicationController#set_session_timeout ever runs. Idling past
+  # SESSION_IDLE_TIMEOUT while the cookie is still valid exercises that check
+  # itself.
+  test "idling past the session timeout returns 401 to a JSON caller" do
+    travel_to ApplicationController::SESSION_IDLE_TIMEOUT.from_now + 1.minute do
+      patch task_path(@task, kanban: true), params: {
+        task: { status_name: 'In Progress' }
+      }, as: :json
+
+      assert_response :unauthorized
+    end
+  end
+
+  test "idling past the session timeout redirects a browser navigation to the login page" do
+    travel_to ApplicationController::SESSION_IDLE_TIMEOUT.from_now + 1.minute do
+      get tasks_path(show_completed: false)
+
+      assert_redirected_to new_user_session_path
+      assert_equal I18n.t('application.messages.session_expired'), flash[:alert]
+    end
+  end
+
+  test "a request within the session timeout is not treated as expired" do
+    travel_to ApplicationController::SESSION_IDLE_TIMEOUT.from_now - 1.minute do
+      get tasks_path(show_completed: false)
+
+      assert_response :success
+    end
+  end
+
+  test "a rejected CSRF token returns 401 to a JSON caller" do
+    with_forgery_protection do
+      patch task_path(@task, kanban: true), params: {
+        task: { status_name: 'In Progress' }
+      }, as: :json
+
+      assert_response :unauthorized
+    end
+  end
+
+  test "a rejected CSRF token redirects a browser navigation to the login page" do
+    with_forgery_protection do
+      patch task_path(@task), params: { task: { title: "Updated Task" } }
+
+      assert_redirected_to new_user_session_path
+      assert_equal I18n.t('application.messages.session_expired'), flash[:alert]
+      assert_not_equal "Updated Task", @task.reload.title
+    end
+  end
+
+  test "kanban update of another user's task is rejected" do
+    other_task = projects(:two).tasks.create!(title: "Someone else's task", user: users(:two))
+    original_status_id = other_task.status_id
+
+    patch task_path(other_task, kanban: true), params: {
+      task: { status_name: 'In Progress' }
+    }, as: :json
+
+    assert_response :not_found
+    assert_equal original_status_id, other_task.reload.status_id
+  end
+
+  test "toggling another user's task is rejected" do
+    other_task = projects(:two).tasks.create!(title: "Someone else's task", user: users(:two))
+
+    patch toggle_task_path(other_task)
+
+    assert_redirected_to tasks_path(show_completed: false)
+    assert_not other_task.reload.completed
+  end
+
+  test "showing another user's task redirects instead of rendering it" do
+    other_task = projects(:two).tasks.create!(title: "Someone else's task", user: users(:two))
+
+    get task_path(other_task)
+
+    assert_redirected_to tasks_path(show_completed: false)
+  end
+
+  test "deleting another user's task is rejected" do
+    other_task = projects(:two).tasks.create!(title: "Someone else's task", user: users(:two))
+
+    assert_no_difference "Task.count" do
+      delete task_path(other_task)
+    end
+
+    assert_redirected_to tasks_path(show_completed: false)
   end
 
   test "should get edit" do

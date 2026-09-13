@@ -60,6 +60,7 @@ de:
       confirmation_required: "Sind Sie sicher?"
       delete_confirmation: "Möchten Sie diese %{resource} wirklich löschen?"
       unsaved_changes: "Sie haben ungespeicherte Änderungen. Möchten Sie wirklich gehen?"
+      session_expired: "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
       destroyed: "%{resource} wurde erfolgreich gelöscht."
       archived: "%{resource} wurde erfolgreich archiviert."
       unarchived: "%{resource} wurde erfolgreich aus dem Archiv wiederhergestellt."

@@ -265,7 +265,12 @@ Devise.setup do |config|
   # should add them to the navigational formats lists.
   #
   # The "*/*" below is required to match Internet Explorer requests.
-  config.navigational_formats = ['*/*', :html, :turbo_stream, :json]
+  #
+  # :json stays out of this list: the kanban board's fetch calls tell an
+  # expired session apart from a real error by the 401, and a navigational
+  # :json would instead 302 to the sign-in page, which fetch follows into a
+  # 200 carrying HTML.
+  config.navigational_formats = ['*/*', :html, :turbo_stream]
 
   # The default HTTP method used to sign out a resource. Default is :delete.
   config.sign_out_via = :delete

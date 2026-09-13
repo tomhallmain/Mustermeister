@@ -28,10 +28,6 @@ class AttachmentsController < ApplicationController
 
   private
 
-  # Deliberately tighter than TasksController#set_task's unscoped
-  # Task.not_archived.find - files are a bigger leak risk than task text.
-  # A new precedent for this controller only; TasksController/
-  # CommentsController are untouched.
   def set_task
     @task = current_user.tasks.not_archived.find(params[:task_id])
   end
