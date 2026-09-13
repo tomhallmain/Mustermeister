@@ -98,6 +98,34 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_select "select#task_task_category_id option[selected][value=?]", task_categories(:feature).id.to_s
   end
 
+  test "new task form lists the project dropdown alphabetically by title" do
+    without_duplicate_title_check do
+      @user.projects.create!(title: "Zulu")
+      @user.projects.create!(title: "Alpha")
+      @user.projects.create!(title: "Mike")
+    end
+
+    get new_project_task_path(@project)
+    assert_response :success
+
+    titles = css_select("select#task_project_id option").map(&:text).select { |t| %w[Alpha Mike Zulu].include?(t) }
+    assert_equal %w[Alpha Mike Zulu], titles
+  end
+
+  test "edit task form lists the project dropdown alphabetically by title" do
+    without_duplicate_title_check do
+      @user.projects.create!(title: "Zulu")
+      @user.projects.create!(title: "Alpha")
+      @user.projects.create!(title: "Mike")
+    end
+
+    get edit_task_path(@task)
+    assert_response :success
+
+    titles = css_select("select#task_project_id option").map(&:text).select { |t| %w[Alpha Mike Zulu].include?(t) }
+    assert_equal %w[Alpha Mike Zulu], titles
+  end
+
   test "should create task with default status" do
     assert_difference('Task.count') do
       post tasks_path, params: {

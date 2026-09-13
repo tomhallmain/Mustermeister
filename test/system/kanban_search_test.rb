@@ -5,7 +5,12 @@ class KanbanSearchTest < ApplicationSystemTestCase
     @user = users(:one)
     @project = projects(:one)
     @project.create_default_statuses! # Ensure default statuses are created
+    setup_paper_trail(@user)
     sign_in_as(@user)
+  end
+
+  def teardown
+    teardown_paper_trail
   end
 
   test "search finds a task beyond the first loaded page of results" do

@@ -612,7 +612,7 @@ class TasksController < ApplicationController
   end
 
   def load_projects_and_tags
-    @projects = current_user.projects
+    @projects = current_user.projects.order(:title)
     @tags = Tag.all
     TaskCategory.ensure_default_categories!
     @task_categories = TaskCategory.default_categories.order(:name) + current_user.task_categories.order(:name)
