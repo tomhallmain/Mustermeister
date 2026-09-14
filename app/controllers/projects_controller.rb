@@ -284,7 +284,7 @@ class ProjectsController < ApplicationController
   end
 
   def project_params
-    params.require(:project).permit(:title, :description, :due_date, :default_priority, :default_category_id, :category, :color, :confirm_duplicate)
+    params.require(:project).permit(:title, :description, :due_date, :default_priority, :default_category_id, :category, :color, :weight, :confirm_duplicate)
   end
 
   def load_task_categories

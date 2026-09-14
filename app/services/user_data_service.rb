@@ -256,6 +256,7 @@ class UserDataService
           name: project.title,
           description: project.description,
           priority: project.default_priority,
+          weight: project.weight,
           created_at: project.created_at,
           updated_at: project.updated_at,
           last_activity_at: project.last_activity_at,
@@ -374,6 +375,7 @@ class UserDataService
       project.assign_attributes(
         description: project_data['description'],
         default_priority: project_data['priority'],
+        weight: project_data['weight'],
         created_at: project_data['created_at'],
         updated_at: project_data['updated_at'],
         last_activity_at: project_data['last_activity_at'],

@@ -17,6 +17,44 @@ class ProjectTest < ActiveSupport::TestCase
     assert @project.valid?
   end
 
+  test "weight follows the default priority until it is set explicitly" do
+    @project.update!(default_priority: "high", weight: nil)
+    assert_equal "high", @project.effective_weight
+    assert_in_delta 4.0 / 3, @project.weight_multiplier, 0.001
+
+    @project.update!(weight: "leisure")
+    assert_equal "leisure", @project.effective_weight, "an explicit weight wins over the default priority"
+
+    @project.update!(default_priority: nil, weight: nil)
+    assert_equal "medium", @project.effective_weight, "neutral when neither is set"
+  end
+
+  test "a neutral weight leaves scores exactly as they were" do
+    @project.update!(default_priority: Project::NEUTRAL_WEIGHT, weight: nil)
+
+    assert_equal 1.0, @project.weight_multiplier
+  end
+
+  test "weight rejects a value outside the priority vocabulary" do
+    @project.weight = "urgent"
+
+    assert_not @project.valid?
+  end
+
+  test "a heavier project outranks an otherwise identical lighter one" do
+    heavy = Project.create!(title: "Heavier undertaking", user: @user, weight: "high", confirm_duplicate: true)
+    light = Project.create!(title: "Lighter undertaking", user: @user, weight: "leisure", confirm_duplicate: true)
+    [heavy, light].each do |project|
+      task = project.create_task!(title: "Shared shape of work in #{project.title}", user: @user, priority: "medium")
+      task.update!(completed: true)
+    end
+
+    ranked = Project.where(id: [heavy.id, light.id])
+                    .order(Arel.sql("#{Project.priority_weighted_completed_amount_sql} DESC"))
+
+    assert_equal [heavy.id, light.id], ranked.map(&:id)
+  end
+
   test "collaborator? and manager? tell owner, member, manager and outsider apart" do
     member = users(:two)
     outsider = users(:sorting_test_user)

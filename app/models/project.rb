@@ -30,8 +30,35 @@ class Project < ApplicationRecord
 
   validates :title, presence: true
   validates :default_priority, inclusion: { in: %w[low medium high leisure] }, allow_nil: true
+  validates :weight, inclusion: { in: %w[low medium high leisure] }, allow_nil: true
   validates :color, inclusion: { in: %w[red orange yellow green blue purple pink gray], message: "must be a valid color" }, allow_nil: true, allow_blank: true
   validate :warn_if_similar_title_exists, on: %i[create update]
+
+  # The weight that scales to 1.0, so a project nobody has weighted keeps
+  # exactly the figures it had before weighting existed.
+  NEUTRAL_WEIGHT = "medium"
+
+  # How much this project's tasks count against other projects' tasks. Blank
+  # means "follow default_priority", so raising what new tasks start at also
+  # raises the project's standing until someone pins it deliberately.
+  def effective_weight
+    weight.presence || default_priority.presence || NEUTRAL_WEIGHT
+  end
+
+  # Relative to NEUTRAL_WEIGHT rather than the raw 1-4 scale: an absolute
+  # factor would restate every existing score on a different scale, including
+  # for projects whose weight nobody has touched.
+  def weight_multiplier
+    Task::PRIORITY_WEIGHTS.fetch(effective_weight, 1).to_f /
+      Task::PRIORITY_WEIGHTS.fetch(NEUTRAL_WEIGHT)
+  end
+
+  # The SQL form of weight_multiplier, for the cross-project ordering below.
+  def self.weight_sql
+    "((CASE COALESCE(projects.weight, projects.default_priority, '#{NEUTRAL_WEIGHT}') " \
+    "WHEN 'high' THEN 4 WHEN 'medium' THEN 3 WHEN 'low' THEN 2 ELSE 1 END)::float " \
+    "/ #{Task::PRIORITY_WEIGHTS.fetch(NEUTRAL_WEIGHT)})"
+  end
 
   # Access predicates for a shared project. The owner is never a membership
   # row - their access is derived from user_id - so both checks start there.
@@ -157,7 +184,10 @@ class Project < ApplicationRecord
   # above trivially-small or low-priority ones, without letting raw size
   # alone dominate completion rate or priority mix.
   def self.priority_weighted_completed_amount_sql
-    weight = Task::PRIORITY_WEIGHT_SQL
+    # Scaled by the project's own weight, which is what makes this comparable
+    # across projects. The ratio-based sort above deliberately is not: a
+    # constant factor cancels out of completed/total within one project.
+    weight = "(#{Task::PRIORITY_WEIGHT_SQL}) * (#{weight_sql})"
     size_exponent = WEIGHTED_PROGRESS_SIZE_EXPONENT
     priority_exponent = WEIGHTED_PROGRESS_PRIORITY_EXPONENT
     "COALESCE((SELECT " \

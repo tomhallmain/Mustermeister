@@ -147,6 +147,14 @@ class ReportStatsService
     completed = tasks.completed.count
     incomplete = total - completed
     ratio, weighted_completed_amount = weighted_progress_stats(tasks)
+    # Scaling every task weight by the project's own k scales this amount by
+    # k**PRIORITY_EXPONENT, which is what makes it comparable across projects
+    # - the same thing Project.priority_weighted_completed_amount_sql does for
+    # the projects index. completion_ratio is left alone: a constant factor
+    # cancels out of completed/total.
+    weighted_completed_amount = (
+      weighted_completed_amount * (project.weight_multiplier**Project::WEIGHTED_PROGRESS_PRIORITY_EXPONENT)
+    ).round(1)
     status_breakdown = tasks.joins(:status).group("statuses.name").count
 
     ProjectBreakdown.new(

@@ -4,7 +4,7 @@ class MergeProjectsService
   # Single source of truth for which Project fields are user-choosable during
   # a merge - shared with the controller's strong-params allowlist and the
   # merge view's fieldset loop.
-  MERGEABLE_FIELDS = %w[title description default_priority color category default_category_id due_date].freeze
+  MERGEABLE_FIELDS = %w[title description default_priority weight color category default_category_id due_date].freeze
 
   def self.call(source:, target:, field_choices:, current_user:)
     new(source, target, field_choices, current_user).call
