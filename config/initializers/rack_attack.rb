@@ -70,10 +70,15 @@ class Rack::Attack
     end
   end
 
-  # Throttle API requests by user ID
-  throttle('api/user', limit: 300, period: 5.minutes) do |req|
-    if req.path.start_with?('/api/') && req.env['warden']&.user
-      req.env['warden'].user.id
+  # Throttle API requests by bearer token. The API is stateless and token-authed
+  # (Api::BaseController deliberately bypasses Devise/Warden), so a per-IP rule
+  # alone cannot separate one client polling legitimately from a runaway one
+  # when both arrive from the same server IP. The token is hashed so the raw
+  # credential never becomes a cache key.
+  throttle('api/token', limit: 300, period: 5.minutes) do |req|
+    if req.path.start_with?('/api/')
+      token = req.get_header('HTTP_AUTHORIZATION').to_s.delete_prefix('Bearer ')
+      Digest::SHA256.hexdigest(token) if token.present?
     end
   end
 

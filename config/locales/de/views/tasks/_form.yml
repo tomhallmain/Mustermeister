@@ -101,3 +101,5 @@ de:
         tags: "Stichworte"
         completed: "Abgeschlossen"
         copy_suffix: "(Kopie)"
+        estimated_minutes: "Geschätzte Dauer (Minuten)"
+        estimated_minutes_placeholder: "z. B. 90"

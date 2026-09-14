@@ -43,6 +43,7 @@ class Task < ApplicationRecord
 
   validates :title, presence: true
   validates :priority, inclusion: { in: %w[low medium high leisure] }, allow_nil: true
+  validates :estimated_minutes, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validate :archived_at_presence_if_archived
   validate :status_belongs_to_project
   validate :warn_if_similar_title_exists_in_project, on: %i[create update]

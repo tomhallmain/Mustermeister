@@ -10,10 +10,10 @@ class TaskToolsServiceTest < ActiveSupport::TestCase
     teardown_paper_trail
   end
 
-  test "TOOL_NAMES lists all seven tools" do
+  test "TOOL_NAMES lists all eight tools" do
     assert_equal(
       %w[project_summary status_breakdown overdue_tasks high_priority_open_tasks
-         open_tasks_by_priorities recent_tasks search_tasks],
+         open_tasks_by_priorities recent_tasks search_tasks workload],
       TaskToolsService::TOOL_NAMES
     )
   end
@@ -154,5 +154,66 @@ class TaskToolsServiceTest < ActiveSupport::TestCase
     without_exclusion = TaskToolsService.new(user: @user).run("status_breakdown", {})
 
     assert_operator with_exclusion.values.sum, :<, without_exclusion.values.sum
+  end
+
+  test "formatted tasks expose estimated_minutes only when set" do
+    tasks(:one).update!(estimated_minutes: 45)
+    tasks(:two).update!(estimated_minutes: nil)
+
+    service = TaskToolsService.new(user: @user)
+    payload = service.run("recent_tasks", { "days" => 3650, "limit" => 200 })
+
+    with_estimate = payload[:items].find { |t| t[:id] == tasks(:one).id }
+    without_estimate = payload[:items].find { |t| t[:id] == tasks(:two).id }
+
+    assert_equal 45, with_estimate[:estimated_minutes]
+    assert_not without_estimate.key?(:estimated_minutes)
+  end
+
+  test "workload aggregates open tasks per day with priority weighting and estimated minutes" do
+    project = Project.create!(title: "Workload Project", user: @user)
+    due = Date.new(2027, 3, 1).beginning_of_day
+    project.create_task!(title: "Refactor billing exporter", user: @user, priority: "high", due_date: due, estimated_minutes: 60)
+    project.create_task!(title: "Zebra migration notes", user: @user, priority: "low", due_date: due, estimated_minutes: 30)
+    project.create_task!(title: "Quarterly archive sweep", user: @user, priority: "high", due_date: due, completed: true)
+
+    payload = TaskToolsService.new(user: @user).run(
+      "workload",
+      { "from" => "2027-03-01", "to" => "2027-03-03", "project_ids" => [project.id] }
+    )
+
+    assert_equal({ from: "2027-03-01", to: "2027-03-03" }, payload[:range])
+    assert_equal %w[2027-03-01 2027-03-02 2027-03-03], payload[:days].map { |d| d[:date] }
+
+    busy_day = payload[:days].first
+    assert_equal 2, busy_day[:task_count]
+    assert_equal 6.0, busy_day[:weighted_load]
+    assert_equal 90, busy_day[:estimated_minutes]
+
+    empty_day = payload[:days].last
+    assert_equal 0, empty_day[:task_count]
+    assert_equal 0.0, empty_day[:weighted_load]
+    assert_equal 0, empty_day[:estimated_minutes]
+  end
+
+  test "workload excludes tasks from excluded projects" do
+    excluded_project = Project.create!(title: "Confidential Project", user: @user)
+    due = Date.new(2027, 4, 1).beginning_of_day
+    excluded_project.create_task!(title: "Secret capacity work", user: @user, priority: "high", due_date: due)
+
+    payload = TaskToolsService.new(user: @user, excluded_project_ids: [excluded_project.id])
+      .run("workload", { "from" => "2027-04-01", "to" => "2027-04-01" })
+
+    assert_equal 0, payload[:days].first[:task_count]
+  end
+
+  test "workload rejects a missing, unparseable, inverted or oversized range" do
+    service = TaskToolsService.new(user: @user)
+
+    assert_match(/required ISO dates/, service.run("workload", {})[:error])
+    assert_match(/required ISO dates/, service.run("workload", { "from" => "not-a-date", "to" => "2027-03-01" })[:error])
+    assert_match(/on or before/, service.run("workload", { "from" => "2027-03-05", "to" => "2027-03-01" })[:error])
+    assert_match(/at most/, service.run("workload", { "from" => "2027-01-01", "to" => "2029-01-01" })[:error])
+    assert_equal [], service.run("workload", {})[:days]
   end
 end

@@ -632,6 +632,7 @@ class TasksController < ApplicationController
       priority: source_task.priority,
       due_date: source_task.due_date,
       task_category_id: source_task.task_category_id,
+      estimated_minutes: source_task.estimated_minutes,
       tag_ids: source_task.tag_ids
     )
   end
@@ -639,7 +640,7 @@ class TasksController < ApplicationController
   def task_params
     params.require(:task).permit(:title, :description, :completed, :due_date,
                                :priority, :project_id, :status_id, :status_name, :task_category_id,
-                               :confirm_duplicate, tag_ids: [])
+                               :estimated_minutes, :confirm_duplicate, tag_ids: [])
   end
 
   def task_result_params

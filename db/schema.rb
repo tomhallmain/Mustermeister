@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_31_060000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_14_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -179,6 +179,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_31_060000) do
     t.bigint "status_id", null: false
     t.bigint "task_category_id"
     t.bigint "recurring_task_template_id"
+    t.integer "estimated_minutes"
     t.index ["archived"], name: "index_tasks_on_archived"
     t.index ["completed", "due_date"], name: "index_tasks_on_completed_and_due_date"
     t.index ["completed_by"], name: "index_tasks_on_completed_by"

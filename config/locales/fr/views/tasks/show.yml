@@ -15,6 +15,10 @@ fr:
         status: "Statut"
         category: "Catégorie"
         due_date: "Date d'échéance"
+        estimated_minutes: "Durée estimée"
+        estimated_minutes_value:
+          one: "%{count} minute"
+          other: "%{count} minutes"
         description: "Description"
         created_at: "Créé le"
         updated_at: "Mis à jour le"

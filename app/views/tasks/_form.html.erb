@@ -81,6 +81,13 @@
     </div>
 
     <div>
+      <%= f.label :estimated_minutes, t('views.tasks.form.estimated_minutes'), class: "block text-sm font-medium text-gray-700" %>
+      <%= f.number_field :estimated_minutes, min: 1, step: 1,
+          placeholder: t('views.tasks.form.estimated_minutes_placeholder'),
+          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+    </div>
+
+    <div>
       <%= f.label :tag_ids, t('views.tasks.form.tags'), class: "block text-sm font-medium text-gray-700" %>
       <div class="mt-2 space-y-2">
         <%= f.collection_check_boxes :tag_ids, @tags, :id, :name do |b| %>

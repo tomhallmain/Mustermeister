@@ -11,6 +11,7 @@ de:
         priority: "Priority"
         status: "Status"
         due_date: "Due Date"
+        estimated_minutes: "Geschätzte Dauer (Minuten)"
         created_at: "Erstellt am"
         updated_at: "Aktualisiert am"
         completed_at: "Abgeschlossen am"

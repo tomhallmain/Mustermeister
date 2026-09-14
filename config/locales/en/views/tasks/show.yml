@@ -15,6 +15,10 @@ en:
         status: "Status"
         category: "Category"
         due_date: "Due Date"
+        estimated_minutes: "Estimated Time"
+        estimated_minutes_value:
+          one: "%{count} minute"
+          other: "%{count} minutes"
         description: "Description"
         created_at: "Created"
         updated_at: "Last Updated"

@@ -100,3 +100,5 @@ fr:
         tags: "Étiquettes"
         completed: "Terminé"
         copy_suffix: "(Copie)"
+        estimated_minutes: "Durée estimée (minutes)"
+        estimated_minutes_placeholder: "p. ex. 90"

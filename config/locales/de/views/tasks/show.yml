@@ -15,6 +15,10 @@ de:
         status: "Status"
         category: "Kategorie"
         due_date: "Fälligkeitsdatum"
+        estimated_minutes: "Geschätzte Dauer"
+        estimated_minutes_value:
+          one: "%{count} Minute"
+          other: "%{count} Minuten"
         description: "Beschreibung"
         created_at: "Erstellt am"
         updated_at: "Aktualisiert am"

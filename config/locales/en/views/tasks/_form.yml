@@ -36,3 +36,5 @@ en:
         tags: "Tags"
         completed: "Completed"
         copy_suffix: "(Copy)"
+        estimated_minutes: "Estimated Time (minutes)"
+        estimated_minutes_placeholder: "e.g. 90"

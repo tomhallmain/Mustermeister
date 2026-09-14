@@ -16,7 +16,7 @@ module Api
     private
 
     def tool_args
-      params.permit(:limit, :days, :keyword, priorities: [], project_ids: []).to_h
+      params.permit(:limit, :days, :keyword, :from, :to, priorities: [], project_ids: []).to_h
     end
   end
 end

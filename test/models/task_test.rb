@@ -399,4 +399,18 @@ class TaskTest < ActiveSupport::TestCase
     assert_includes results, tasks(:search_test_three)
     assert_includes results, tasks(:search_test_four)
   end
+
+  test "estimated_minutes is optional but must be a positive integer when given" do
+    @task.estimated_minutes = nil
+    assert @task.valid?
+
+    @task.estimated_minutes = 90
+    assert @task.valid?
+
+    @task.estimated_minutes = 0
+    assert_not @task.valid?
+
+    @task.estimated_minutes = -30
+    assert_not @task.valid?
+  end
 end

@@ -150,6 +150,15 @@
                 </p>
               </div>
             <% end %>
+
+            <% if @task.estimated_minutes %>
+              <div>
+                <h3 class="text-sm font-medium text-gray-500"><%= t('views.tasks.show.estimated_minutes') %></h3>
+                <p class="mt-1 text-gray-900">
+                  <%= t('views.tasks.show.estimated_minutes_value', count: @task.estimated_minutes) %>
+                </p>
+              </div>
+            <% end %>
           </div>
 
           <div>

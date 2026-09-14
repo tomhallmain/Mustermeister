@@ -17,6 +17,10 @@ class TaskToolsService
   # adjust.
   DESCRIPTION_TRUNCATE_LENGTH = ENV.fetch("TASK_DESCRIPTION_TRUNCATE_LENGTH", "500").to_i
 
+  # Upper bound on the workload tool's date range, so a single call can't be
+  # asked to materialize an unbounded per-day series.
+  WORKLOAD_MAX_RANGE_DAYS = 366
+
   TOOL_DEFINITIONS = [
     {
       name: "project_summary",
@@ -56,6 +60,15 @@ class TaskToolsService
       name: "search_tasks",
       description: "Search task titles/descriptions via local substring matching.",
       args: { keyword: "required plain substring string (not a natural-language query)", project_ids: "optional array of project ids", limit: "optional integer <= #{MAX_LIST_ITEMS}" }
+    },
+    {
+      name: "workload",
+      description: "Summarize committed open-task load per day across a date range, for capacity planning and scheduling.",
+      args: {
+        from: "required start date, ISO YYYY-MM-DD",
+        to: "required end date, ISO YYYY-MM-DD, spanning at most #{WORKLOAD_MAX_RANGE_DAYS} days from 'from'",
+        project_ids: "optional array of project ids"
+      }
     }
   ].freeze
   TOOL_NAMES = TOOL_DEFINITIONS.map { |tool| tool[:name] }.freeze
@@ -74,6 +87,7 @@ class TaskToolsService
     when "open_tasks_by_priorities" then open_tasks_by_priorities(args)
     when "recent_tasks" then recent_tasks(args)
     when "search_tasks" then search_tasks(args)
+    when "workload" then workload(args)
     else
       { error: "Unknown tool: #{tool_name}" }
     end
@@ -119,6 +133,7 @@ class TaskToolsService
     }
     due = task.due_date&.to_date&.iso8601
     data[:due_date] = due if due.present?
+    data[:estimated_minutes] = task.estimated_minutes if task.estimated_minutes.present?
     data
   end
 
@@ -205,6 +220,52 @@ class TaskToolsService
       .where("LOWER(tasks.title) LIKE :q OR LOWER(tasks.description) LIKE :q", q: pattern)
       .order(updated_at: :desc)
     list_result(scope, limit: limit)
+  end
+
+  # Per-day committed load across a date range, so a scheduler can fit new work
+  # around what is already due. weighted_load reuses Task::PRIORITY_WEIGHT_SQL,
+  # the same priority weighting the Reports feature uses, so both answer "how
+  # heavy is this" identically rather than drifting into two variants.
+  # Completed tasks are excluded - they are no longer load to plan around.
+  def workload(args)
+    from = parse_iso_date(args["from"])
+    to = parse_iso_date(args["to"])
+    return workload_error("from and to are required ISO dates (YYYY-MM-DD)") if from.nil? || to.nil?
+    return workload_error("from must be on or before to") if from > to
+    return workload_error("range must span at most #{WORKLOAD_MAX_RANGE_DAYS} days") if (to - from).to_i >= WORKLOAD_MAX_RANGE_DAYS
+
+    scope = scoped_tasks(args["project_ids"])
+      .where(completed: false)
+      .where(due_date: from.beginning_of_day..to.end_of_day)
+
+    # Grouped as a string rather than a DATE expression so the hash keys are
+    # unambiguously comparable to the iso8601 keys built below.
+    day = Arel.sql("TO_CHAR(tasks.due_date, 'YYYY-MM-DD')")
+    counts = scope.group(day).count
+    weights = scope.group(day).sum(Arel.sql(Task::PRIORITY_WEIGHT_SQL))
+    minutes = scope.group(day).sum(:estimated_minutes)
+
+    days = (from..to).map do |date|
+      key = date.iso8601
+      {
+        date: key,
+        task_count: counts[key].to_i,
+        weighted_load: weights[key].to_f.round(1),
+        estimated_minutes: minutes[key].to_i
+      }
+    end
+
+    { range: { from: from.iso8601, to: to.iso8601 }, days: days }
+  end
+
+  def workload_error(message)
+    { error: message, range: nil, days: [] }
+  end
+
+  def parse_iso_date(value)
+    Date.iso8601(value.to_s)
+  rescue ArgumentError
+    nil
   end
 
   def list_result(scope, limit:)

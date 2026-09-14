@@ -100,3 +100,5 @@ es:
         tags: "Etiquetas"
         completed: "Completado"
         copy_suffix: "(Copia)"
+        estimated_minutes: "Tiempo estimado (minutos)"
+        estimated_minutes_placeholder: "p. ej. 90"
