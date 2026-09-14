@@ -7,7 +7,14 @@
 require "csv"
 
 class TaskTsvExportService
-  HEADERS = ["Title", "Priority", "Status", "Due Date", "Category", "Description"].freeze
+  # Ordered identity, then classification, then dates, with the one long free
+  # text field last so it never pushes the rest off the edge of a spreadsheet.
+  # Header names stay untranslated: UserDataService::TSV_IMPORT_COLUMNS matches
+  # incoming columns against these literal names, so a localized header would
+  # stop resolving. Import matches by name rather than position, so this order
+  # is a presentation choice and nothing depends on it.
+  HEADERS = ["Title", "Status", "Priority", "Category",
+             "Due Date", "Created", "Updated", "Description"].freeze
 
   def self.call(tasks)
     CSV.generate(col_sep: "\t") do |tsv|
@@ -15,10 +22,12 @@ class TaskTsvExportService
       tasks.each do |task|
         tsv << [
           task.title,
-          task.priority,
           task.status&.name,
-          task.due_date&.to_date&.iso8601,
+          task.priority,
           task.task_category&.name,
+          task.due_date&.to_date&.iso8601,
+          task.created_at&.to_date&.iso8601,
+          task.updated_at&.to_date&.iso8601,
           task.description
         ]
       end

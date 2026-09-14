@@ -54,7 +54,7 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/\.tsv"/, response.headers["Content-Disposition"])
 
     rows = CSV.parse(response.body, col_sep: "\t")
-    assert_equal ["Title", "Priority", "Status", "Due Date", "Category", "Description"], rows.first
+    assert_equal TaskTsvExportService::HEADERS, rows.first
     assert_includes rows.map { |row| row[0] }, tasks(:one).title
   end
 
