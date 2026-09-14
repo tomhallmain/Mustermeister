@@ -2,6 +2,8 @@
 
 # Write-back tools for the external scheduling integration: the narrow set of
 # fields a scheduler needs to set after deciding when work actually happens.
+# Task creation and deletion are deliberately absent - widening this surface
+# later is safe, withdrawing it once another team's app depends on it is not.
 #
 # Deliberately separate from TaskToolsService. That class is wired into the
 # Task Insights LLM tool-calling loop, and the text it feeds the model comes

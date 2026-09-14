@@ -640,7 +640,7 @@ class TasksController < ApplicationController
   def task_params
     params.require(:task).permit(:title, :description, :completed, :due_date,
                                :priority, :project_id, :status_id, :status_name, :task_category_id,
-                               :estimated_minutes, :confirm_duplicate, tag_ids: [])
+                               :estimated_minutes, :scheduled_at, :confirm_duplicate, tag_ids: [])
   end
 
   def task_result_params

@@ -102,26 +102,37 @@ class Rack::Attack
     end
   end
 
-  # Block suspicious user agents
+  # Scanners are never a legitimate client anywhere. A generic HTTP client is,
+  # but only against the token-authed API, where curl or wget is an ordinary
+  # way to drive a server-to-server integration - blocking those on /api/ bans
+  # a correctly configured client outright, and the resulting failure looks
+  # nothing like a credentials problem from the client's side. Everywhere else
+  # they still indicate scripted traffic against a browser-facing surface.
+  scanner_agents = %w[sqlmap nikto nmap]
+  scripted_client_agents = %w[wget curl]
+
   blocklist("block suspicious user agents") do |req|
-    req.user_agent && (
-      req.user_agent.include?("sqlmap") ||
-      req.user_agent.include?("nikto") ||
-      req.user_agent.include?("nmap") ||
-      req.user_agent.include?("wget") ||
-      req.user_agent.include?("curl")
-    )
+    user_agent = req.user_agent.to_s
+    next false if user_agent.empty?
+
+    blocked = req.path.start_with?('/api/') ? scanner_agents : scanner_agents + scripted_client_agents
+    blocked.any? { |agent| user_agent.include?(agent) }
   end
 
-  # Custom throttling response
-  self.throttled_responder = lambda do |env|
-    now = Time.now
-    match_data = env['rack.attack.match_data']
+  # Custom throttling response. The responder is handed a Rack::Attack::Request
+  # and the match data lives on its env. epoch_time is the same clock the
+  # period was counted against, so the reset header lands on the real window
+  # boundary and is the integer clients expect rather than a formatted Time.
+  self.throttled_responder = lambda do |request|
+    match_data = request.env['rack.attack.match_data']
+    now = match_data[:epoch_time]
+    period = match_data[:period].to_i
+
     headers = {
       'Content-Type' => 'application/json',
       'X-RateLimit-Limit' => match_data[:limit].to_s,
       'X-RateLimit-Remaining' => '0',
-      'X-RateLimit-Reset' => (now + (match_data[:period] - now.to_i % match_data[:period])).to_s
+      'X-RateLimit-Reset' => (now + (period - now % period)).to_s
     }
 
     [ 429, headers, [{ error: "Rate limit exceeded. Please try again later." }.to_json] ]

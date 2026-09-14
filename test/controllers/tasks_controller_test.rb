@@ -898,6 +898,20 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Updated Task", @task.title
   end
 
+  test "should set and clear scheduled_at from the task form" do
+    patch task_path(@task), params: { task: { scheduled_at: "2027-03-01T09:00" } }
+    assert_equal Time.zone.local(2027, 3, 1, 9), @task.reload.scheduled_at
+
+    patch task_path(@task), params: { task: { scheduled_at: "" } }
+    assert_nil @task.reload.scheduled_at
+  end
+
+  test "should update estimated_minutes from the task form" do
+    patch task_path(@task), params: { task: { estimated_minutes: 90 } }
+
+    assert_equal 90, @task.reload.estimated_minutes
+  end
+
   test "should update task with new status" do
     new_status = @project.status_by_key(:ready_to_test)
     assert_not_nil new_status, "Ready to Test status should exist"

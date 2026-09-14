@@ -103,3 +103,5 @@ de:
         copy_suffix: "(Kopie)"
         estimated_minutes: "Geschätzte Dauer (Minuten)"
         estimated_minutes_placeholder: "z. B. 90"
+        scheduled_at: "Eingeplant für"
+        scheduled_at_hint: "Wann Sie daran arbeiten wollen, im Unterschied zur Fälligkeit. Eine externe Planungsintegration kann dies ebenfalls setzen."

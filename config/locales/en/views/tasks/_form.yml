@@ -38,3 +38,5 @@ en:
         copy_suffix: "(Copy)"
         estimated_minutes: "Estimated Time (minutes)"
         estimated_minutes_placeholder: "e.g. 90"
+        scheduled_at: "Scheduled For"
+        scheduled_at_hint: "When you plan to work on this, as opposed to when it is due. An external scheduling integration can set this too."
