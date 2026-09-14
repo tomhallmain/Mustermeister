@@ -353,9 +353,8 @@ class Task < ApplicationRecord
     )
   end
 
-  # user_id still means "creator" today, so it is the right source. Once
-  # assignment makes user_id mutable, this keeps the original author on record
-  # where user_id no longer can.
+  # At creation the assignee is whoever is writing the task, so user_id is the
+  # right source. created_by then holds that author across any reassignment.
   def record_creator
     self.created_by ||= user_id
   end

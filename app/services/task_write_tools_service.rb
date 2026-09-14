@@ -1,16 +1,15 @@
 # frozen_string_literal: true
 
 # Write-back tools for the external scheduling integration: the narrow set of
-# fields a scheduler needs to set after deciding when work actually happens.
-# Task creation and deletion are deliberately absent - widening this surface
-# later is safe, withdrawing it once another team's app depends on it is not.
+# fields a scheduler sets after deciding when work happens. Creation and
+# deletion are absent on purpose - widening this surface later is safe,
+# withdrawing it once another app depends on it is not.
 #
-# Deliberately separate from TaskToolsService. That class is wired into the
-# Task Insights LLM tool-calling loop, and the text it feeds the model comes
-# from task titles and descriptions - content a user can be talked into
-# pasting. A write tool reachable from there would turn prompt injection into
-# unauthorized data modification, so nothing in this class is exposed to the
-# model; only Api::ToolsController#create dispatches to it.
+# Separate from TaskToolsService because that class feeds the Task Insights
+# LLM loop with task titles and descriptions, content a user can be talked
+# into pasting. A write tool reachable from there would turn prompt injection
+# into unauthorized data modification, so only Api::ToolsController#create
+# dispatches here.
 class TaskWriteToolsService
   TOOL_DEFINITIONS = [
     {

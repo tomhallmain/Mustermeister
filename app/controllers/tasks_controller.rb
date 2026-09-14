@@ -84,9 +84,9 @@ class TasksController < ApplicationController
     @tasks = @tasks.page(params[:page]).per(TASKS_PER_PAGE)
 
     # The most recent task this user wrote and can still see. Keyed on
-    # created_by, not user_id: since assignment landed, user_id names whoever
-    # the task was handed to, and project access alone would offer up a
-    # colleague's task under a "duplicate *your* last task" button.
+    # created_by, not user_id: user_id names whoever the task is assigned to,
+    # so project access alone would offer up a colleague's task under a
+    # "duplicate *your* last task" button.
     @last_created_task = current_user.accessible_tasks
                                      .where(created_by: current_user.id)
                                      .order(created_at: :desc)
