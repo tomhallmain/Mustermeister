@@ -1,0 +1,14 @@
+en:
+  notifications:
+    events:
+      added_to_project:
+        title: "You were added to %{project}"
+        body:
+          member: "You can now work on every task in this project."
+          manager: "You can now work on every task in this project and change its settings."
+      task_assigned:
+        title: "A task was assigned to you"
+        body: "“%{task}” in %{project} is now yours."
+      task_commented:
+        title: "New comment on a task assigned to you"
+        body: "%{author} commented on “%{task}”."

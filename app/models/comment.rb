@@ -15,6 +15,8 @@ class Comment < ApplicationRecord
   belongs_to :project, optional: true
 
   # Validations
+  after_create_commit :notify_task_assignee
+
   validates :content, presence: true
   validates :status, inclusion: { in: %w[open closed resolved], message: "%{value} is not a valid status" }
   validate :must_belong_to_task_or_project
@@ -49,5 +51,20 @@ class Comment < ApplicationRecord
 
   def user_agent_for_paper_trail
     PaperTrail.request.controller_info[:user_agent]
+  end
+
+  # Whoever the task is assigned to hears about it, unless they wrote the
+  # comment themselves. Deliberately not every project member: a shared
+  # project would otherwise notify everyone on every comment.
+  def notify_task_assignee
+    return if task.nil? || task.user.nil? || task.user_id == user_id
+
+    Notification.notify!(
+      user: task.user,
+      title: I18n.t('notifications.events.task_commented.title'),
+      body: I18n.t('notifications.events.task_commented.body', author: user.name, task: task.title),
+      kind: "task_commented",
+      link_path: Rails.application.routes.url_helpers.task_path(task)
+    )
   end
 end

@@ -235,6 +235,18 @@ class UserDataService
         created_at: @user.created_at,
         updated_at: @user.updated_at
       },
+      # Metadata, deliberately not a copy: a project somebody else owns is
+      # their data, not this user's, so a shared project is listed here and
+      # exported nowhere. Import creates no memberships from it either - it
+      # exists so a reader can see what access was held when the export ran.
+      memberships: @user.project_memberships.includes(project: :user).map do |membership|
+        {
+          project: membership.project.title,
+          owner: membership.project.user.email,
+          role: membership.role,
+          created_at: membership.created_at
+        }
+      end,
       # No separate "standalone tasks" bucket - Task#project_id is a required
       # column and tasks are only ever created nested under a project, so
       # every task is reachable via its project below.
@@ -264,6 +276,7 @@ class UserDataService
               due_date: task.due_date,
               estimated_minutes: task.estimated_minutes,
               scheduled_at: task.scheduled_at,
+              assigned_to: task.user&.email,
               completed: task.completed,
               completed_at: task.completed_at,
               completed_by: task.completed_by,
@@ -404,6 +417,20 @@ class UserDataService
     end
   end
   
+  # Assignment survives a round trip only when the task was the importing
+  # user's own: a colleague's email means nothing in another installation, and
+  # guessing would hand them work they never had.
+  #
+  # A payload with no assigned_to key at all predates task assignment, and
+  # every task in it was the exporter's by definition - falling through to
+  # "unassigned" there would quietly strip ownership from an older backup.
+  # An explicit null is different: that task really was unassigned.
+  def imported_assignee(task_data)
+    return @user unless task_data.key?('assigned_to')
+
+    task_data['assigned_to'] == @user.email ? @user : nil
+  end
+
   def import_project_tasks(project, tasks_data, imported_tags)
     tasks_data.each do |task_data|
       task = project.tasks.find_or_initialize_by(title: task_data['title'])
@@ -419,11 +446,7 @@ class UserDataService
       end
       
       task.assign_attributes(
-        # The export doesn't carry a per-task owner (only completed_by/
-        # archived_by, which are plain historical ids, not the required
-        # Task#user association) - importing is always restoring the
-        # importing user's own data, so they're also every task's owner.
-        user: @user,
+        user: imported_assignee(task_data),
         description: task_data['description'],
         priority: task_data['priority'],
         due_date: task_data['due_date'],

@@ -60,6 +60,7 @@ Rails.application.routes.draw do
       get 'all_reports'
     end
     resources :comments, only: [:create, :update, :destroy]
+    resources :project_memberships, shallow: true, only: [:create, :update, :destroy]
   end
 
   resources :tasks do

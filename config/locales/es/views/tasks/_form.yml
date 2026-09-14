@@ -102,5 +102,7 @@ es:
         copy_suffix: "(Copia)"
         estimated_minutes: "Tiempo estimado (minutos)"
         estimated_minutes_placeholder: "p. ej. 90"
+        assignee: "Asignado a"
+        unassigned: "Sin asignar"
         scheduled_at: "Programado para"
         scheduled_at_hint: "Cuándo planeas trabajar en esto, a diferencia de su fecha de vencimiento. Una integración de planificación externa también puede establecerlo."

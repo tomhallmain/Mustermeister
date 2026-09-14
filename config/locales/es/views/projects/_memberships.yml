@@ -1,0 +1,21 @@
+es:
+  views:
+    projects:
+      edit:
+        members:
+          title: "Miembros del proyecto"
+          help: "Las personas añadidas aquí pueden trabajar en todas las tareas de este proyecto. Los gestores pueden además cambiar la configuración del proyecto, los estados y esta lista de miembros."
+          owner_badge: "Propietario"
+          none_yet: "Todavía no se ha añadido a nadie a este proyecto."
+          add_label: "Añadir a alguien"
+          role_label: "Rol"
+          add_button: "Añadir miembro"
+          save_role: "Guardar"
+          nobody_to_add: "Todas las personas con cuenta ya están en este proyecto."
+          remove_confirm: "¿Quitar a %{name} de este proyecto? Perderá el acceso a todas sus tareas de inmediato."
+          added: "El miembro se añadió correctamente."
+          removed: "El miembro se quitó correctamente."
+          role_updated: "El rol se actualizó correctamente."
+          roles:
+            member: "Miembro"
+            manager: "Gestor"

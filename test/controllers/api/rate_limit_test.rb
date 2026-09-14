@@ -12,13 +12,19 @@ class Api::RateLimitTest < ActionDispatch::IntegrationTest
     # is a null store that would never accumulate a count, so both have to be
     # stood up explicitly here. A fresh store per test also keeps one test's
     # counters from deciding another's outcome under random ordering.
+    #
+    # Both are process-global, so both are captured and put back rather than
+    # reset to an assumed value: the initializer leaves rack_attack enabled
+    # when ENABLE_RACK_ATTACK is set, and hardcoding "off" here would switch
+    # it off for every test that ran after this one.
+    @original_enabled = Rack::Attack.enabled
     @original_store = Rack::Attack.cache.store
     Rack::Attack.cache.store = ActiveSupport::Cache::MemoryStore.new
     Rack::Attack.enabled = true
   end
 
   def teardown
-    Rack::Attack.enabled = false
+    Rack::Attack.enabled = @original_enabled
     Rack::Attack.cache.store = @original_store
   end
 

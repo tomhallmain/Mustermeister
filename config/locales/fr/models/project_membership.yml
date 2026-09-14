@@ -1,0 +1,22 @@
+fr:
+  activerecord:
+    models:
+      project_membership:
+        one: "Adhésion au projet"
+        other: "Adhésions au projet"
+    attributes:
+      project_membership:
+        project: "Projet"
+        user: "Membre"
+        user_id: "Membre"
+        role: "Rôle"
+    errors:
+      models:
+        project_membership:
+          attributes:
+            user:
+              is_project_owner: "possède déjà ce projet et n'a pas besoin d'une adhésion"
+            user_id:
+              taken: "est déjà membre de ce projet"
+            role:
+              inclusion: "doit être membre ou gestionnaire"

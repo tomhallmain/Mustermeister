@@ -32,6 +32,8 @@ en:
             due_date:
               invalid: "must be a valid date"
               in_past: "cannot be in the past"
+            project:
+              not_accessible: "must be a project you have access to"
   priorities:
     leisure: "Leisure"
     low: "Low"

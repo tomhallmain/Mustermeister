@@ -6,12 +6,20 @@ class ProjectsController < ApplicationController
   PROJECT_INDEX_SORT_OPTIONS = %w[last_activity_desc title_asc completion_desc weighted_progress_desc].freeze
 
   before_action :initialize_show_completed_prefs
-  before_action :set_project, only: [:show, :edit, :update, :destroy, :report, :reprioritize, :recategorize, :merge, :merge_execute]
+  # Three finders rather than one plus permission guards: scoping the lookup is
+  # how authorization is expressed everywhere else in this app, and an
+  # out-of-scope id then 404s instead of leaking that the project exists.
+  # show/report/reprioritize/recategorize are task-level work any collaborator
+  # does; edit/update are project configuration; destroy and merge destroy a
+  # project outright and stay with its owner.
+  before_action :set_project, only: [:show, :report, :reprioritize, :recategorize]
+  before_action :set_manageable_project, only: [:edit, :update]
+  before_action :set_owned_project, only: [:destroy, :merge, :merge_execute]
   before_action :load_task_categories, only: [:new, :edit, :create, :update]
   before_action :load_category_suggestions, only: [:new, :edit, :create, :update]
 
   def index
-    @projects = current_user.projects.includes(:tasks)
+    @projects = current_user.accessible_projects.includes(:tasks)
 
     if params[:sort_by].present?
       session[:projects_sort_by] = params[:sort_by]
@@ -56,7 +64,7 @@ class ProjectsController < ApplicationController
   end
 
   def all_reports
-    @projects = current_user.projects.not_completed
+    @projects = current_user.accessible_projects.not_completed
                           .includes(tasks: :tags)
                           .order(updated_at: :desc)
   end
@@ -264,6 +272,14 @@ class ProjectsController < ApplicationController
   end
 
   def set_project
+    @project = current_user.accessible_projects.includes(:tasks).find(params[:id])
+  end
+
+  def set_manageable_project
+    @project = current_user.manageable_projects.includes(:tasks).find(params[:id])
+  end
+
+  def set_owned_project
     @project = current_user.projects.includes(:tasks).find(params[:id])
   end
 

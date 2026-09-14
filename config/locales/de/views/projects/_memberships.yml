@@ -1,0 +1,21 @@
+de:
+  views:
+    projects:
+      edit:
+        members:
+          title: "Projektmitglieder"
+          help: "Hier hinzugefügte Personen können an jeder Aufgabe dieses Projekts arbeiten. Manager können zusätzlich Projekteinstellungen, Status und diese Mitgliederliste ändern."
+          owner_badge: "Eigentümer"
+          none_yet: "Diesem Projekt wurde noch niemand hinzugefügt."
+          add_label: "Person hinzufügen"
+          role_label: "Rolle"
+          add_button: "Mitglied hinzufügen"
+          save_role: "Speichern"
+          nobody_to_add: "Alle Personen mit einem Konto sind bereits in diesem Projekt."
+          remove_confirm: "%{name} aus diesem Projekt entfernen? Der Zugriff auf alle Aufgaben geht sofort verloren."
+          added: "Mitglied wurde erfolgreich hinzugefügt."
+          removed: "Mitglied wurde erfolgreich entfernt."
+          role_updated: "Rolle wurde erfolgreich aktualisiert."
+          roles:
+            member: "Mitglied"
+            manager: "Manager"

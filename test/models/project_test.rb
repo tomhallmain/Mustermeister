@@ -17,6 +17,24 @@ class ProjectTest < ActiveSupport::TestCase
     assert @project.valid?
   end
 
+  test "collaborator? and manager? tell owner, member, manager and outsider apart" do
+    member = users(:two)
+    outsider = users(:sorting_test_user)
+
+    assert @project.collaborator?(@project.user), "the owner is always a collaborator"
+    assert @project.manager?(@project.user), "the owner is always a manager"
+
+    membership = ProjectMembership.create!(project: @project, user: member, role: "member")
+    assert @project.collaborator?(member)
+    assert_not @project.manager?(member), "a plain member does not manage the project"
+
+    membership.update!(role: "manager")
+    assert @project.manager?(member)
+
+    assert_not @project.collaborator?(outsider)
+    assert_not @project.manager?(outsider)
+  end
+
   test "should require title" do
     @project.title = nil
     assert_not @project.valid?

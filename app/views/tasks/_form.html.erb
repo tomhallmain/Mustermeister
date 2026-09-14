@@ -68,6 +68,17 @@
           { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" } %>
     </div>
 
+    <% assignable_users = (task.project || @project)&.assignable_users || [] %>
+    <% if assignable_users.size > 1 || task.user_id.nil? %>
+      <div>
+        <%= f.label :user_id, t('views.tasks.form.assignee'), class: "block text-sm font-medium text-gray-700" %>
+        <%= f.select :user_id,
+            options_from_collection_for_select(assignable_users, :id, :name, task.user_id),
+            { include_blank: t('views.tasks.form.unassigned') },
+            { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" } %>
+      </div>
+    <% end %>
+
     <div>
       <%= f.label :project_id, t('views.tasks.form.project'), class: "block text-sm font-medium text-gray-700" %>
       <%= f.collection_select :project_id, @projects, :id, :title,

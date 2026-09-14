@@ -26,6 +26,8 @@ class User < ApplicationRecord
   has_many :task_categories, dependent: :destroy
   has_many :recurring_task_templates, dependent: :destroy
   has_many :notifications, dependent: :destroy
+  has_many :project_memberships, dependent: :destroy
+  has_many :member_projects, through: :project_memberships, source: :project
 
   validates :name, presence: true
   validates :email, presence: true, 
@@ -67,6 +69,29 @@ class User < ApplicationRecord
 
   def api_token_read_write?
     api_token_scope == "read_write"
+  end
+
+  # Read access to a shared project: owned outright, or joined through a
+  # membership. This is what `projects` widens to wherever a controller means
+  # "projects I can see" rather than "projects that are mine".
+  # A subquery rather than a join plus DISTINCT: a joined-and-deduplicated
+  # relation cannot be ordered by an expression that is not also selected, and
+  # callers order these by computed SQL (weighted progress, last task update).
+  def accessible_projects
+    Project.where(user_id: id).or(Project.where(id: project_memberships.select(:project_id)))
+  end
+
+  # Configuration access: statuses, recurring templates, project settings.
+  # Narrower than accessible_projects and wider than `projects`.
+  def manageable_projects
+    Project.where(user_id: id)
+           .or(Project.where(id: project_memberships.where(role: "manager").select(:project_id)))
+  end
+
+  # Task access follows the project, not tasks.user_id - a collaborator works
+  # every task in a project they are in, including ones they did not create.
+  def accessible_tasks
+    Task.where(project: accessible_projects)
   end
 
   def assigned_tasks

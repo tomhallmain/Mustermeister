@@ -8,6 +8,11 @@ class UserTest < ActiveSupport::TestCase
       password: "password123",
       password_confirmation: "password123"
     )
+    setup_paper_trail(users(:one))
+  end
+
+  def teardown
+    teardown_paper_trail
   end
 
   test "should be valid" do
@@ -109,6 +114,44 @@ class UserTest < ActiveSupport::TestCase
   test "translate_target_language rejects a value outside the allowed list" do
     @user.translate_target_language = "Klingon"
     assert_not @user.valid?
+  end
+
+  test "accessible_projects covers owned and joined projects but nothing else" do
+    user = users(:one)
+    owned = projects(:one)
+    joined = projects(:two)
+    ProjectMembership.create!(project: joined, user: user, role: "member")
+
+    accessible = user.accessible_projects
+
+    assert_includes accessible, owned
+    assert_includes accessible, joined
+    assert_not_includes accessible, projects(:sorting_test_project)
+  end
+
+  test "manageable_projects covers owned and managed projects but not plain membership" do
+    user = users(:one)
+    joined = projects(:two)
+    membership = ProjectMembership.create!(project: joined, user: user, role: "member")
+
+    assert_includes user.manageable_projects, projects(:one)
+    assert_not_includes user.manageable_projects, joined
+
+    membership.update!(role: "manager")
+
+    assert_includes user.manageable_projects, joined
+  end
+
+  test "accessible_tasks follows the project rather than the task's own owner" do
+    user = users(:one)
+    shared_project = projects(:two)
+    shared_task = shared_project.create_task!(title: "Work item in a shared project", user: users(:two))
+
+    assert_not_includes user.accessible_tasks, shared_task
+
+    ProjectMembership.create!(project: shared_project, user: user, role: "member")
+
+    assert_includes user.accessible_tasks, shared_task
   end
 
   test "api_token_scope defaults to read and rejects anything outside the allowed list" do

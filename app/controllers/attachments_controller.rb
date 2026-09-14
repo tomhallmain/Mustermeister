@@ -29,7 +29,7 @@ class AttachmentsController < ApplicationController
   private
 
   def set_task
-    @task = current_user.tasks.not_archived.find(params[:task_id])
+    @task = current_user.accessible_tasks.not_archived.find(params[:task_id])
   end
 
   # Attachment#user_id is the *uploader*, not the task owner, so this scopes

@@ -16,8 +16,11 @@ class Task < ApplicationRecord
   }
 
   belongs_to :project
-  belongs_to :user
+  # Optional because a task in a shared project can sit unassigned - who wrote
+  # it is recorded separately in created_by.
+  belongs_to :user, optional: true
   belongs_to :archived_by_user, class_name: 'User', foreign_key: 'archived_by', optional: true
+  belongs_to :created_by_user, class_name: 'User', foreign_key: 'created_by', optional: true
   belongs_to :status
   belongs_to :task_category, optional: true
   belongs_to :recurring_task_template, optional: true
@@ -46,14 +49,17 @@ class Task < ApplicationRecord
   validates :estimated_minutes, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validate :archived_at_presence_if_archived
   validate :status_belongs_to_project
+  validate :project_accessible_to_task_owner
   validate :warn_if_similar_title_exists_in_project, on: %i[create update]
 
   before_validation :set_defaults
   before_validation :remap_status_to_new_project
+  before_validation :record_creator, on: :create
   before_destroy :ensure_no_active_dependencies
   after_save :update_project_activity
   after_save :handle_status_completion
   after_save :sync_task_result_with_completion
+  after_update_commit :notify_new_assignee
   # confirm_duplicate/skip_duplicate_check are meant to authorize exactly one
   # save - attr_accessors otherwise have no reason to clear themselves, so
   # without this a record saved twice in-process (a console session, a job,
@@ -328,6 +334,39 @@ class Task < ApplicationRecord
   def reset_duplicate_confirmation
     self.confirm_duplicate = false
     self.skip_duplicate_check = false
+  end
+
+  # Only when the work changed hands to somebody else - assigning a task to
+  # yourself needs no telling. The actor comes from PaperTrail's whodunnit,
+  # already the app-wide answer to "who is doing this" inside a model.
+  def notify_new_assignee
+    return unless saved_change_to_user_id?
+    return if user.nil?
+    return if user_id.to_s == PaperTrail.request.whodunnit.to_s
+
+    Notification.notify!(
+      user: user,
+      title: I18n.t('notifications.events.task_assigned.title', task: title),
+      body: I18n.t('notifications.events.task_assigned.body', task: title, project: project&.title),
+      kind: "task_assigned",
+      link_path: Rails.application.routes.url_helpers.task_path(self)
+    )
+  end
+
+  # user_id still means "creator" today, so it is the right source. Once
+  # assignment makes user_id mutable, this keeps the original author on record
+  # where user_id no longer can.
+  def record_creator
+    self.created_by ||= user_id
+  end
+
+  # task_params permits :project_id, so without this a task can be filed into
+  # any project id at all, including one its owner has no access to.
+  def project_accessible_to_task_owner
+    return if project.nil? || user.nil?
+    return if project.collaborator?(user)
+
+    errors.add(:project, :not_accessible)
   end
 
   def status_belongs_to_project

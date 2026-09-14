@@ -1,6 +1,6 @@
 class CommentsController < ApplicationController
   def create
-    @task = Task.find(params[:task_id])
+    @task = current_user.accessible_tasks.find(params[:task_id])
     @comment = @task.comments.build(comment_params)
     @comment.user = current_user
 

@@ -117,7 +117,7 @@ class TaskToolsService
   private
 
   def scoped_tasks(project_ids = nil)
-    scope = @user.tasks.not_archived.includes(:project, :status)
+    scope = @user.accessible_tasks.not_archived.includes(:project, :status)
     scope = scope.where.not(project_id: @excluded_project_ids) if @excluded_project_ids.present?
     return scope if project_ids.blank?
 
@@ -126,7 +126,7 @@ class TaskToolsService
 
   def normalized_project_ids(project_ids)
     ids = Array(project_ids).map(&:to_i).uniq
-    allowed = @user.projects.where(id: ids).pluck(:id)
+    allowed = @user.accessible_projects.where(id: ids).pluck(:id)
     @excluded_project_ids.present? ? allowed - @excluded_project_ids : allowed
   end
 
@@ -134,7 +134,7 @@ class TaskToolsService
     ids = Array(project_ids).map(&:to_i).uniq
     return [] if ids.empty?
 
-    @user.projects.where(id: ids).pluck(:id).map(&:to_i)
+    @user.accessible_projects.where(id: ids).pluck(:id).map(&:to_i)
   end
 
   def normalized_limit(limit)
@@ -144,7 +144,7 @@ class TaskToolsService
   def project_summary(args)
     tasks = scoped_tasks(args["project_ids"])
     grouped = tasks.group(:project_id).count
-    projects = @user.projects.where(id: grouped.keys).index_by(&:id)
+    projects = @user.accessible_projects.where(id: grouped.keys).index_by(&:id)
     grouped.map do |project_id, total|
       open = tasks.where(project_id: project_id, completed: false).count
       {

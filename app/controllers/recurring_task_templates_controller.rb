@@ -61,7 +61,7 @@ class RecurringTaskTemplatesController < ApplicationController
   end
 
   def load_form_collections
-    @projects = current_user.projects.order(:title)
+    @projects = current_user.manageable_projects.order(:title)
     @task_categories = TaskCategory.where(user_id: [nil, current_user.id]).order(:name)
   end
 

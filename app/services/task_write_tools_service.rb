@@ -52,7 +52,7 @@ class TaskWriteToolsService
   # reads: a project held back from the integration must not be modifiable
   # through it either.
   def writable_tasks
-    scope = @user.tasks.not_archived
+    scope = @user.accessible_tasks.not_archived
     return scope if @excluded_project_ids.blank?
 
     scope.where.not(project_id: @excluded_project_ids)
@@ -62,7 +62,7 @@ class TaskWriteToolsService
     ids = Array(project_ids).map(&:to_i).uniq
     return [] if ids.empty?
 
-    @user.projects.where(id: ids).pluck(:id).map(&:to_i)
+    @user.accessible_projects.where(id: ids).pluck(:id).map(&:to_i)
   end
 
   # A task outside the caller's scope is reported as simply not found, so the

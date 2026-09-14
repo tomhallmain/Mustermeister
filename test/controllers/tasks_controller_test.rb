@@ -61,7 +61,7 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     # header button specifically (identified by its text) rather than just
     # asserting on the href, which legitimately appears once per row too.
     assert_select "a[href=?]", new_project_task_path(newer_task.project, source_task_id: newer_task.id, show_completed: 'false'),
-      text: /Duplicate Last Task/
+      text: /#{Regexp.escape(I18n.t('views.tasks.index.duplicate_last_task'))}/
   end
 
   test "tasks index does not show a duplicate last task button when the user has no tasks" do
@@ -69,12 +69,15 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     # second time within one test flips Devise's response format to HTML
     # (see Users::SessionsController#set_request_format) and redirects instead
     # of the JSON response sign_in_as expects.
-    @user.tasks.update_all(user_id: users(:two).id)
+    #
+    # The button keys on created_by, so authorship is what has to be moved
+    # away - reassigning user_id only changes who the work is assigned to.
+    Task.where(created_by: @user.id).update_all(created_by: users(:two).id)
 
     get tasks_path(show_completed: false)
     assert_response :success
 
-    assert_select "a", text: /Duplicate Last Task/, count: 0
+    assert_select "a", text: /#{Regexp.escape(I18n.t('views.tasks.index.duplicate_last_task'))}/, count: 0
   end
 
   test "should redirect to tasks when trying to create task without project" do
@@ -898,6 +901,39 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Updated Task", @task.title
   end
 
+  test "archive index lists only the current user's archived tasks and stats" do
+    @task.update!(archived: true, archived_at: Time.current)
+    other_task = projects(:two).create_task!(title: "Someone else's archived task", user: users(:two))
+    other_task.update!(archived: true, archived_at: Time.current)
+
+    get archives_path
+
+    assert_response :success
+    assert_match @task.title, response.body
+    assert_no_match(/Someone else's archived task/, response.body)
+
+    # The first stat tile is total_archived: two tasks are archived app-wide,
+    # exactly one of them ours.
+    assert_equal "1", css_select("div.text-2xl.font-bold").first.text.strip
+  end
+
+  test "a project member can open a task in a project they do not own" do
+    shared_project = projects(:two)
+    shared_task = shared_project.create_task!(title: "Shared work item", user: users(:two))
+    ProjectMembership.create!(project: shared_project, user: @user, role: "member")
+
+    get task_path(shared_task)
+
+    assert_response :success
+  end
+
+  test "cannot file a task into another user's project" do
+    patch task_path(@task), params: { task: { project_id: projects(:two).id } }
+
+    assert_response :unprocessable_entity
+    assert_equal @project.id, @task.reload.project_id
+  end
+
   test "should set and clear scheduled_at from the task form" do
     patch task_path(@task), params: { task: { scheduled_at: "2027-03-01T09:00" } }
     assert_equal Time.zone.local(2027, 3, 1, 9), @task.reload.scheduled_at
@@ -928,7 +964,7 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
 
   test "switching a task's project via update remaps a stale status from the old project" do
     @task.update!(status: @project.status_by_key(:in_progress))
-    other_project = projects(:two)
+    other_project = projects(:reprioritize_test)
     other_project.create_default_statuses!
     stale_status_id = @task.status_id # still belongs to @project, the old one
 

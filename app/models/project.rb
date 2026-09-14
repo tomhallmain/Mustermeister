@@ -13,6 +13,8 @@ class Project < ApplicationRecord
   has_many :comments, dependent: :destroy
   has_many :statuses, dependent: :destroy
   has_many :recurring_task_templates, dependent: :destroy
+  has_many :project_memberships, dependent: :destroy
+  has_many :members, through: :project_memberships, source: :user
   belongs_to :user
   belongs_to :default_category, class_name: 'TaskCategory', optional: true
 
@@ -30,6 +32,29 @@ class Project < ApplicationRecord
   validates :default_priority, inclusion: { in: %w[low medium high leisure] }, allow_nil: true
   validates :color, inclusion: { in: %w[red orange yellow green blue purple pink gray], message: "must be a valid color" }, allow_nil: true, allow_blank: true
   validate :warn_if_similar_title_exists, on: %i[create update]
+
+  # Access predicates for a shared project. The owner is never a membership
+  # row - their access is derived from user_id - so both checks start there.
+  def collaborator?(user)
+    user_id == user.id || project_memberships.exists?(user: user)
+  end
+
+  def manager?(user)
+    user_id == user.id || project_memberships.exists?(user: user, role: "manager")
+  end
+
+  # Candidates for the "add a member" picker: everyone who is not already in
+  # the project. The owner is excluded because their access comes from
+  # user_id and a membership row for them is rejected outright.
+  # Everyone a task in this project may be assigned to: the owner plus every
+  # member, whatever their role.
+  def assignable_users
+    User.where(id: project_memberships.pluck(:user_id) << user_id).order(:name)
+  end
+
+  def addable_members
+    User.where.not(id: project_memberships.pluck(:user_id) << user_id).order(:name)
+  end
 
   before_save :update_last_activity
   before_save :normalize_category

@@ -65,12 +65,14 @@ class StatusesController < ApplicationController
     project.update_column(:last_activity_at, Time.current)
   end
 
+  # Statuses are project configuration, so both finders are scoped to projects
+  # the user manages rather than merely collaborates on.
   def set_project
-    @project = current_user.projects.find(params[:project_id])
+    @project = current_user.manageable_projects.find(params[:project_id])
   end
 
   def set_status
-    @status = Status.joins(:project).where(projects: { user_id: current_user.id }).find(params[:id])
+    @status = Status.where(project: current_user.manageable_projects).find(params[:id])
   rescue ActiveRecord::RecordNotFound
     redirect_to root_path, alert: t('views.projects.edit.statuses.not_found')
   end

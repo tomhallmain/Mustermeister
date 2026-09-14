@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_14_150000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_14_180000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -57,6 +57,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_150000) do
     t.datetime "updated_at", null: false
     t.index ["user_id", "read_at"], name: "index_notifications_on_user_id_and_read_at"
     t.index ["user_id"], name: "index_notifications_on_user_id"
+  end
+
+  create_table "project_memberships", force: :cascade do |t|
+    t.bigint "project_id", null: false
+    t.bigint "user_id", null: false
+    t.string "role", default: "member", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["project_id", "user_id"], name: "index_project_memberships_on_project_id_and_user_id", unique: true
+    t.index ["project_id"], name: "index_project_memberships_on_project_id"
+    t.index ["user_id"], name: "index_project_memberships_on_user_id"
   end
 
   create_table "projects", force: :cascade do |t|
@@ -168,7 +179,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_150000) do
     t.datetime "due_date"
     t.string "priority", default: "medium"
     t.bigint "project_id", null: false
-    t.bigint "user_id", null: false
+    t.bigint "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "completed_at"
@@ -181,9 +192,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_150000) do
     t.bigint "recurring_task_template_id"
     t.integer "estimated_minutes"
     t.datetime "scheduled_at"
+    t.integer "created_by"
     t.index ["archived"], name: "index_tasks_on_archived"
     t.index ["completed", "due_date"], name: "index_tasks_on_completed_and_due_date"
     t.index ["completed_by"], name: "index_tasks_on_completed_by"
+    t.index ["created_by"], name: "index_tasks_on_created_by"
     t.index ["project_id", "completed"], name: "index_tasks_on_project_id_and_completed"
     t.index ["project_id"], name: "index_tasks_on_project_id"
     t.index ["recurring_task_template_id"], name: "index_tasks_on_recurring_task_template_id"
@@ -235,6 +248,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_150000) do
   add_foreign_key "comments", "tasks"
   add_foreign_key "comments", "users"
   add_foreign_key "notifications", "users"
+  add_foreign_key "project_memberships", "projects"
+  add_foreign_key "project_memberships", "users"
   add_foreign_key "projects", "task_categories", column: "default_category_id"
   add_foreign_key "projects", "users"
   add_foreign_key "recurring_task_templates", "projects"
@@ -252,4 +267,5 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_150000) do
   add_foreign_key "tasks", "users"
   add_foreign_key "tasks", "users", column: "archived_by"
   add_foreign_key "tasks", "users", column: "completed_by", validate: false
+  add_foreign_key "tasks", "users", column: "created_by"
 end

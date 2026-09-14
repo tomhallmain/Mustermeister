@@ -11,6 +11,81 @@ class UserDataServiceTest < ActiveSupport::TestCase
     teardown_paper_trail
   end
 
+  test "an export made before assignment existed still imports as the user's own" do
+    data = {
+      "export_info" => { "version" => "1.0" },
+      "user" => { "id" => @user.id },
+      "tags" => [],
+      "projects" => [
+        {
+          "name" => @project.title,
+          "description" => @project.description,
+          "priority" => @project.default_priority,
+          "created_at" => @project.created_at,
+          "updated_at" => @project.updated_at,
+          "statuses" => [],
+          "comments" => [],
+          "tasks" => [{ "title" => "Legacy payload task", "priority" => "medium", "comments" => [] }]
+        }
+      ]
+    }
+
+    result = UserDataService.import_data(@user, json_file(data), password: nil)
+
+    assert result[:success], "Expected import to succeed, got error: #{result[:error]}"
+    assert_equal @user, @project.tasks.find_by(title: "Legacy payload task").user
+  end
+
+  test "an explicitly unassigned task imports as unassigned" do
+    data = {
+      "export_info" => { "version" => "1.0" },
+      "user" => { "id" => @user.id },
+      "tags" => [],
+      "projects" => [
+        {
+          "name" => @project.title,
+          "description" => @project.description,
+          "priority" => @project.default_priority,
+          "created_at" => @project.created_at,
+          "updated_at" => @project.updated_at,
+          "statuses" => [],
+          "comments" => [],
+          "tasks" => [{ "title" => "Nobody claimed this one", "priority" => "medium", "assigned_to" => nil, "comments" => [] }]
+        }
+      ]
+    }
+
+    result = UserDataService.import_data(@user, json_file(data), password: nil)
+
+    assert result[:success], "Expected import to succeed, got error: #{result[:error]}"
+    assert_nil @project.tasks.find_by(title: "Nobody claimed this one").user
+  end
+
+  test "export lists shared memberships as metadata without copying the project" do
+    shared = projects(:two)
+    ProjectMembership.create!(project: shared, user: @user, role: "manager")
+
+    data = JSON.parse(UserDataService.export_data(@user, format: "json")[:data])
+
+    assert_equal [shared.title], data["memberships"].map { |m| m["project"] }
+    assert_equal "manager", data["memberships"].first["role"]
+    assert_not_includes data["projects"].map { |p| p["name"] }, shared.title
+  end
+
+  test "task assignment round-trips only when the task was the exporter's own" do
+    ProjectMembership.create!(project: @project, user: users(:two), role: "member")
+    @project.create_task!(title: "Mine to keep", user: @user)
+    @project.create_task!(title: "Somebody else is on this", user: users(:two))
+    @project.create_task!(title: "Nobody is on this", user: nil)
+
+    data = JSON.parse(UserDataService.export_data(@user, format: "json")[:data])
+    exported = data["projects"].find { |p| p["name"] == @project.title }["tasks"].index_by { |t| t["title"] }
+
+    assert_equal @user.email, exported["Mine to keep"]["assigned_to"]
+    assert_equal users(:two).email, exported["Somebody else is on this"]["assigned_to"]
+    assert_nil exported["Nobody is on this"]["assigned_to"]
+  end
+
   test "importing a task with a title similar to an existing sibling task does not fail" do
     # Mirrors what a recurring task template generates: the same base title
     # with only a date label changing between instances - RecurringTaskTemplate

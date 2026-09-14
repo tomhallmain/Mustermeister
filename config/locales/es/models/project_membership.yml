@@ -1,0 +1,22 @@
+es:
+  activerecord:
+    models:
+      project_membership:
+        one: "Membresía de proyecto"
+        other: "Membresías de proyecto"
+    attributes:
+      project_membership:
+        project: "Proyecto"
+        user: "Miembro"
+        user_id: "Miembro"
+        role: "Rol"
+    errors:
+      models:
+        project_membership:
+          attributes:
+            user:
+              is_project_owner: "ya es propietario de este proyecto y no necesita una membresía"
+            user_id:
+              taken: "ya es miembro de este proyecto"
+            role:
+              inclusion: "debe ser miembro o gestor"

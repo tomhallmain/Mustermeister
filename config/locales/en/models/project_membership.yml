@@ -1,0 +1,22 @@
+en:
+  activerecord:
+    models:
+      project_membership:
+        one: "Project Membership"
+        other: "Project Memberships"
+    attributes:
+      project_membership:
+        project: "Project"
+        user: "Member"
+        user_id: "Member"
+        role: "Role"
+    errors:
+      models:
+        project_membership:
+          attributes:
+            user:
+              is_project_owner: "already owns this project and does not need a membership"
+            user_id:
+              taken: "is already a member of this project"
+            role:
+              inclusion: "must be either member or manager"

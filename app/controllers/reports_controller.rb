@@ -13,7 +13,7 @@ class ReportsController < ApplicationController
   SORT_DIRECTIONS = %w[asc desc].freeze
 
   def index
-    @projects = current_user.projects.order(:title)
+    @projects = current_user.accessible_projects.order(:title)
     @available_stats = AVAILABLE_STATS
     @project_categories = Project.category_suggestions_for(current_user)
     # Pre-fill from session when returning from analysis (or from params for backwards compatibility)
@@ -43,7 +43,7 @@ class ReportsController < ApplicationController
     sort_direction = SORT_DIRECTIONS.include?(params[:sort_direction]) ? params[:sort_direction] : "desc"
     @scope_label = params[:scope_label].presence || report_config_scope_label
 
-    @projects_scope = current_user.projects
+    @projects_scope = current_user.accessible_projects
     @result = ReportStatsService.call(@projects_scope, project_ids: project_ids.presence)
     @result.projects_breakdown.sort! do |a, b|
       ka = sort_key_for(a, sort_by)

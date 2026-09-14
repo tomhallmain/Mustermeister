@@ -102,5 +102,7 @@ fr:
         copy_suffix: "(Copie)"
         estimated_minutes: "Durée estimée (minutes)"
         estimated_minutes_placeholder: "p. ex. 90"
+        assignee: "Assigné à"
+        unassigned: "Non assigné"
         scheduled_at: "Planifié pour"
         scheduled_at_hint: "Quand vous prévoyez d'y travailler, par opposition à son échéance. Une intégration de planification externe peut également le définir."

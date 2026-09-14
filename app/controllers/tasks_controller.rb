@@ -45,7 +45,7 @@ class TasksController < ApplicationController
     current_preference = params[:show_completed] == 'true'
 
     # Now load the tasks based on the current preference
-    @tasks = current_user.tasks.not_archived.includes(:project, :tags, :task_category, :comments)
+    @tasks = current_user.accessible_tasks.not_archived.includes(:project, :tags, :task_category, :comments)
     @tasks = @tasks.not_completed unless current_preference
 
     # Remember sort_by/search whenever explicitly provided, and fall back to the
@@ -83,7 +83,14 @@ class TasksController < ApplicationController
 
     @tasks = @tasks.page(params[:page]).per(TASKS_PER_PAGE)
 
-    @last_created_task = current_user.tasks.order(created_at: :desc).first
+    # The most recent task this user wrote and can still see. Keyed on
+    # created_by, not user_id: since assignment landed, user_id names whoever
+    # the task was handed to, and project access alone would offer up a
+    # colleague's task under a "duplicate *your* last task" button.
+    @last_created_task = current_user.accessible_tasks
+                                     .where(created_by: current_user.id)
+                                     .order(created_at: :desc)
+                                     .first
   end
 
   def show
@@ -243,14 +250,15 @@ class TasksController < ApplicationController
   end
 
   def archive_index
-    @archived_tasks = Task.archived.includes(:user, :project)
+    visible_tasks = current_user.accessible_tasks
+    @archived_tasks = visible_tasks.archived.includes(:user, :project)
                          .order(archived_at: :desc)
                          .page(params[:page])
-    
+
     @archive_stats = {
-      total_archived: Task.archived.count,
-      archived_this_month: Task.archived.where('archived_at > ?', 1.month.ago).count,
-      total_completed: Task.completed.count
+      total_archived: visible_tasks.archived.count,
+      archived_this_month: visible_tasks.archived.where('archived_at > ?', 1.month.ago).count,
+      total_completed: visible_tasks.completed.count
     }
   end
 
@@ -323,7 +331,7 @@ class TasksController < ApplicationController
   end
 
   def reschedule_index
-    @tasks = current_user.tasks
+    @tasks = current_user.accessible_tasks
                         .not_archived
                         .includes(:project, :tags)
                         .order(due_date: :asc)
@@ -372,7 +380,7 @@ class TasksController < ApplicationController
   end
 
   def kanban
-    @projects = current_user.projects.order(:title)
+    @projects = current_user.accessible_projects.order(:title)
     @statuses = Status.default_statuses
     @current_project = params[:project_id].present? ? current_user.projects.find(params[:project_id]) : nil
     # Only when a single project is selected AND it has a status beyond the
@@ -406,7 +414,7 @@ class TasksController < ApplicationController
 
     AppDebugLogger.debug { "Kanban tasks request - Project: #{@current_project&.id}, Sort: #{@sort_by}, Page: #{@page}, Show All Completed: #{@show_all_completed}, Priority: #{@priority_filter}, Updated Within Days: #{@updated_within_days}, Search: #{@search}" }
 
-    tasks = current_user.tasks
+    tasks = current_user.accessible_tasks
       .includes(:project, :status, :user, :task_category)
       .where(archived: false)
 
@@ -601,7 +609,7 @@ class TasksController < ApplicationController
   end
 
   def set_task
-    @task = current_user.tasks.not_archived.find(params[:id])
+    @task = current_user.accessible_tasks.not_archived.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     if params[:kanban]
       render json: { error: 'Task not found or already archived.' }, status: :not_found
@@ -612,7 +620,7 @@ class TasksController < ApplicationController
   end
 
   def load_projects_and_tags
-    @projects = current_user.projects.order(:title)
+    @projects = current_user.accessible_projects.order(:title)
     @tags = Tag.all
     TaskCategory.ensure_default_categories!
     @task_categories = TaskCategory.default_categories.order(:name) + current_user.task_categories.order(:name)
@@ -623,7 +631,7 @@ class TasksController < ApplicationController
   # copy always starts fresh, and only ever copies from a task the current
   # user owns.
   def copy_fields_from_source_task!(task)
-    source_task = current_user.tasks.find_by(id: params[:source_task_id])
+    source_task = current_user.accessible_tasks.find_by(id: params[:source_task_id])
     return unless source_task
 
     task.assign_attributes(
@@ -640,7 +648,7 @@ class TasksController < ApplicationController
   def task_params
     params.require(:task).permit(:title, :description, :completed, :due_date,
                                :priority, :project_id, :status_id, :status_name, :task_category_id,
-                               :estimated_minutes, :scheduled_at, :confirm_duplicate, tag_ids: [])
+                               :estimated_minutes, :scheduled_at, :user_id, :confirm_duplicate, tag_ids: [])
   end
 
   def task_result_params

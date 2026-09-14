@@ -63,7 +63,7 @@ class TaskTest < ActiveSupport::TestCase
   test "switching project remaps a default-named status to the equivalent status in the new project" do
     @task.status = statuses(:project_one_in_progress)
     @task.save!
-    other_project = projects(:two)
+    other_project = projects(:reprioritize_test)
 
     @task.project = other_project
     assert @task.valid?
@@ -74,7 +74,7 @@ class TaskTest < ActiveSupport::TestCase
   test "switching project does not remap when no same-named status exists in the new project" do
     @task.status = Status.create!(name: "Custom Status", project: @project)
     @task.save!
-    other_project = projects(:two)
+    other_project = projects(:reprioritize_test)
 
     @task.project = other_project
     assert_not @task.valid?
@@ -398,6 +398,43 @@ class TaskTest < ActiveSupport::TestCase
     assert_includes results, tasks(:search_test_two)
     assert_includes results, tasks(:search_test_three)
     assert_includes results, tasks(:search_test_four)
+  end
+
+  test "a task may be left unassigned" do
+    @task.user = nil
+
+    assert @task.valid?
+  end
+
+  test "reassigning a task to a member leaves created_by untouched" do
+    ProjectMembership.create!(project: @project, user: users(:two), role: "member")
+    task = @project.create_task!(title: "Handover candidate", user: @user)
+
+    task.update!(user: users(:two))
+
+    assert_equal users(:two).id, task.reload.user_id
+    assert_equal @user.id, task.created_by
+  end
+
+  test "created_by records who created the task" do
+    task = @project.create_task!(title: "Attribution check", user: @user)
+
+    assert_equal @user.id, task.created_by
+    assert_equal @user, task.created_by_user
+  end
+
+  test "project must be one the task's owner can access" do
+    assert @task.valid?
+
+    @task.project = projects(:two)
+
+    assert_not @task.valid?
+    assert_includes @task.errors[:project],
+                    I18n.t('activerecord.errors.models.task.attributes.project.not_accessible')
+
+    ProjectMembership.create!(project: projects(:two), user: @user, role: "member")
+
+    assert @task.valid?, "a member of the project should be able to file a task into it"
   end
 
   test "estimated_minutes is optional but must be a positive integer when given" do

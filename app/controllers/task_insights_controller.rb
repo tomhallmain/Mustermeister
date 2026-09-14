@@ -77,7 +77,7 @@ class TaskInsightsController < ApplicationController
   def prepare_form_defaults
     @available_ai_locales = I18n.available_locales.map(&:to_s)
     @available_ai_models = OllamaLlmService.available_models
-    @available_projects = current_user.projects.order(:title)
+    @available_projects = current_user.accessible_projects.order(:title)
 
     requested_ai_locale = params[:ai_locale].to_s
     @ai_locale = if @available_ai_locales.include?(requested_ai_locale)
@@ -109,7 +109,7 @@ class TaskInsightsController < ApplicationController
   def extract_excluded_project_ids
     raw = params[:excluded_project_ids]
     ids = raw.is_a?(Array) ? raw : current_user.task_insights_excluded_project_ids
-    allowed_ids = current_user.projects.where(id: ids).pluck(:id)
+    allowed_ids = current_user.accessible_projects.where(id: ids).pluck(:id)
     allowed_ids.map(&:to_i)
   end
 

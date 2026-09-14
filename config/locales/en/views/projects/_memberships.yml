@@ -1,0 +1,21 @@
+en:
+  views:
+    projects:
+      edit:
+        members:
+          title: "Project Members"
+          help: "People added here can work on every task in this project. Managers can additionally change project settings, statuses and this member list."
+          owner_badge: "Owner"
+          none_yet: "Nobody has been added to this project yet."
+          add_label: "Add someone"
+          role_label: "Role"
+          add_button: "Add Member"
+          save_role: "Save"
+          nobody_to_add: "Everyone with an account is already in this project."
+          remove_confirm: "Remove %{name} from this project? They lose access to all of its tasks immediately."
+          added: "Member was successfully added."
+          removed: "Member was successfully removed."
+          role_updated: "Role was successfully updated."
+          roles:
+            member: "Member"
+            manager: "Manager"
