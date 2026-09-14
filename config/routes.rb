@@ -15,6 +15,7 @@ Rails.application.routes.draw do
 
   namespace :api do
     get "tools/:tool_name", to: "tools#show", as: :tool
+    post "tools/:tool_name", to: "tools#create"
   end
 
   # Configure Devise routes
@@ -106,6 +107,7 @@ Rails.application.routes.draw do
   post 'profile/export', to: 'users#export_data'
   post 'profile/import', to: 'users#import_data', as: :import_data
   post 'profile/api_token', to: 'users#regenerate_api_token', as: :regenerate_api_token
+  post 'profile/api_token_scope', to: 'users#update_api_token_scope', as: :update_api_token_scope
 
   # CSP violation reporting endpoint
   post '/csp-violation-report', to: 'csp_violation_reports#create'

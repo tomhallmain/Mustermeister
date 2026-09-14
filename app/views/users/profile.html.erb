@@ -139,11 +139,14 @@
         <div class="surface p-4 rounded-lg" style="background-color: var(--color-surface-elevated);">
           <p class="text-gray-600 mb-4"><%= t('views.users.profile.api_access_intro') %></p>
 
-          <% if current_user.api_token.present? %>
+          <% if flash[:api_token].present? %>
             <div class="mb-4">
               <label class="block text-sm font-medium text-gray-700 mb-1"><%= t('views.users.profile.api_token_label') %></label>
-              <code class="block px-3 py-2 bg-gray-100 rounded-md text-sm font-mono break-all"><%= current_user.api_token %></code>
+              <code class="block px-3 py-2 bg-gray-100 rounded-md text-sm font-mono break-all"><%= flash[:api_token] %></code>
+              <p class="mt-1 text-sm text-amber-700"><%= t('views.users.profile.api_token_shown_once') %></p>
             </div>
+          <% elsif current_user.api_token? %>
+            <p class="text-sm text-gray-500 mb-4"><%= t('views.users.profile.api_token_set') %></p>
           <% else %>
             <p class="text-sm text-gray-500 mb-4"><%= t('views.users.profile.api_token_none') %></p>
           <% end %>
@@ -152,6 +155,24 @@
                 method: :post,
                 class: "inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500",
                 data: { confirm: t('views.users.profile.regenerate_api_token_confirm') } %>
+
+          <% if current_user.api_token? %>
+            <div class="mt-4 pt-4 border-t border-gray-200">
+              <label class="block text-sm font-medium text-gray-700 mb-1"><%= t('views.users.profile.api_token_scope_label') %></label>
+              <p class="text-sm text-gray-500 mb-2"><%= t('views.users.profile.api_token_scope_help') %></p>
+              <%= form_with url: update_api_token_scope_path, method: :post, class: "flex flex-wrap items-center gap-2" do %>
+                <%= select_tag :api_token_scope,
+                      options_for_select(
+                        User::API_TOKEN_SCOPES.map { |scope| [t("views.users.profile.api_token_scopes.#{scope}"), scope] },
+                        current_user.api_token_scope
+                      ),
+                      class: "rounded-md border-gray-300 shadow-sm text-sm focus:border-purple-500 focus:ring-purple-500" %>
+                <%= submit_tag t('views.users.profile.api_token_scope_submit'),
+                      class: "inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500",
+                      data: { confirm: t('views.users.profile.api_token_scope_confirm') } %>
+              <% end %>
+            </div>
+          <% end %>
         </div>
       </div>
 

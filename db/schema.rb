@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_14_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_14_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -180,6 +180,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120000) do
     t.bigint "task_category_id"
     t.bigint "recurring_task_template_id"
     t.integer "estimated_minutes"
+    t.datetime "scheduled_at"
     t.index ["archived"], name: "index_tasks_on_archived"
     t.index ["completed", "due_date"], name: "index_tasks_on_completed_and_due_date"
     t.index ["completed_by"], name: "index_tasks_on_completed_by"
@@ -206,8 +207,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120000) do
     t.string "ai_summary_model"
     t.integer "task_insights_excluded_project_ids", default: [], null: false, array: true
     t.string "translate_target_language"
-    t.string "api_token"
-    t.index ["api_token"], name: "index_users_on_api_token", unique: true
+    t.string "api_token_digest"
+    t.string "api_token_scope", default: "read", null: false
+    t.index ["api_token_digest"], name: "index_users_on_api_token_digest", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end

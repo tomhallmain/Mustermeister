@@ -159,6 +159,15 @@
                 </p>
               </div>
             <% end %>
+
+            <% if @task.scheduled_at %>
+              <div>
+                <h3 class="text-sm font-medium text-gray-500"><%= t('views.tasks.show.scheduled_at') %></h3>
+                <p class="mt-1 text-gray-900">
+                  <%= @task.scheduled_at.strftime("%B %d, %Y %H:%M") %>
+                </p>
+              </div>
+            <% end %>
           </div>
 
           <div>

@@ -110,4 +110,43 @@ class UserTest < ActiveSupport::TestCase
     @user.translate_target_language = "Klingon"
     assert_not @user.valid?
   end
+
+  test "api_token_scope defaults to read and rejects anything outside the allowed list" do
+    assert_equal "read", User.new.api_token_scope
+
+    @user.api_token_scope = "read_write"
+    assert @user.valid?
+
+    @user.api_token_scope = "admin"
+    assert_not @user.valid?
+  end
+
+  test "regenerating an API token stores only its digest and returns the raw token once" do
+    user = users(:one)
+    raw_token = user.regenerate_api_token!
+
+    assert raw_token.present?
+    assert_equal User.digest_api_token(raw_token), user.reload.api_token_digest
+    assert_not_equal raw_token, user.api_token_digest
+  end
+
+  test "authenticate_api_token matches the raw token and nothing else" do
+    user = users(:one)
+    raw_token = user.regenerate_api_token!
+
+    assert_equal user, User.authenticate_api_token(raw_token)
+    assert_nil User.authenticate_api_token("#{raw_token}x")
+    assert_nil User.authenticate_api_token(user.api_token_digest)
+    assert_nil User.authenticate_api_token("")
+    assert_nil User.authenticate_api_token(nil)
+  end
+
+  test "regenerating an API token invalidates the previous one" do
+    user = users(:one)
+    old_token = user.regenerate_api_token!
+    new_token = user.regenerate_api_token!
+
+    assert_nil User.authenticate_api_token(old_token)
+    assert_equal user, User.authenticate_api_token(new_token)
+  end
 end

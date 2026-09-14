@@ -16,6 +16,7 @@ en:
         category: "Category"
         due_date: "Due Date"
         estimated_minutes: "Estimated Time"
+        scheduled_at: "Scheduled For"
         estimated_minutes_value:
           one: "%{count} minute"
           other: "%{count} minutes"

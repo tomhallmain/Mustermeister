@@ -70,16 +70,24 @@ class Rack::Attack
     end
   end
 
-  # Throttle API requests by bearer token. The API is stateless and token-authed
-  # (Api::BaseController deliberately bypasses Devise/Warden), so a per-IP rule
-  # alone cannot separate one client polling legitimately from a runaway one
-  # when both arrive from the same server IP. The token is hashed so the raw
-  # credential never becomes a cache key.
-  throttle('api/token', limit: 300, period: 5.minutes) do |req|
-    if req.path.start_with?('/api/')
-      token = req.get_header('HTTP_AUTHORIZATION').to_s.delete_prefix('Bearer ')
-      Digest::SHA256.hexdigest(token) if token.present?
-    end
+  # The API is stateless and token-authed (Api::BaseController deliberately
+  # bypasses Devise/Warden), so a per-IP rule alone cannot separate one client
+  # polling legitimately from a runaway one when both arrive from the same
+  # server IP. Hashed so the raw credential never becomes a cache key.
+  api_token_key = lambda do |req|
+    return nil unless req.path.start_with?('/api/')
+
+    token = req.get_header('HTTP_AUTHORIZATION').to_s.delete_prefix('Bearer ')
+    Digest::SHA256.hexdigest(token) if token.present?
+  end
+
+  throttle('api/token', limit: 300, period: 5.minutes) { |req| api_token_key.call(req) }
+
+  # Write-back is far lower-volume than read polling and far more damaging
+  # when a client misbehaves, so it carries its own tighter budget on top of
+  # the shared read limit above.
+  throttle('api/token/write', limit: 60, period: 5.minutes) do |req|
+    api_token_key.call(req) if req.post?
   end
 
   # Block suspicious requests

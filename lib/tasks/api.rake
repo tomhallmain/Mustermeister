@@ -7,7 +7,9 @@ namespace :api do
       next
     end
 
-    user.update!(api_token: SecureRandom.hex(32))
-    puts "API token for #{user.email}: #{user.api_token}"
+    raw_token = user.regenerate_api_token!
+    puts "API token for #{user.email}: #{raw_token}"
+    puts "Only the digest is stored, so this token cannot be shown again."
+    puts "Scope: #{user.api_token_scope} (write-back needs 'read_write', set on the profile page)"
   end
 end

@@ -16,6 +16,7 @@ fr:
         category: "Catégorie"
         due_date: "Date d'échéance"
         estimated_minutes: "Durée estimée"
+        scheduled_at: "Planifié pour"
         estimated_minutes_value:
           one: "%{count} minute"
           other: "%{count} minutes"

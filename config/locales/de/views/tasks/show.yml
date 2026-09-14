@@ -16,6 +16,7 @@ de:
         category: "Kategorie"
         due_date: "Fälligkeitsdatum"
         estimated_minutes: "Geschätzte Dauer"
+        scheduled_at: "Eingeplant für"
         estimated_minutes_value:
           one: "%{count} Minute"
           other: "%{count} Minuten"

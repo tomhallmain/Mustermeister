@@ -93,6 +93,27 @@ class TaskToolsService
     end
   end
 
+  # Class-level so the write-back tools can render the same task shape without
+  # instantiating a query service; it reads nothing but the task itself.
+  def self.format_task(task)
+    data = {
+      id: task.id,
+      title: task.title,
+      description: task.description&.truncate(DESCRIPTION_TRUNCATE_LENGTH),
+      completed: task.completed,
+      project: task.project&.title,
+      status: task.status&.name,
+      priority: task.priority,
+      updated_date: task.updated_at&.to_date&.iso8601
+    }
+    due = task.due_date&.to_date&.iso8601
+    data[:due_date] = due if due.present?
+    data[:estimated_minutes] = task.estimated_minutes if task.estimated_minutes.present?
+    scheduled = task.scheduled_at&.iso8601
+    data[:scheduled_at] = scheduled if scheduled.present?
+    data
+  end
+
   private
 
   def scoped_tasks(project_ids = nil)
@@ -118,23 +139,6 @@ class TaskToolsService
 
   def normalized_limit(limit)
     [[limit.to_i, 1].max, MAX_LIST_ITEMS].min
-  end
-
-  def format_task(task)
-    data = {
-      id: task.id,
-      title: task.title,
-      description: task.description&.truncate(DESCRIPTION_TRUNCATE_LENGTH),
-      completed: task.completed,
-      project: task.project&.title,
-      status: task.status&.name,
-      priority: task.priority,
-      updated_date: task.updated_at&.to_date&.iso8601
-    }
-    due = task.due_date&.to_date&.iso8601
-    data[:due_date] = due if due.present?
-    data[:estimated_minutes] = task.estimated_minutes if task.estimated_minutes.present?
-    data
   end
 
   def project_summary(args)
@@ -270,7 +274,7 @@ class TaskToolsService
 
   def list_result(scope, limit:)
     total_matching_count = scope.except(:limit, :offset).count
-    items = scope.limit(limit).map { |task| format_task(task) }
+    items = scope.limit(limit).map { |task| self.class.format_task(task) }
     {
       items: items,
       returned_count: items.size,
@@ -280,7 +284,7 @@ class TaskToolsService
   end
 
   def grouped_list_result(scope, limit:)
-    limited_items = scope.limit(limit).map { |task| format_task(task) }
+    limited_items = scope.limit(limit).map { |task| self.class.format_task(task) }
     grouped = {}
     limited_items.each do |task|
       priority = task[:priority].presence || "unknown"

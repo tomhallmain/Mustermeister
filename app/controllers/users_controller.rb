@@ -59,8 +59,18 @@ class UsersController < ApplicationController
   end
 
   def regenerate_api_token
-    current_user.update!(api_token: SecureRandom.hex(32))
+    # Only the digest is stored, so this redirect is the one and only time the
+    # token itself can be shown. The profile view reads it back out of flash.
+    flash[:api_token] = current_user.regenerate_api_token!
     redirect_to profile_path, notice: t('views.users.profile.api_token_regenerated')
+  end
+
+  def update_api_token_scope
+    if current_user.update(api_token_scope: params[:api_token_scope])
+      redirect_to profile_path, notice: t('views.users.profile.api_token_scope_updated')
+    else
+      redirect_to profile_path, alert: t('views.users.profile.api_token_scope_invalid')
+    end
   end
 
   private
