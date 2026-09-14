@@ -4,6 +4,8 @@ de:
       kanban:
         title: "Meine Aufgabenübersicht"
         all_projects: "Alle Projekte"
+        report_groups: "Berichtsgruppen"
+        projects: "Projekte"
         all_priorities: "Alle Prioritäten"
         sort:
           last_updated: "Aktualisiert am"

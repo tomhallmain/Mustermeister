@@ -4,6 +4,8 @@ fr:
       kanban:
         title: "Mon tableau des tâches"
         all_projects: "Tous les projets"
+        report_groups: "Groupes de rapport"
+        projects: "Projets"
         all_priorities: "Toutes les priorités"
         sort:
           last_updated: "Mis à jour le"

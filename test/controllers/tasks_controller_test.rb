@@ -348,6 +348,36 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_select "code", text: "inline comment code"
   end
 
+  test "the board filter offers report groups alongside individual projects" do
+    @project.update!(category: "Client work")
+
+    get kanban_path
+
+    assert_response :success
+    assert_select "#project-filter optgroup[label=?] option[value=?]",
+                  I18n.t('views.tasks.kanban.report_groups'), "group:Client work"
+    assert_select "#project-filter optgroup[label=?] option[value=?]",
+                  I18n.t('views.tasks.kanban.projects'), @project.id.to_s
+  end
+
+  test "kanban_tasks filtered by a report group returns every project in it" do
+    @project.update!(category: "Client work")
+    sibling = Project.create!(title: "Second client project", user: @user, category: "Client work", confirm_duplicate: true)
+    in_group = sibling.create_task!(title: "Work for the same client", user: @user)
+    outside = Project.create!(title: "Unrelated internal project", user: @user, confirm_duplicate: true)
+    outside.create_task!(title: "Nothing to do with clients", user: @user)
+
+    get kanban_tasks_path(project_id: "group:Client work"), as: :json
+    assert_response :success
+
+    # The default board groups its payload by status key, so the titles are
+    # spread across those buckets rather than sitting in one flat list.
+    titles = JSON.parse(response.body)["tasks"].values.flatten.map { |t| t["title"] }
+    assert_includes titles, in_group.title
+    assert_includes titles, tasks(:one).title
+    assert_not_includes titles, "Nothing to do with clients"
+  end
+
   test "kanban_tasks should include project color in JSON response" do
     # Ensure project has a color set
     @project.update!(color: 'green')

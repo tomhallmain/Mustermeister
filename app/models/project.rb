@@ -43,15 +43,15 @@ class Project < ApplicationRecord
     user_id == user.id || project_memberships.exists?(user: user, role: "manager")
   end
 
-  # Candidates for the "add a member" picker: everyone who is not already in
-  # the project. The owner is excluded because their access comes from
-  # user_id and a membership row for them is rejected outright.
   # Everyone a task in this project may be assigned to: the owner plus every
   # member, whatever their role.
   def assignable_users
     User.where(id: project_memberships.pluck(:user_id) << user_id).order(:name)
   end
 
+  # Candidates for the "add a member" picker: everyone who is not already in
+  # the project. The owner is excluded because their access comes from
+  # user_id and a membership row for them is rejected outright.
   def addable_members
     User.where.not(id: project_memberships.pluck(:user_id) << user_id).order(:name)
   end
@@ -253,7 +253,7 @@ class Project < ApplicationRecord
   # existing category (e.g. for report grouping) instead of typing a
   # near-duplicate.
   def self.category_suggestions_for(user)
-    user.projects.where.not(category: [nil, ""]).distinct.order(:category).pluck(:category)
+    user.accessible_projects.where.not(category: [nil, ""]).distinct.order(:category).pluck(:category)
   end
 
   private

@@ -19,8 +19,22 @@
     <div class="flex items-center space-x-4">
       <select id="project-filter" class="rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200/50">
         <option value=""><%= t('views.tasks.kanban.all_projects') %></option>
-        <% @projects.each do |project| %>
-          <option value="<%= project.id %>" <%= 'selected' if @current_project&.id == project.id %>><%= project.title %></option>
+        <%# Report groups live in this same dropdown rather than a second one -
+            picking a group filters to every project carrying that category. %>
+        <% project_options = capture do %>
+          <% @projects.each do |project| %>
+            <option value="<%= project.id %>" <%= 'selected' if @current_project&.id == project.id %>><%= project.title %></option>
+          <% end %>
+        <% end %>
+        <% if @project_groups.present? %>
+          <optgroup label="<%= t('views.tasks.kanban.report_groups') %>">
+            <% @project_groups.each do |group| %>
+              <option value="group:<%= group %>" <%= 'selected' if @current_group == group %>><%= group %></option>
+            <% end %>
+          </optgroup>
+          <optgroup label="<%= t('views.tasks.kanban.projects') %>"><%= project_options %></optgroup>
+        <% else %>
+          <%= project_options %>
         <% end %>
       </select>
 

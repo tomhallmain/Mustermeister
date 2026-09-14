@@ -4,6 +4,8 @@ en:
       kanban:
         title: "My Tasks Board"
         all_projects: "All Projects"
+        report_groups: "Report Groups"
+        projects: "Projects"
         all_priorities: "All Priorities"
         sort:
           last_updated: "Last Updated"

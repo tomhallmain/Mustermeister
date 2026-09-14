@@ -381,8 +381,9 @@ class TasksController < ApplicationController
 
   def kanban
     @projects = current_user.accessible_projects.order(:title)
+    @project_groups = Project.category_suggestions_for(current_user)
     @statuses = Status.default_statuses
-    @current_project = params[:project_id].present? ? current_user.projects.find(params[:project_id]) : nil
+    resolve_kanban_filter
     # Only when a single project is selected AND it has a status beyond the
     # fixed default set does the board switch from the standard 5 columns to
     # one column per that project's actual (ordered) status list - see
@@ -390,7 +391,7 @@ class TasksController < ApplicationController
     # filter dropdown know, without a round trip, whether switching to a
     # given project requires a full page reload to pick up different columns.
     @dynamic_project_statuses = @current_project.statuses.ordered if @current_project&.custom_statuses?
-    @custom_status_project_ids = current_user.projects.joins(:statuses).merge(Status.custom).distinct.pluck(:id)
+    @custom_status_project_ids = current_user.accessible_projects.joins(:statuses).merge(Status.custom).distinct.pluck(:id)
     @sort_by = params[:sort_by] || 'updated_at'
     @priority_filter = params[:priority]
     @page = (params[:page] || 1).to_i
@@ -403,7 +404,7 @@ class TasksController < ApplicationController
   end
 
   def kanban_tasks
-    @current_project = params[:project_id].present? ? current_user.projects.find(params[:project_id]) : nil
+    resolve_kanban_filter
     @sort_by = params[:sort_by] || 'updated_at'
     @priority_filter = params[:priority]
     @updated_within_days = params[:updated_within_days]&.to_i
@@ -431,6 +432,8 @@ class TasksController < ApplicationController
 
     if @current_project
       tasks = tasks.where(project: @current_project)
+    elsif @current_group
+      tasks = tasks.where(project: current_user.accessible_projects.where(category: @current_group))
     end
 
     if @priority_filter.present?
@@ -616,6 +619,22 @@ class TasksController < ApplicationController
     else
       redirect_to tasks_path(show_completed: session[:tasks_show_completed] || false), 
                   alert: 'Task not found or already archived.'
+    end
+  end
+
+  # The board's single filter dropdown carries either a project id or a
+  # "group:<name>" report group, so one control covers both rather than
+  # standing next to a second one. A group never maps to one project, so the
+  # board keeps its fixed columns for it.
+  def resolve_kanban_filter
+    value = params[:project_id].to_s
+    @current_project = nil
+    @current_group = nil
+
+    if value.start_with?("group:")
+      @current_group = value.delete_prefix("group:").presence
+    elsif value.present?
+      @current_project = current_user.accessible_projects.find(value)
     end
   end
 
