@@ -168,6 +168,23 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to project_path(new_project)
   end
 
+  test "should create project without choosing a weight" do
+    assert_difference('Project.count') do
+      post projects_path, params: {
+        project: {
+          title: "New Project",
+          description: "Project Description",
+          default_priority: "high",
+          weight: ""
+        }
+      }
+    end
+
+    new_project = Project.find_by(title: "New Project")
+    assert_nil new_project.weight
+    assert_redirected_to project_path(new_project)
+  end
+
   test "should create project with default category" do
     assert_difference('Project.count') do
       post projects_path, params: {

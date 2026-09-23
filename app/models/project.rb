@@ -31,6 +31,10 @@ class Project < ApplicationRecord
   validates :title, presence: true
   validates :default_priority, inclusion: { in: %w[low medium high leisure] }, allow_nil: true
   validates :weight, inclusion: { in: %w[low medium high leisure] }, allow_nil: true
+  # The form's "follow default priority" option submits "". Stored as nil so
+  # the validation above accepts it and weight_sql's COALESCE falls through to
+  # default_priority.
+  normalizes :weight, with: ->(weight) { weight.presence }
   validates :color, inclusion: { in: %w[red orange yellow green blue purple pink gray], message: "must be a valid color" }, allow_nil: true, allow_blank: true
   validate :warn_if_similar_title_exists, on: %i[create update]
 

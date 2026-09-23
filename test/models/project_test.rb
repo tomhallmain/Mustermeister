@@ -35,6 +35,13 @@ class ProjectTest < ActiveSupport::TestCase
     assert_equal 1.0, @project.weight_multiplier
   end
 
+  test "a blank weight is stored as nil and follows the default priority" do
+    @project.update!(default_priority: "high", weight: "")
+
+    assert_nil @project.reload.weight
+    assert_equal "high", @project.effective_weight
+  end
+
   test "weight rejects a value outside the priority vocabulary" do
     @project.weight = "urgent"
 
