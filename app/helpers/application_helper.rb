@@ -65,108 +65,76 @@ module ApplicationHelper
     end
   end
 
+  # Opening fence with an optional info string (e.g. "ruby", "c++"), up to the
+  # next ``` that closes it.
+  FENCED_CODE_BLOCK = /```([^`\n]*)\n(.*?)```/m
+
   def markdown(text)
-    return '' if text.blank?
-    
-    renderer = Redcarpet::Render::HTML.new(
-      hard_wrap: true,
-      link_attributes: { target: '_blank', rel: 'noopener' }
-    )
-    
-    markdown = Redcarpet::Markdown.new(renderer, {
-      autolink: true,
-      tables: true,
-      fenced_code_blocks: true,
-      strikethrough: true,
-      superscript: true,
-      underline: true,
-      highlight: true,
-      quote: true,
-      footnotes: true,
-      # Ensure code blocks are properly parsed
-      disable_indented_code_blocks: false,
-      # More aggressive code block detection
-      space_after_headers: false
-    })
-    
-    # Pre-process the text to handle problematic characters in code blocks
-    processed_text = preprocess_markdown(text)
-    
-    markdown.render(processed_text).html_safe
+    render_markdown(text, autolink: true, footnotes: true)
   end
 
-  # Alternative method for more robust markdown rendering
-  # This method automatically handles common markdown formatting issues:
-  # - Adds proper spacing around code blocks
-  # - Escapes problematic characters in code content
-  # - Handles long content better
+  # Used for user- and LLM-written content (task descriptions, comments, task
+  # insights answers). Bare URLs are not turned into links and footnote syntax
+  # is not processed.
   def markdown_robust(text)
-    return '' if text.blank?
-
-    # Use a different approach for problematic content
-    renderer = Redcarpet::Render::HTML.new(
-      hard_wrap: true,
-      link_attributes: { target: '_blank', rel: 'noopener' }
-    )
-
-    markdown = Redcarpet::Markdown.new(renderer, {
-      autolink: false, # Disable autolink to prevent interference
-      tables: true,
-      fenced_code_blocks: true,
-      strikethrough: true,
-      superscript: true,
-      underline: true,
-      highlight: true,
-      quote: true,
-      footnotes: false, # Disable footnotes to prevent interference
-      disable_indented_code_blocks: false,
-      space_after_headers: false
-    })
-
-    # More aggressive preprocessing for problematic content
-    processed_text = text.dup
-
-    # Ensure proper spacing around code blocks
-    # Add newlines before code blocks if they don't have them
-    processed_text.gsub!(/([^\n])(```\w*\n)/, "\\1\n\n\\2")
-
-    # Handle code blocks more carefully
-    processed_text.gsub!(/```(\w+)?\n(.*?)```/m) do |match|
-      lang = $1 || ''
-      code_content = $2
-
-      # Escape all potentially problematic characters
-      escaped_code = code_content
-        .gsub('>', '&gt;')
-        .gsub('<', '&lt;')
-        .gsub('&', '&amp;')
-
-      # Ensure proper formatting
-      "```#{lang}\n#{escaped_code}\n```"
-    end
-
-    markdown.render(processed_text).html_safe
+    render_markdown(text, autolink: false, footnotes: false)
   end
 
   private
 
-  # Note: Markdown requires proper spacing around code blocks.
-  # Code blocks must be preceded by a blank line to be properly parsed.
-  # Example:
-  #   Not working: "text```lang\ncode```"
-  #   Working: "text\n\n```lang\ncode```"
-  def preprocess_markdown(text)
-    # Handle code blocks with special characters
-    text.gsub(/```(\w+)?\n(.*?)```/m) do |match|
-      lang = $1
-      code_content = $2
-      
-      # Escape problematic characters that might interfere with parsing
-      # Replace > with HTML entity to prevent blockquote interpretation
-      escaped_code = code_content.gsub('>', '&gt;')
-      
-      # Ensure proper code block formatting
-      "```#{lang}\n#{escaped_code}\n```"
+  def render_markdown(text, autolink:, footnotes:)
+    return '' if text.blank?
+
+    # escape_html: the result is marked html_safe, so raw HTML in the source is
+    # shown as text. safe_links_only: drops links with schemes such as
+    # "javascript:".
+    renderer = Redcarpet::Render::HTML.new(
+      hard_wrap: true,
+      escape_html: true,
+      safe_links_only: true,
+      link_attributes: { target: '_blank', rel: 'noopener' }
+    )
+
+    markdown = Redcarpet::Markdown.new(renderer, {
+      autolink: autolink,
+      footnotes: footnotes,
+      tables: true,
+      fenced_code_blocks: true,
+      strikethrough: true,
+      superscript: true,
+      underline: true,
+      # "file_name_v2" must not open an underline. Otherwise Redcarpet can close
+      # it on an underscore inside a later `code span`, which breaks the
+      # pairing of every backtick after it.
+      no_intra_emphasis: true,
+      highlight: true,
+      quote: true,
+      disable_indented_code_blocks: false,
+      space_after_headers: false
+    })
+
+    markdown.render(normalize_code_fences(text)).html_safe
+  end
+
+  # Redcarpet only recognizes an opening fence at the start of a line and a
+  # closing fence alone on its line, but content can contain "text```ruby" and
+  # "end```". This moves such fences onto their own lines, keeping the opening
+  # fence's indentation (e.g. inside a list) for the closing fence. Code content
+  # is left unescaped; Redcarpet escapes it when rendering.
+  def normalize_code_fences(text)
+    text.gsub(FENCED_CODE_BLOCK) do
+      match = Regexp.last_match
+      text_before_on_line = match.pre_match[/[^\n]*\z/]
+      if text_before_on_line.strip.empty?
+        separator = ""
+        indent = text_before_on_line
+      else
+        separator = "\n\n"
+        indent = ""
+      end
+      code = match[2].sub(/\n?[ \t]*\z/, "")
+
+      "#{separator}```#{match[1].strip}\n#{code}\n#{indent}```\n"
     end
   end
 end
