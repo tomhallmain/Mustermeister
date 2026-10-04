@@ -164,4 +164,16 @@ class TaskInsightsControllerTest < ActionDispatch::IntegrationTest
     assert_equal true, body["ok"]
     assert_equal ["mistral:latest"], body["models"]
   end
+
+  test "ollama_health asks for a fresh model list rather than a cached one" do
+    requested_fresh = nil
+    available_models = ->(**options) { requested_fresh = options[:fresh]; ["mistral:latest"] }
+
+    OllamaLlmService.stub :available_models, available_models do
+      get task_insights_ollama_health_path, as: :json
+    end
+
+    assert_response :success
+    assert_equal true, requested_fresh
+  end
 end

@@ -82,6 +82,7 @@ class OllamaLlmService
   FAILURE_THRESHOLD = 3
   DEFAULT_STATE = "local"
   PROMPT_RESPONSE_HISTORY_MAX_ITEMS = 200
+  MODEL_LIST_CACHE_TTL = 1.minute
 
   @failure_counts = Hash.new(0)
   @failure_lock = Mutex.new
@@ -108,7 +109,24 @@ class OllamaLlmService
       failure_count_for_state(state_key) >= FAILURE_THRESHOLD
     end
 
-    def available_models(timeout: 5)
+    # Cached briefly so pages that list models don't each wait on Ollama. An
+    # empty list (Ollama unreachable, or no models pulled) is never cached, so
+    # recovery shows on the next call. fresh: true skips the cache read.
+    def available_models(timeout: 5, fresh: false)
+      cache_key = "ollama_available_models:#{tags_endpoint}"
+      unless fresh
+        cached = Rails.cache.read(cache_key)
+        return cached if cached.present?
+      end
+
+      models = fetch_available_models(timeout: timeout)
+      Rails.cache.write(cache_key, models, expires_in: MODEL_LIST_CACHE_TTL) if models.any?
+      models
+    end
+
+    private
+
+    def fetch_available_models(timeout:)
       uri = URI.parse(tags_endpoint)
       http = Net::HTTP.new(uri.host, uri.port)
       http.open_timeout = timeout
@@ -123,8 +141,6 @@ class OllamaLlmService
       Rails.logger.warn("Unable to fetch Ollama model list: #{e.message}")
       []
     end
-
-    private
 
     def tags_endpoint
       explicit = TAGS_ENDPOINT.to_s

@@ -68,7 +68,7 @@ class TaskInsightsController < ApplicationController
   end
 
   def ollama_health
-    models = OllamaLlmService.available_models
+    models = OllamaLlmService.available_models(fresh: true)
     render json: { ok: models.any?, models: models }
   end
 
