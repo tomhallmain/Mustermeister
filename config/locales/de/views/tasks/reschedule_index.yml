@@ -12,3 +12,7 @@ de:
         reschedule_confirm: "Möchten Sie die ausgewählten Aufgaben wirklich verschieben?"
         project_label: "Projekt"
         due_label: "Fällig"
+        bulk_rescheduled:
+          one: "%{count} Aufgabe erfolgreich neu geplant."
+          other: "%{count} Aufgaben erfolgreich neu geplant."
+        bulk_reschedule_failed: "Aufgaben konnten nicht neu geplant werden: %{message}"

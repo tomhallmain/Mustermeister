@@ -12,3 +12,7 @@ fr:
         reschedule_confirm: "Êtes-vous sûr de vouloir reprogrammer les tâches sélectionnées ?"
         project_label: "Projet"
         due_label: "Échéance"
+        bulk_rescheduled:
+          one: "%{count} tâche replanifiée avec succès."
+          other: "%{count} tâches replanifiées avec succès."
+        bulk_reschedule_failed: "Échec de la replanification des tâches : %{message}"

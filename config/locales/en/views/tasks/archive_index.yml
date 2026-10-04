@@ -17,3 +17,7 @@ en:
         unknown: "Unknown"
         last_comment: "Last comment"
         no_archived_tasks: "No archived tasks found."
+        bulk_archived:
+          one: "Successfully archived %{count} completed task."
+          other: "Successfully archived %{count} completed tasks."
+        bulk_archive_failed: "Failed to archive tasks: %{message}"

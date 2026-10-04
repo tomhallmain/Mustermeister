@@ -3,7 +3,7 @@ require "test_helper"
 # TODO replace with capybara tests in "copy" file in this directory
 
 class TaskPaginationTest < ActionDispatch::IntegrationTest
-  TASKS_PER_PAGE = TasksController::TASKS_PER_PAGE
+  TASKS_PER_PAGE = TaskIndexQuery::PER_PAGE
   
   def setup
     @user = users(:two)  # Use a different fixture user to avoid conflicts with other tests

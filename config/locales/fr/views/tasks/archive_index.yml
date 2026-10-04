@@ -17,3 +17,7 @@ fr:
         unknown: "Inconnu"
         last_comment: "Dernier commentaire"
         no_archived_tasks: "Aucune tâche archivée trouvée."
+        bulk_archived:
+          one: "%{count} tâche terminée archivée avec succès."
+          other: "%{count} tâches terminées archivées avec succès."
+        bulk_archive_failed: "Échec de l'archivage des tâches : %{message}"

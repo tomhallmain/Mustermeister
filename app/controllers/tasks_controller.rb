@@ -1,27 +1,14 @@
 class TasksController < ApplicationController
-  TASKS_PER_PAGE = 15
-
-  TASK_INDEX_DEFAULT_SORT = 'updated_desc'
-  # Active (not completed) tasks oldest-first, then completed tasks newest-first -
-  # deliberately the reverse of the kanban board's "most recently active first" logic,
-  # surfacing neglected active tasks while keeping a normal recency log of completed ones.
-  TASK_INDEX_ACTIVE_OLDEST_SORT = 'active_oldest_completed_newest'
-  TASK_INDEX_SORT_OPTIONS = [TASK_INDEX_DEFAULT_SORT, TASK_INDEX_ACTIVE_OLDEST_SORT].freeze
-
-  ACTIVE_OLDEST_COMPLETED_NEWEST_SQL = <<~SQL.squish
-    CASE WHEN tasks.completed THEN 1 ELSE 0 END ASC,
-    CASE WHEN tasks.completed
-      THEN -EXTRACT(EPOCH FROM COALESCE(tasks.updated_at, tasks.created_at))
-      ELSE EXTRACT(EPOCH FROM COALESCE(tasks.updated_at, tasks.created_at))
-    END ASC
-  SQL
+  include ShowCompletedPreferences
 
   # The values the board's sort dropdown offers; anything else would reach
   # order() as an unknown column name.
   KANBAN_DEFAULT_SORT = 'updated_at'
   KANBAN_SORT_OPTIONS = [KANBAN_DEFAULT_SORT, 'updated_at_asc', 'created_at', 'priority'].freeze
+  KANBAN_PER_PAGE = 100
+  # How far back the board's completed column(s) reach unless "show all completed" is on.
+  KANBAN_RECENT_COMPLETED_WINDOW = 7.days
 
-  before_action :initialize_show_completed_prefs
   before_action :set_task, only: [:show, :edit, :update, :destroy, :toggle, :archive, :refresh, :translate]
   before_action :load_projects_and_tags, only: [:new, :edit, :create, :update]
   before_action :run_recurring_task_generation_check, only: [:index]
@@ -32,26 +19,14 @@ class TasksController < ApplicationController
 
     # If show_completed param is present, update the session preference
     if params[:show_completed].present?
-      show_completed = params[:show_completed] == 'true'
-      session[:tasks_show_completed] = show_completed
+      session[:tasks_show_completed] = params[:show_completed] == 'true'
     end
 
-    # Get the current stored preference (default to false if nil)
-    stored_preference = session[:tasks_show_completed]
-    stored_preference = false if stored_preference.nil?
-
-    # If no param and we have a stored preference, redirect to include it
+    # If no param, redirect to include the stored preference
     if params[:show_completed].nil?
-      redirect_to tasks_path(show_completed: stored_preference, page: params[:page])
+      redirect_to tasks_path(show_completed: session[:tasks_show_completed], page: params[:page])
       return
     end
-
-    # Current preference is from params (already stored in session above)
-    current_preference = params[:show_completed] == 'true'
-
-    # Now load the tasks based on the current preference
-    @tasks = current_user.accessible_tasks.not_archived.includes(:project, :tags, :task_category, :comments)
-    @tasks = @tasks.not_completed unless current_preference
 
     # Remember sort_by/search whenever explicitly provided, and fall back to the
     # remembered value - without forcing a redirect the way show_completed does,
@@ -59,9 +34,7 @@ class TasksController < ApplicationController
     if params[:sort_by].present?
       session[:tasks_sort_by] = params[:sort_by]
     end
-    requested_sort_by = params[:sort_by].presence || session[:tasks_sort_by] || TASK_INDEX_DEFAULT_SORT
-    @sort_by = TASK_INDEX_SORT_OPTIONS.include?(requested_sort_by) ? requested_sort_by : TASK_INDEX_DEFAULT_SORT
-    sort_sql = task_index_sort_sql(@sort_by)
+    @sort_by = TaskIndexQuery.valid_sort(params[:sort_by].presence || session[:tasks_sort_by])
 
     # search has no meaningful "default" - remember it (including an explicit
     # clear) whenever the key is present at all, distinct from it being absent.
@@ -70,13 +43,13 @@ class TasksController < ApplicationController
     end
     @search = params.key?(:search) ? params[:search] : session[:tasks_search]
 
-    if @search.present?
-      @tasks = @tasks.search_ranked(@search, then_order: sort_sql)
-    else
-      @tasks = @tasks.order(Arel.sql(sort_sql))
-    end
-
-    @tasks = @tasks.page(params[:page]).per(TASKS_PER_PAGE)
+    @tasks = TaskIndexQuery.new(
+      scope: current_user.accessible_tasks,
+      show_completed: params[:show_completed] == 'true',
+      search: @search,
+      sort_by: @sort_by,
+      page: params[:page]
+    ).call
 
     # The most recent task this user wrote and can still see. Keyed on
     # created_by, not user_id: user_id names whoever the task is assigned to,
@@ -104,7 +77,7 @@ class TasksController < ApplicationController
 
   def new
     if params[:project_id].blank?
-      redirect_to projects_path, notice: 'Please select a project to create a task.'
+      redirect_to projects_path, notice: t('views.tasks.index.select_project_first')
       return
     end
     
@@ -121,8 +94,7 @@ class TasksController < ApplicationController
 
     # If we have a show_completed param, update the session
     if params[:show_completed].present?
-      show_completed = params[:show_completed] == 'true'
-      session[:projects_show_completed][@project.id.to_s] = show_completed
+      session[:projects_show_completed][@project.id.to_s] = params[:show_completed] == 'true'
     end
   end
 
@@ -133,16 +105,7 @@ class TasksController < ApplicationController
       # If the task is marked as completed, call mark_as_complete!
       @task.mark_as_complete!(current_user) if @task.completed
 
-      if @task.project
-        show_completed = session[:projects_show_completed][@task.project.id.to_s]
-        # Default to false if not set in session
-        show_completed = show_completed.nil? ? false : show_completed
-        redirect_to project_path(@task.project, show_completed: show_completed), 
-                    notice: 'Task was successfully created.'
-      else
-        redirect_to tasks_path(show_completed: session[:tasks_show_completed] || false), 
-                    notice: 'Task was successfully created.'
-      end
+      redirect_to task_list_path_for(@task.project), notice: t('views.tasks.index.created')
     else
       render :new, status: :unprocessable_entity
     end
@@ -167,16 +130,7 @@ class TasksController < ApplicationController
       if params[:kanban]
         render json: { success: true }
       else
-        if @task.project
-          show_completed = session[:projects_show_completed][@task.project.id.to_s]
-          # Default to false if not set in session
-          show_completed = show_completed.nil? ? false : show_completed
-          redirect_to project_path(@task.project, show_completed: show_completed), 
-                      notice: 'Task was successfully updated.'
-        else
-          redirect_to tasks_path(show_completed: session[:tasks_show_completed] || false), 
-                      notice: 'Task was successfully updated.'
-        end
+        redirect_to task_list_path_for(@task.project), notice: t('views.tasks.index.updated')
       end
     else
       if params[:kanban]
@@ -188,22 +142,8 @@ class TasksController < ApplicationController
   end
 
   def destroy
-    project = @task.project
-    
-    if project
-      project_id = project.id.to_s
-      show_completed = session[:projects_show_completed][project_id]
-      # Default to false if not set in session
-      show_completed = show_completed.nil? ? false : show_completed
-      
-      @task.destroy
-      redirect_to project_path(project, show_completed: show_completed),
-                notice: t('views.tasks.index.deleted')
-    else
-      @task.destroy
-      redirect_to tasks_path(show_completed: session[:tasks_show_completed] || false),
-                notice: t('views.tasks.index.deleted')
-    end
+    @task.destroy
+    redirect_to task_list_path_for(@task.project), notice: t('views.tasks.index.deleted')
   end
 
   def toggle
@@ -227,21 +167,14 @@ class TasksController < ApplicationController
 
     if !toggled || @task.errors.any?
       redirect_back(
-        fallback_location: tasks_path(show_completed: session[:tasks_show_completed] || false),
+        fallback_location: tasks_path(show_completed: session[:tasks_show_completed]),
         alert: @task.errors.full_messages.join(", ")
       )
       return
     end
-    
-    # If show_completed param is present, use it for the redirect
-    show_completed = if params[:show_completed].present?
-                       params[:show_completed]
-                     else
-                       session[:tasks_show_completed] || false
-                     end
-    
-    redirect_back(fallback_location: tasks_path(show_completed: show_completed), 
-                  notice: 'Task status updated.')
+
+    redirect_back(fallback_location: tasks_path(show_completed: tasks_show_completed_preference),
+                  notice: t('views.tasks.index.status_updated'))
   end
 
   def archive_index
@@ -258,16 +191,9 @@ class TasksController < ApplicationController
   end
 
   def archive
-    # If show_completed param is present, use it for the redirect
-    show_completed = if params[:show_completed].present?
-                       params[:show_completed]
-                     else
-                       session[:tasks_show_completed] || false
-                     end
-    
     if @task.archive!(current_user)
-      redirect_to tasks_path(show_completed: show_completed), 
-                notice: 'Task was successfully archived.'
+      redirect_to tasks_path(show_completed: tasks_show_completed_preference),
+                  notice: t('views.tasks.index.archived')
     else
       redirect_to @task, alert: @task.errors.full_messages.join(", ")
     end
@@ -278,8 +204,7 @@ class TasksController < ApplicationController
     #       instead of overwriting the standard updated_at value.
     @task.touch
 
-    redirect_to task_path(@task),
-                notice: 'Task refreshed successfully.'
+    redirect_to task_path(@task), notice: t('views.tasks.show.refreshed')
   end
 
   def translate
@@ -317,11 +242,11 @@ class TasksController < ApplicationController
         current_user: current_user
       )
       
-      redirect_to archives_path, 
-                  notice: "Successfully archived #{count} completed tasks."
+      redirect_to archives_path,
+                  notice: t('views.tasks.archive_index.bulk_archived', count: count)
     rescue TaskManagementService::Error => e
-      redirect_to tasks_path(show_completed: session[:tasks_show_completed] || false), 
-                  alert: "Failed to archive tasks: #{e.message}"
+      redirect_to tasks_path(show_completed: session[:tasks_show_completed]),
+                  alert: t('views.tasks.archive_index.bulk_archive_failed', message: e.message)
     end
   end
 
@@ -347,11 +272,11 @@ class TasksController < ApplicationController
         current_user: current_user
       )
       
-      redirect_to tasks_path(show_completed: session[:tasks_show_completed] || false), 
-                  notice: "Successfully rescheduled #{count} tasks."
+      redirect_to tasks_path(show_completed: session[:tasks_show_completed]),
+                  notice: t('views.tasks.reschedule_index.bulk_rescheduled', count: count)
     rescue TaskManagementService::Error => e
       redirect_to reschedule_path,
-                  alert: "Failed to reschedule tasks: #{e.message}"
+                  alert: t('views.tasks.reschedule_index.bulk_reschedule_failed', message: e.message)
     end
   end
 
@@ -390,7 +315,6 @@ class TasksController < ApplicationController
     @sort_by = kanban_sort_by
     @priority_filter = params[:priority]
     @page = (params[:page] || 1).to_i
-    @per_page = 100
 
     respond_to do |format|
       format.html
@@ -404,7 +328,6 @@ class TasksController < ApplicationController
     @priority_filter = params[:priority]
     @updated_within_days = params[:updated_within_days]&.to_i
     @page = (params[:page] || 1).to_i
-    @per_page = 100
     @show_all_completed = params[:show_all_completed] == 'true'
     @search = params[:search].presence
 
@@ -511,15 +434,14 @@ class TasksController < ApplicationController
 
       status_tasks = tasks.where(status: { name: name })
 
-      # For completed tasks, only show those from the last 7 days unless show_all_completed is true
       if key == :complete
         status_tasks = status_tasks.or(tasks.where(status: { name: 'Closed' }))
         unless @show_all_completed
-          status_tasks = status_tasks.where('tasks.updated_at >= ?', 7.days.ago)
+          status_tasks = status_tasks.where('tasks.updated_at >= ?', KANBAN_RECENT_COMPLETED_WINDOW.ago)
         end
       end
 
-      paginated_tasks = status_tasks.page(@page).per(@per_page)
+      paginated_tasks = status_tasks.page(@page).per(KANBAN_PER_PAGE)
       tasks_by_status[key] = paginated_tasks
       has_more ||= paginated_tasks.total_pages > @page
       AppDebugLogger.debug { "Status #{key}: #{tasks_by_status[key].count} tasks" }
@@ -550,10 +472,10 @@ class TasksController < ApplicationController
       status_tasks = tasks.where(status_id: status.id)
 
       if terminal_names.include?(status.name) && !@show_all_completed
-        status_tasks = status_tasks.where('tasks.updated_at >= ?', 7.days.ago)
+        status_tasks = status_tasks.where('tasks.updated_at >= ?', KANBAN_RECENT_COMPLETED_WINDOW.ago)
       end
 
-      paginated_tasks = status_tasks.page(@page).per(@per_page)
+      paginated_tasks = status_tasks.page(@page).per(KANBAN_PER_PAGE)
       tasks_by_status[status.id.to_s] = paginated_tasks
       has_more ||= paginated_tasks.total_pages > @page
     end
@@ -592,32 +514,18 @@ class TasksController < ApplicationController
     KANBAN_SORT_OPTIONS.include?(params[:sort_by]) ? params[:sort_by] : KANBAN_DEFAULT_SORT
   end
 
-  def initialize_show_completed_prefs
-    session[:projects_show_completed] ||= {}
-    session[:tasks_show_completed] = false if session[:tasks_show_completed].nil?
-  end
-
   def run_recurring_task_generation_check
     RecurringTaskGenerationCheck.run_if_due!
-  end
-
-  def task_index_sort_sql(sort_by)
-    case sort_by
-    when TASK_INDEX_ACTIVE_OLDEST_SORT
-      ACTIVE_OLDEST_COMPLETED_NEWEST_SQL
-    else
-      'COALESCE(updated_at, created_at) DESC, created_at DESC'
-    end
   end
 
   def set_task
     @task = current_user.accessible_tasks.not_archived.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     if params[:kanban]
-      render json: { error: 'Task not found or already archived.' }, status: :not_found
+      render json: { error: t('views.tasks.index.not_found') }, status: :not_found
     else
-      redirect_to tasks_path(show_completed: session[:tasks_show_completed] || false), 
-                  alert: 'Task not found or already archived.'
+      redirect_to tasks_path(show_completed: session[:tasks_show_completed]),
+                  alert: t('views.tasks.index.not_found')
     end
   end
 

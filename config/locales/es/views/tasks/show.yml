@@ -69,3 +69,4 @@ es:
             project_reschedule: "reprogramación del proyecto"
             project_reprioritize: "repriorización del proyecto"
             project_recategorize: "recategorización del proyecto"
+        refreshed: "La tarea se ha refrescado correctamente."

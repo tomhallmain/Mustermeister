@@ -1,11 +1,12 @@
 class ProjectsController < ApplicationController
+  include ShowCompletedPreferences
+
   PROJECTS_PER_PAGE = 12
   TASKS_PER_PAGE = 15
 
   PROJECT_INDEX_DEFAULT_SORT = 'last_activity_desc'
   PROJECT_INDEX_SORT_OPTIONS = %w[last_activity_desc title_asc completion_desc weighted_progress_desc].freeze
 
-  before_action :initialize_show_completed_prefs
   # Three finders rather than one plus permission guards: scoping the lookup is
   # how authorization is expressed everywhere else in this app, and an
   # out-of-scope id then 404s instead of leaking that the project exists.
@@ -62,8 +63,6 @@ class ProjectsController < ApplicationController
   def show
     @tasks = @project.tasks
 
-    # Initialize preferences for this project if not already set
-    session[:projects_show_completed] ||= {}
     session[:projects_search] ||= {}
 
     # Debug values on entry
@@ -76,17 +75,12 @@ class ProjectsController < ApplicationController
 
     # If show_completed param is present, update the session preference
     if params[:show_completed].present?
-      show_completed = params[:show_completed] == 'true'
-      session[:projects_show_completed][@project.id.to_s] = show_completed
+      session[:projects_show_completed][@project.id.to_s] = params[:show_completed] == 'true'
     end
 
-    # Get the current stored preference (default to false if nil)
-    stored_preference = session[:projects_show_completed][@project.id.to_s]
-    stored_preference = false if stored_preference.nil?
-
-    # If no param and we have a stored preference, redirect to include it
+    # If no param, redirect to include the stored preference
     if params[:show_completed].nil?
-      redirect_url = project_path(@project, show_completed: stored_preference, page: params[:page])
+      redirect_url = project_path(@project, show_completed: project_show_completed_preference(@project), page: params[:page])
       AppDebugLogger.debug { "REDIRECTING to: #{redirect_url}" }
       redirect_to redirect_url
       return
@@ -232,10 +226,6 @@ class ProjectsController < ApplicationController
 
   def merge_params
     params.fetch(:merge, {}).permit(:target_id, field_choices: MergeProjectsService::MERGEABLE_FIELDS)
-  end
-
-  def initialize_show_completed_prefs
-    session[:projects_show_completed] ||= {}
   end
 
   def project_index_sort_sql(sort_by)

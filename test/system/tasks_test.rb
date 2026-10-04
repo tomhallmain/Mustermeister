@@ -18,7 +18,7 @@ class TasksTest < ApplicationSystemTestCase
     select @project.title, from: "Project"
     click_on "Save Task"
 
-    assert_text "Task was successfully created"
+    assert_text I18n.t("views.tasks.index.created")
     assert_text "New System Test Task"
   end
 
@@ -29,7 +29,7 @@ class TasksTest < ApplicationSystemTestCase
     fill_in "task-description", with: "This task has been updated through system tests"
     click_on "Save Task"
 
-    assert_text "Task was successfully updated"
+    assert_text I18n.t("views.tasks.index.updated")
     assert_text "Updated System Test Task"
   end
 
@@ -60,7 +60,7 @@ class TasksTest < ApplicationSystemTestCase
     # something Capybara DOES synchronize on, it can run before the server
     # has processed the toggle at all. This flash notice only appears once
     # the redirect_back round trip has completed.
-    assert_text "Task status updated."
+    assert_text I18n.t("views.tasks.index.status_updated")
     assert @task.reload.completed, "expected the task to be marked completed after toggling"
 
     # Re-visit rather than trust where the toggle's redirect_back lands - only
@@ -79,7 +79,7 @@ class TasksTest < ApplicationSystemTestCase
       within(row) { find("button[data-confirm]").click }
     end
 
-    assert_text "Task was successfully archived"
+    assert_text I18n.t("views.tasks.index.archived")
     assert_no_link @task.title, exact: true
   end
 

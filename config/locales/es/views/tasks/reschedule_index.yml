@@ -12,3 +12,7 @@ es:
         reschedule_confirm: "¿Está seguro de que desea reprogramar las tareas seleccionadas?"
         project_label: "Proyecto"
         due_label: "Vencido"
+        bulk_rescheduled:
+          one: "Se ha reprogramado %{count} tarea."
+          other: "Se han reprogramado %{count} tareas."
+        bulk_reschedule_failed: "No se han podido reprogramar las tareas: %{message}"

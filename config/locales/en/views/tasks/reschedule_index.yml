@@ -12,3 +12,7 @@ en:
         reschedule_confirm: "Are you sure you want to reschedule the selected tasks?"
         project_label: "Project"
         due_label: "Due"
+        bulk_rescheduled:
+          one: "Successfully rescheduled %{count} task."
+          other: "Successfully rescheduled %{count} tasks."
+        bulk_reschedule_failed: "Failed to reschedule tasks: %{message}"

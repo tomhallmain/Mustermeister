@@ -17,3 +17,7 @@ es:
         unknown: "Desconocido"
         last_comment: "Último comentario"
         no_archived_tasks: "No se han encontrado tareas archivadas."
+        bulk_archived:
+          one: "Se ha archivado %{count} tarea completada."
+          other: "Se han archivado %{count} tareas completadas."
+        bulk_archive_failed: "No se han podido archivar las tareas: %{message}"

@@ -1050,6 +1050,54 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to project_path(@task.project, show_completed: false)
   end
 
+  test "update redirects to the task's project page with that project's remembered show_completed" do
+    get project_path(@task.project, show_completed: true)
+
+    patch task_path(@task), params: { task: { title: "Updated Title" } }
+
+    assert_redirected_to project_path(@task.project, show_completed: true)
+    assert_equal I18n.t('views.tasks.index.updated'), flash[:notice]
+  end
+
+  test "toggle's fallback redirect uses an explicit show_completed param over the stored preference" do
+    patch toggle_task_path(@task, show_completed: 'true')
+
+    assert_redirected_to tasks_path(show_completed: true)
+    assert_equal I18n.t('views.tasks.index.status_updated'), flash[:notice]
+  end
+
+  test "toggle treats an unrecognized show_completed param as false" do
+    patch toggle_task_path(@task, show_completed: 'yes')
+
+    assert_redirected_to tasks_path(show_completed: false)
+  end
+
+  test "archive redirects with an explicit show_completed param and a localized notice" do
+    post archive_task_path(@task, show_completed: 'true')
+
+    assert_redirected_to tasks_path(show_completed: true)
+    assert_equal I18n.t('views.tasks.index.archived'), flash[:notice]
+  end
+
+  test "bulk_archive reports the archived count with a localized notice" do
+    TaskManagementService.stub :archive_completed_tasks, 3 do
+      post bulk_archive_path
+    end
+
+    assert_redirected_to archives_path
+    assert_equal I18n.t('views.tasks.archive_index.bulk_archived', count: 3), flash[:notice]
+  end
+
+  test "bulk_archive reports a service failure with a localized alert" do
+    failing = ->(**) { raise TaskManagementService::Error, "boom" }
+    TaskManagementService.stub :archive_completed_tasks, failing do
+      post bulk_archive_path
+    end
+
+    assert_redirected_to tasks_path(show_completed: false)
+    assert_equal I18n.t('views.tasks.archive_index.bulk_archive_failed', message: "boom"), flash[:alert]
+  end
+
   test "should toggle task completion" do
     patch toggle_task_path(@task)
     assert_redirected_to tasks_path(show_completed: false)
@@ -1106,6 +1154,7 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     
     # Verify redirect
     assert_redirected_to task_path(@task)
+    assert_equal I18n.t('views.tasks.show.refreshed'), flash[:notice]
     
     # Verify updated_at is now more recent than the old timestamp
     @task.reload

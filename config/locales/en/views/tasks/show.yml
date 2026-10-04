@@ -69,3 +69,4 @@ en:
             project_reschedule: "project reschedule"
             project_reprioritize: "project reprioritize"
             project_recategorize: "project recategorize"
+        refreshed: "Task refreshed successfully."

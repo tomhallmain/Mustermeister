@@ -232,7 +232,7 @@ class TaskSortingTest < ActionDispatch::IntegrationTest
     # creating records directly here.
     setup_paper_trail
     without_duplicate_title_check do
-      (TasksController::TASKS_PER_PAGE + 1).times do |i|
+      (TaskIndexQuery::PER_PAGE + 1).times do |i|
         @project.create_task!(title: "Extra Task #{i}", user: @user)
       end
     end

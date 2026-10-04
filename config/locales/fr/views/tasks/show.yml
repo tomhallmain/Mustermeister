@@ -69,3 +69,4 @@ fr:
             project_reschedule: "replanification du projet"
             project_reprioritize: "repriorisation du projet"
             project_recategorize: "recatégorisation du projet"
+        refreshed: "La tâche a été rafraîchie avec succès."
