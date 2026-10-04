@@ -45,7 +45,7 @@ module PostgresConnectionChecker
     def self.start_postgres_service(db_config)
         log "Attempting to start PostgreSQL service..."
         # If user specified a service name in environment variable, use that
-        service_name = ENV['POSTGRES_SERVICE']
+        service_name = ENV['POSTGRES_SERVICE']&.strip
         if RbConfig::CONFIG['host_os'] =~ /mswin|mingw|cygwin/
             start_postgres_service_windows(db_config, service_name)
         elsif RbConfig::CONFIG['host_os'] =~ /linux/
@@ -156,6 +156,7 @@ module PostgresConnectionChecker
                 # Find all PostgreSQL services
                 postgres_services = services_output.scan(/SERVICE_NAME\s*:\s*(postgresql.*)/)
                     .flatten
+                    .map(&:strip)
                     .select { |name| name.downcase.include?('postgresql') }
                 
                 if postgres_services.empty?
@@ -175,7 +176,7 @@ module PostgresConnectionChecker
             end
 
             log "Starting PostgreSQL service: #{service_name}"
-            system("net start #{service_name}")
+            system("net", "start", service_name)
             sleep 2 # Allow time for service startup
             log "PostgreSQL service started successfully"
             
@@ -228,7 +229,7 @@ module PostgresConnectionChecker
             end
 
             # Attempt to start service
-            if system("sudo systemctl start #{service_name}")
+            if system("sudo", "systemctl", "start", service_name)
                 log "Successfully started #{service_name}".green
                 sleep 2 # Allow time for service startup
                 return if verify_database_connection(db_config, true)
@@ -262,7 +263,7 @@ module PostgresConnectionChecker
             end
 
             # Start service
-            if system("brew services start #{service_name}")
+            if system("brew", "services", "start", service_name)
                 log "Successfully started #{service_name}".green
                 sleep 2 # Allow time for service startup
                 return if verify_database_connection(db_config, true)

@@ -19,7 +19,7 @@ module TitleDescriptionSearchable
       ])
 
       where("#{title} ILIKE :contains OR #{description} ILIKE :contains", contains: "%#{pattern}%")
-        .order(Arel.sql("#{rank_sql}, #{then_order}"))
+        .order(Arel.sql(rank_sql), Arel.sql(then_order))
     end
   end
 end

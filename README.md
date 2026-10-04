@@ -17,3 +17,6 @@ Built using Ruby on Rails with Postgres, this application has been personally te
 
 * Built using Ruby version 3.3.7, Postgres 17
 
+## Local development
+
+See [README.local.md](README.local.md) for setup, database, server, asset and debugging commands.

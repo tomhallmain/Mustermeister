@@ -1,3 +1,5 @@
+require "open3"
+
 # BackupService provides automated database backup functionality with three strategies:
 #
 # 1. **pg_dump method (default)**: Uses PostgreSQL's native pg_dump utility for fast,
@@ -114,49 +116,10 @@ class BackupService
   
   def self.pg_dump_version
     return nil unless pg_dump_available?
-    
-         if Gem.win_platform?
-       # Use inline batch script to match backup script behavior
-       batch_script = <<~BATCH
-         @echo off
-         pg_dump --version 2>&1
-       BATCH
-      
-      # Write temporary batch file and execute it
-      require 'tempfile'
-      temp_file = Tempfile.new(['pg_dump_version', '.bat'])
-      temp_file.write(batch_script)
-      temp_file.close
-      
-      begin
-        version_output = `"#{temp_file.path}" 2>&1`
-        version_output.strip if $?.success?
-      ensure
-        temp_file.unlink
-      end
-    else
-      # Use inline shell script to match backup script behavior
-      shell_script = <<~SHELL
-        #!/bin/bash
-        pg_dump --version 2>&1
-      SHELL
-      
-      # Write temporary shell script and execute it
-      require 'tempfile'
-      temp_file = Tempfile.new(['pg_dump_version', '.sh'])
-      temp_file.write(shell_script)
-      temp_file.close
-      
-      begin
-        # Make executable and run
-        File.chmod(0o755, temp_file.path)
-        version_output = `"#{temp_file.path}" 2>&1`
-        version_output.strip if $?.success?
-      ensure
-        temp_file.unlink
-      end
-    end
-  rescue
+
+    output, status = Open3.capture2e("pg_dump", "--version")
+    output.strip if status.success?
+  rescue StandardError
     nil
   end
   
@@ -727,7 +690,7 @@ class BackupService
           numeric_precision,
           numeric_scale
         FROM information_schema.columns 
-        WHERE table_name = '#{table}' 
+        WHERE table_name = #{ActiveRecord::Base.connection.quote(table)}
         ORDER BY ordinal_position
       SQL
       
@@ -754,7 +717,7 @@ class BackupService
         JOIN information_schema.constraint_column_usage AS ccu USING (constraint_schema, constraint_name)
         JOIN information_schema.columns AS c ON c.table_schema = tc.constraint_schema
           AND tc.table_name = c.table_name AND ccu.column_name = c.column_name
-        WHERE constraint_type = 'PRIMARY KEY' AND tc.table_name = '#{table}'
+        WHERE constraint_type = 'PRIMARY KEY' AND tc.table_name = #{ActiveRecord::Base.connection.quote(table)}
       SQL
       
       if pk_result.count > 0
@@ -768,7 +731,7 @@ class BackupService
           indexname,
           indexdef
         FROM pg_indexes 
-        WHERE tablename = '#{table}' 
+        WHERE tablename = #{ActiveRecord::Base.connection.quote(table)}
         AND indexname NOT LIKE '%_pkey'
         ORDER BY indexname
       SQL
@@ -842,7 +805,7 @@ class BackupService
   
   def generate_table_data(table)
     # Get row count
-    count_result = ActiveRecord::Base.connection.execute("SELECT COUNT(*) as count FROM #{table}")
+    count_result = ActiveRecord::Base.connection.execute("SELECT COUNT(*) as count FROM #{ActiveRecord::Base.connection.quote_table_name(table)}")
     row_count = count_result.first['count'].to_i
     
     if row_count == 0
@@ -853,7 +816,7 @@ class BackupService
     columns_result = ActiveRecord::Base.connection.execute(<<-SQL)
       SELECT column_name, data_type 
       FROM information_schema.columns 
-      WHERE table_name = '#{table}' 
+      WHERE table_name = #{ActiveRecord::Base.connection.quote(table)}
       ORDER BY ordinal_position
     SQL
     
@@ -866,9 +829,9 @@ class BackupService
     
     while offset < row_count
       data_result = ActiveRecord::Base.connection.execute(<<-SQL)
-        SELECT * FROM #{table} 
-        ORDER BY #{columns.first} 
-        LIMIT #{batch_size} OFFSET #{offset}
+        SELECT * FROM #{ActiveRecord::Base.connection.quote_table_name(table)}
+        ORDER BY #{ActiveRecord::Base.connection.quote_column_name(columns.first)}
+        LIMIT #{batch_size.to_i} OFFSET #{offset.to_i}
       SQL
       
       data_result.each do |row|
