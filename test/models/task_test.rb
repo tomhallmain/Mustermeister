@@ -400,6 +400,32 @@ class TaskTest < ActiveSupport::TestCase
     assert_includes results, tasks(:search_test_four)
   end
 
+  test "search_ranked orders title-prefix matches, then word-prefix matches, then the rest" do
+    description_only = Task.create!(title: "Unrelated chore", description: "feed the quokka", user: @user, project: @project, status: @status, skip_duplicate_check: true)
+    word_prefix = Task.create!(title: "Photograph a quokka", user: @user, project: @project, status: @status, skip_duplicate_check: true)
+    title_prefix = Task.create!(title: "Quokka census", user: @user, project: @project, status: @status, skip_duplicate_check: true)
+
+    results = @project.tasks.search_ranked("quokka", then_order: "tasks.id ASC").to_a
+
+    assert_equal [title_prefix, word_prefix, description_only], results
+  end
+
+  test "search_ranked treats quotes in the term as plain text" do
+    match = Task.create!(title: "Don't forget the milk", user: @user, project: @project, status: @status, skip_duplicate_check: true)
+
+    assert_equal [match], @project.tasks.search_ranked("don't", then_order: "tasks.id ASC").to_a
+  end
+
+  test "search_ranked matches % and _ literally rather than as LIKE wildcards" do
+    percent = Task.create!(title: "Reach 100% coverage", user: @user, project: @project, status: @status, skip_duplicate_check: true)
+    Task.create!(title: "Reach 1000 signups", user: @user, project: @project, status: @status, skip_duplicate_check: true)
+    underscore = Task.create!(title: "Rename snake_case keys", user: @user, project: @project, status: @status, skip_duplicate_check: true)
+    Task.create!(title: "Rename snakeXcase keys", user: @user, project: @project, status: @status, skip_duplicate_check: true)
+
+    assert_equal [percent], @project.tasks.search_ranked("100%", then_order: "tasks.id ASC").to_a
+    assert_equal [underscore], @project.tasks.search_ranked("snake_case", then_order: "tasks.id ASC").to_a
+  end
+
   test "a task may be left unassigned" do
     @task.user = nil
 

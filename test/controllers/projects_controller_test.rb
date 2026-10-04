@@ -992,4 +992,26 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/itself/, flash[:alert])
     assert Project.exists?(@project.id)
   end
-end 
+
+  test "projects index search with an apostrophe in the term is bound as a value, not spliced into the SQL" do
+    Project.create!(title: "Grandma's Recipes", user: @user)
+
+    get projects_path(search: "grandma's")
+
+    assert_response :success
+    assert_select ".text-base.font-semibold", count: 1
+    assert_select ".text-base.font-semibold", "Grandma's Recipes"
+  end
+
+  test "project page task search with an apostrophe in the term is bound as a value, not spliced into the SQL" do
+    project = Project.create!(title: "Apostrophe Search Project", user: @user)
+    Task.create!(title: "Don't forget the milk", project: project, user: @user)
+    Task.create!(title: "Regular Task", project: project, user: @user)
+
+    get project_path(project, search: "don't", show_completed: false)
+
+    assert_response :success
+    assert_select ".task-item", count: 1
+    assert_select ".task-item", text: /Don't forget the milk/
+  end
+end

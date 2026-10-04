@@ -1,4 +1,6 @@
 class Task < ApplicationRecord
+  include TitleDescriptionSearchable
+
   # Single source of truth for priority-weighted progress calculations
   # (Project#completion_percentage, ReportStatsService). Reuses the same
   # ordinal scale already used elsewhere for priority sorting.

@@ -29,17 +29,7 @@ class ProjectsController < ApplicationController
     sort_sql = project_index_sort_sql(@sort_by)
 
     if params[:search].present?
-      search_term = params[:search]
-      @projects = @projects.where("title ILIKE ? OR description ILIKE ?",
-                                "%#{search_term}%",
-                                "%#{search_term}%")
-                          .order(Arel.sql("
-                            CASE
-                              WHEN title ILIKE '#{search_term}%' THEN 1
-                              WHEN title ILIKE '% #{search_term}%' THEN 2
-                              ELSE 3
-                            END,
-                            #{sort_sql}"))
+      @projects = @projects.search_ranked(params[:search], then_order: sort_sql)
     else
       @projects = @projects.order(Arel.sql(sort_sql))
     end
@@ -114,17 +104,7 @@ class ProjectsController < ApplicationController
     @search = params.key?(:search) ? params[:search] : session[:projects_search][@project.id.to_s]
 
     if @search.present?
-      search_term = @search
-      @tasks = @tasks.where("title ILIKE ? OR description ILIKE ?",
-                           "%#{search_term}%",
-                           "%#{search_term}%")
-                     .order(Arel.sql("
-                       CASE
-                         WHEN title ILIKE '#{search_term}%' THEN 1
-                         WHEN title ILIKE '% #{search_term}%' THEN 2
-                         ELSE 3
-                       END,
-                       created_at DESC"))
+      @tasks = @tasks.search_ranked(@search, then_order: 'created_at DESC')
     end
 
     # Now load the tasks based on the current preference

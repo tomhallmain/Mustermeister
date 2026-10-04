@@ -1,4 +1,6 @@
 class Project < ApplicationRecord
+  include TitleDescriptionSearchable
+
   # Enable version tracking with metadata
   has_paper_trail versions: {
     scope: -> { order("id desc") }

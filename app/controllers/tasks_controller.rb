@@ -16,6 +16,11 @@ class TasksController < ApplicationController
     END ASC
   SQL
 
+  # The values the board's sort dropdown offers; anything else would reach
+  # order() as an unknown column name.
+  KANBAN_DEFAULT_SORT = 'updated_at'
+  KANBAN_SORT_OPTIONS = [KANBAN_DEFAULT_SORT, 'updated_at_asc', 'created_at', 'priority'].freeze
+
   before_action :initialize_show_completed_prefs
   before_action :set_task, only: [:show, :edit, :update, :destroy, :toggle, :archive, :refresh, :translate]
   before_action :load_projects_and_tags, only: [:new, :edit, :create, :update]
@@ -66,17 +71,7 @@ class TasksController < ApplicationController
     @search = params.key?(:search) ? params[:search] : session[:tasks_search]
 
     if @search.present?
-      search_term = @search
-      @tasks = @tasks.where("title ILIKE ? OR description ILIKE ?",
-                           "%#{search_term}%",
-                           "%#{search_term}%")
-                     .order(Arel.sql("
-                       CASE
-                         WHEN title ILIKE '#{search_term}%' THEN 1
-                         WHEN title ILIKE '% #{search_term}%' THEN 2
-                         ELSE 3
-                       END,
-                       #{sort_sql}"))
+      @tasks = @tasks.search_ranked(@search, then_order: sort_sql)
     else
       @tasks = @tasks.order(Arel.sql(sort_sql))
     end
@@ -392,7 +387,7 @@ class TasksController < ApplicationController
     # given project requires a full page reload to pick up different columns.
     @dynamic_project_statuses = @current_project.statuses.ordered if @current_project&.custom_statuses?
     @custom_status_project_ids = current_user.accessible_projects.joins(:statuses).merge(Status.custom).distinct.pluck(:id)
-    @sort_by = params[:sort_by] || 'updated_at'
+    @sort_by = kanban_sort_by
     @priority_filter = params[:priority]
     @page = (params[:page] || 1).to_i
     @per_page = 100
@@ -405,7 +400,7 @@ class TasksController < ApplicationController
 
   def kanban_tasks
     resolve_kanban_filter
-    @sort_by = params[:sort_by] || 'updated_at'
+    @sort_by = kanban_sort_by
     @priority_filter = params[:priority]
     @updated_within_days = params[:updated_within_days]&.to_i
     @page = (params[:page] || 1).to_i
@@ -591,6 +586,10 @@ class TasksController < ApplicationController
         category_color: task.task_category&.color
       }
     end
+  end
+
+  def kanban_sort_by
+    KANBAN_SORT_OPTIONS.include?(params[:sort_by]) ? params[:sort_by] : KANBAN_DEFAULT_SORT
   end
 
   def initialize_show_completed_prefs

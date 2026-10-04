@@ -1289,6 +1289,32 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_select ".task-item", 5
   end
 
+  test "tasks index search with an apostrophe in the term is bound as a value, not spliced into the SQL" do
+    @project.tasks.create!(title: "Don't forget the milk", user: @user)
+
+    get tasks_path(search: "don't", show_completed: false)
+
+    assert_response :success
+    assert_select ".task-item", 1
+    assert_select ".task-item", text: /Don't forget the milk/
+  end
+
+  test "tasks index search remembered in the session with an apostrophe still renders on a later visit" do
+    @project.tasks.create!(title: "Don't forget the milk", user: @user)
+    get tasks_path(search: "don't", show_completed: false)
+
+    get tasks_path(show_completed: false)
+
+    assert_response :success
+    assert_select ".task-item", text: /Don't forget the milk/
+  end
+
+  test "kanban_tasks falls back to the default sort for an unrecognized sort_by value" do
+    get kanban_tasks_path(sort_by: 'not_a_real_column'), as: :json
+
+    assert_response :success
+  end
+
   test "should set status to complete when creating task with completed checkbox" do
     assert_difference('Task.count') do
       post tasks_path, params: {
