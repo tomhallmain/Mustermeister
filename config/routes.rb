@@ -58,6 +58,8 @@ Rails.application.routes.draw do
     end
     collection do
       get 'all_reports'
+      get 'rename_category'
+      post 'rename_category_execute'
     end
     resources :comments, only: [:create, :update, :destroy]
     resources :project_memberships, shallow: true, only: [:create, :update, :destroy]

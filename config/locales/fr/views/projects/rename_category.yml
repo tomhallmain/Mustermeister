@@ -1,0 +1,25 @@
+fr:
+  views:
+    projects:
+      rename_category:
+        title: "Renommer une catégorie de projet"
+        help: "Modifie la catégorie de tous les projets qui l'ont actuellement. Seuls les projets que vous pouvez gérer sont concernés."
+        no_categories: "Aucun des projets que vous gérez n'a encore de catégorie."
+        from_label: "Catégorie actuelle"
+        select_from: "Choisissez une catégorie"
+        from_option:
+          one: "%{category} (%{count} projet)"
+          other: "%{category} (%{count} projets)"
+        to_label: "Nouvelle catégorie"
+        to_hint: "Saisissez une catégorie existante pour fusionner avec elle, ou laissez vide pour supprimer la catégorie."
+        submit: "Renommer la catégorie"
+        cancel: "Annuler"
+        confirm_dialog: "Modifier la catégorie de tous ces projets ?"
+        success:
+          one: "%{count} projet déplacé de « %{from} » vers « %{to} »."
+          other: "%{count} projets déplacés de « %{from} » vers « %{to} »."
+        cleared:
+          one: "Catégorie « %{from} » supprimée de %{count} projet."
+          other: "Catégorie « %{from} » supprimée de %{count} projets."
+        no_changes: "Aucun projet n'a été modifié. Choisissez une catégorie et un nouveau nom différent."
+        failure: "Le renommage de la catégorie a échoué et aucun projet n'a été modifié : %{message}"

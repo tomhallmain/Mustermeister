@@ -198,6 +198,29 @@ class ProjectsController < ApplicationController
     redirect_to project_path(@project), alert: t('projects.show.recategorize_failure', message: e.message)
   end
 
+  # Scoped to manageable projects because the category is project
+  # configuration, editable through the form only by managers.
+  def rename_category
+    @category_counts = current_user.manageable_projects.category_counts
+  end
+
+  def rename_category_execute
+    from = rename_category_params[:from]
+    to = rename_category_params[:to]
+
+    updated_count = Project.rename_category!(current_user.manageable_projects, from: from, to: to)
+
+    if updated_count.zero?
+      redirect_to rename_category_projects_path, alert: t('views.projects.rename_category.no_changes')
+    elsif to.blank?
+      redirect_to rename_category_projects_path, notice: t('views.projects.rename_category.cleared', count: updated_count, from: from)
+    else
+      redirect_to rename_category_projects_path, notice: t('views.projects.rename_category.success', count: updated_count, from: from, to: to.strip)
+    end
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to rename_category_projects_path, alert: t('views.projects.rename_category.failure', message: e.message)
+  end
+
   def merge
     @mergeable_projects = current_user.projects.where.not(id: @project.id).order(:title)
     @target = current_user.projects.find_by(id: params[:target_id]) if params[:target_id].present?
@@ -223,6 +246,10 @@ class ProjectsController < ApplicationController
   end
 
   private
+
+  def rename_category_params
+    params.fetch(:rename_category, {}).permit(:from, :to)
+  end
 
   def merge_params
     params.fetch(:merge, {}).permit(:target_id, field_choices: MergeProjectsService::MERGEABLE_FIELDS)

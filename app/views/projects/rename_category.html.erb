@@ -1,0 +1,38 @@
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+  <div class="mb-8">
+    <h1 class="text-2xl font-bold text-gray-900"><%= t('views.projects.rename_category.title') %></h1>
+    <p class="mt-2 text-sm text-gray-600"><%= t('views.projects.rename_category.help') %></p>
+  </div>
+
+  <div class="surface shadow-lg rounded-lg p-6">
+    <% if @category_counts.empty? %>
+      <p class="text-gray-600"><%= t('views.projects.rename_category.no_categories') %></p>
+    <% else %>
+      <%= form_with url: rename_category_execute_projects_path, method: :post, scope: :rename_category, class: "space-y-4" do |f| %>
+        <div>
+          <%= f.label :from, t('views.projects.rename_category.from_label'), class: "block text-sm font-medium text-gray-700" %>
+          <%= f.select :from,
+                @category_counts.map { |category, count| [t('views.projects.rename_category.from_option', category: category, count: count), category] },
+                { include_blank: t('views.projects.rename_category.select_from') },
+                { required: true, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" } %>
+        </div>
+        <div>
+          <%= f.label :to, t('views.projects.rename_category.to_label'), class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_field :to, list: "rename-category-suggestions", class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+          <datalist id="rename-category-suggestions">
+            <% @category_counts.each_key do |category| %>
+              <option value="<%= category %>"></option>
+            <% end %>
+          </datalist>
+          <p class="mt-1 text-xs text-gray-500"><%= t('views.projects.rename_category.to_hint') %></p>
+        </div>
+        <div class="flex justify-end space-x-3">
+          <%= link_to t('views.projects.rename_category.cancel'), projects_path, class: "px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+          <%= f.submit t('views.projects.rename_category.submit'),
+                class: "px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700",
+                data: { confirm: t('views.projects.rename_category.confirm_dialog') } %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>

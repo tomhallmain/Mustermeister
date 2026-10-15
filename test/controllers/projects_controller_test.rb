@@ -369,6 +369,102 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     assert_select "datalist#project-category-suggestions option[value=?]", "Sales", count: 0
   end
 
+  test "rename category page lists the user's categories with project counts" do
+    @project.update!(category: "Marketing")
+    Project.create!(title: "Second Marketing Project", user: @user, category: "Marketing", confirm_duplicate: true)
+
+    get rename_category_projects_path
+
+    assert_response :success
+    assert_select "select#rename_category_from option[value=?]", "Marketing",
+                  text: I18n.t('views.projects.rename_category.from_option', category: "Marketing", count: 2)
+  end
+
+  test "rename category page does not list another user's categories" do
+    projects(:two).update!(category: "Sales")
+
+    get rename_category_projects_path
+
+    assert_response :success
+    assert_select "select#rename_category_from option[value=?]", "Sales", count: 0
+  end
+
+  test "renaming a category updates every project that has it" do
+    @project.update!(category: "Marketing")
+    second = Project.create!(title: "Second Marketing Project", user: @user, category: "Marketing", confirm_duplicate: true)
+    unrelated = Project.create!(title: "Ops Work", user: @user, category: "Operations", confirm_duplicate: true)
+
+    post rename_category_execute_projects_path, params: { rename_category: { from: "Marketing", to: " Growth " } }
+
+    assert_redirected_to rename_category_projects_path
+    assert_equal I18n.t('views.projects.rename_category.success', count: 2, from: "Marketing", to: "Growth"), flash[:notice]
+    assert_equal "Growth", @project.reload.category
+    assert_equal "Growth", second.reload.category
+    assert_equal "Operations", unrelated.reload.category
+  end
+
+  test "renaming a category does not count as activity on the project" do
+    @project.update!(category: "Marketing")
+    @project.update_columns(last_activity_at: 3.days.ago, updated_at: 3.days.ago)
+    last_activity_at = @project.reload.last_activity_at
+    updated_at = @project.updated_at
+
+    post rename_category_execute_projects_path, params: { rename_category: { from: "Marketing", to: "Growth" } }
+
+    @project.reload
+    assert_equal "Growth", @project.category
+    assert_equal last_activity_at, @project.last_activity_at
+    assert_equal updated_at, @project.updated_at
+  end
+
+  test "renaming a category to blank clears it" do
+    @project.update!(category: "Marketing")
+
+    post rename_category_execute_projects_path, params: { rename_category: { from: "Marketing", to: "" } }
+
+    assert_redirected_to rename_category_projects_path
+    assert_equal I18n.t('views.projects.rename_category.cleared', count: 1, from: "Marketing"), flash[:notice]
+    assert_nil @project.reload.category
+  end
+
+  test "renaming a category leaves other users' projects alone" do
+    @project.update!(category: "Sales")
+    projects(:two).update!(category: "Sales")
+
+    post rename_category_execute_projects_path, params: { rename_category: { from: "Sales", to: "Revenue" } }
+
+    assert_equal "Revenue", @project.reload.category
+    assert_equal "Sales", projects(:two).reload.category
+  end
+
+  test "renaming a category skips projects where the user is only a member" do
+    shared = projects(:two)
+    shared.update!(category: "Sales")
+    ProjectMembership.create!(project: shared, user: @user, role: "member")
+
+    post rename_category_execute_projects_path, params: { rename_category: { from: "Sales", to: "Revenue" } }
+
+    assert_equal I18n.t('views.projects.rename_category.no_changes'), flash[:alert]
+    assert_equal "Sales", shared.reload.category
+  end
+
+  test "renaming a category includes projects the user manages" do
+    shared = projects(:two)
+    shared.update!(category: "Sales")
+    ProjectMembership.create!(project: shared, user: @user, role: "manager")
+
+    post rename_category_execute_projects_path, params: { rename_category: { from: "Sales", to: "Revenue" } }
+
+    assert_equal "Revenue", shared.reload.category
+  end
+
+  test "renaming a category with no source category changes nothing" do
+    post rename_category_execute_projects_path, params: { rename_category: { from: "", to: "Anything" } }
+
+    assert_redirected_to rename_category_projects_path
+    assert_equal I18n.t('views.projects.rename_category.no_changes'), flash[:alert]
+  end
+
   test "should create project with color" do
     assert_difference('Project.count') do
       post projects_path, params: {

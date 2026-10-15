@@ -5,6 +5,7 @@ es:
         title: "Proyectos"
         new_project: "Nuevo proyecto"
         view_all_reports: "Ver todos los informes"
+        rename_category: "Renombrar categoría"
         search_placeholder: "Buscar proyectos..."
         search: "Buscar"
         clear: "Borrar"

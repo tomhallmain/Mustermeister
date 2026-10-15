@@ -89,7 +89,11 @@ class Project < ApplicationRecord
     User.where.not(id: project_memberships.pluck(:user_id) << user_id).order(:name)
   end
 
-  before_save :update_last_activity
+  # Not persisted - set for bulk housekeeping saves (see rename_category!)
+  # that shouldn't count as activity on the project.
+  attr_accessor :preserve_activity
+
+  before_save :update_last_activity, unless: :preserve_activity
   before_save :normalize_category
   before_create :set_initial_activity
   after_create :create_default_statuses
@@ -290,6 +294,32 @@ class Project < ApplicationRecord
   # near-duplicate.
   def self.category_suggestions_for(user)
     user.accessible_projects.where.not(category: [nil, ""]).distinct.order(:category).pluck(:category)
+  end
+
+  # { category => project count } for the projects in the current relation,
+  # ordered by category.
+  def self.category_counts
+    where.not(category: [nil, ""]).group(:category).order(:category).count
+  end
+
+  # Moves every project in `projects` from category `from` to `to` (blank
+  # clears it), all or nothing. Each record is saved individually so
+  # PaperTrail and normalize_category still run. A rename is housekeeping,
+  # so last_activity_at and updated_at are left alone - both feed the
+  # index's activity date and sort. Returns the number of projects changed.
+  def self.rename_category!(projects, from:, to:)
+    to = to.to_s.strip.presence
+    return 0 if from.blank? || from == to
+
+    matches = projects.where(category: from).to_a
+    transaction do
+      matches.each do |project|
+        project.category = to
+        project.preserve_activity = true
+        project.save!(touch: false)
+      end
+    end
+    matches.size
   end
 
   private

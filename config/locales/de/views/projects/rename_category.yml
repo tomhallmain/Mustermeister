@@ -1,0 +1,25 @@
+de:
+  views:
+    projects:
+      rename_category:
+        title: "Projektkategorie umbenennen"
+        help: "Ändert die Kategorie aller Projekte, die sie derzeit haben. Nur Projekte, die Sie verwalten dürfen, sind betroffen."
+        no_categories: "Keines der Projekte, die Sie verwalten, hat bisher eine Kategorie."
+        from_label: "Aktuelle Kategorie"
+        select_from: "Kategorie auswählen"
+        from_option:
+          one: "%{category} (%{count} Projekt)"
+          other: "%{category} (%{count} Projekte)"
+        to_label: "Neue Kategorie"
+        to_hint: "Geben Sie eine bestehende Kategorie ein, um mit ihr zusammenzuführen, oder lassen Sie das Feld leer, um die Kategorie zu entfernen."
+        submit: "Kategorie umbenennen"
+        cancel: "Abbrechen"
+        confirm_dialog: "Die Kategorie all dieser Projekte ändern?"
+        success:
+          one: "%{count} Projekt von „%{from}“ nach „%{to}“ verschoben."
+          other: "%{count} Projekte von „%{from}“ nach „%{to}“ verschoben."
+        cleared:
+          one: "Kategorie „%{from}“ von %{count} Projekt entfernt."
+          other: "Kategorie „%{from}“ von %{count} Projekten entfernt."
+        no_changes: "Es wurden keine Projekte geändert. Wählen Sie eine Kategorie und einen anderen neuen Namen."
+        failure: "Das Umbenennen der Kategorie ist fehlgeschlagen, es wurden keine Projekte geändert: %{message}"

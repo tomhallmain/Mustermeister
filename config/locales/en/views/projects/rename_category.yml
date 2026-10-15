@@ -1,0 +1,25 @@
+en:
+  views:
+    projects:
+      rename_category:
+        title: "Rename Project Category"
+        help: "Change the category on every project that currently has it. Only projects you can manage are affected."
+        no_categories: "None of the projects you manage have a category yet."
+        from_label: "Current category"
+        select_from: "Choose a category"
+        from_option:
+          one: "%{category} (%{count} project)"
+          other: "%{category} (%{count} projects)"
+        to_label: "New category"
+        to_hint: "Enter an existing category to merge into it, or leave blank to remove the category."
+        submit: "Rename Category"
+        cancel: "Cancel"
+        confirm_dialog: "Change the category on all of these projects?"
+        success:
+          one: "Moved %{count} project from \"%{from}\" to \"%{to}\"."
+          other: "Moved %{count} projects from \"%{from}\" to \"%{to}\"."
+        cleared:
+          one: "Removed the category \"%{from}\" from %{count} project."
+          other: "Removed the category \"%{from}\" from %{count} projects."
+        no_changes: "No projects were changed. Choose a category and a different new name."
+        failure: "Renaming the category failed and no projects were changed: %{message}"
